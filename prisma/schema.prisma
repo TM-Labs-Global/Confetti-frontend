@@ -1,0 +1,96 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          String         @default("organiser")
+  plans         Plan[]
+  bids          Bid[]
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model EventType {
+  id          String     @id
+  name        String
+  description String     @default("")
+  categories  Category[]
+  plans       Plan[]
+}
+
+model Category {
+  id          String   @id
+  name        String
+  description String   @default("")
+  defaultPct  Float    @default(0)
+  eventTypeId String
+  eventType   EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+}
+
+model Plan {
+  id           String         @id @default(cuid())
+  name         String
+  eventTypeId  String
+  eventType    EventType      @relation(fields: [eventTypeId], references: [id])
+  status       String         @default("draft")
+  date         DateTime?
+  dateFlexible Boolean        @default(false)
+  state        String         @default("")
+  city         String         @default("")
+  totalBudget  Int            @default(0)
+  shareCode    String         @unique
+  organiserId  String
+  organiser    User           @relation(fields: [organiserId], references: [id])
+  categories   PlanCategory[]
+  bids         Bid[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model PlanCategory {
+  id         String @id @default(cuid())
+  planId     String
+  plan       Plan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  categoryId String
+  name       String
+  allocation Int    @default(0)
+  bids       Bid[]
+}
+
+model Bid {
+  id             String       @id @default(cuid())
+  planId         String
+  plan           Plan         @relation(fields: [planId], references: [id])
+  planCategoryId String
+  planCategory   PlanCategory @relation(fields: [planCategoryId], references: [id])
+  vendorId       String
+  vendor         User         @relation(fields: [vendorId], references: [id])
+  amount         Int
+  pitch          String       @default("")
+  status         String       @default("pending")
+  isCounterBid   Boolean      @default(false)
+  counterReason  String?
+  canUpdate      Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

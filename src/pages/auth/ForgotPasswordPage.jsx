@@ -1,38 +1,59 @@
-import { Link } from 'react-router-dom'
+'use client'
+import Link from 'next/link'
+
+function LogoMark() {
+  return (
+    <div className="relative w-9 h-9 rounded-[10px] shrink-0"
+      style={{ background: 'linear-gradient(135deg, #00C4CC 0%, #39E75F 100%)' }}>
+      <div className="absolute top-[8px] left-[8px] w-[9px] h-[9px] bg-warning rounded-[2px] rotate-[20deg]" />
+    </div>
+  )
+}
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="min-h-screen bg-brand-navy flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-brand-navy">
-            Confetti <span className="text-brand-gold">✦</span>
-          </h1>
-          <p className="text-gray-400 text-sm mt-1">Reset your password</p>
+    <div className="min-h-screen bg-dark flex items-center justify-center p-4"
+      style={{
+        backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(0,196,204,0.12), transparent 50%)',
+      }}>
+      <div className="w-full max-w-[400px]">
+        <div className="flex items-center gap-3 mb-10 justify-center">
+          <LogoMark />
+          <span className="font-display font-bold text-[22px] tracking-[-0.01em] text-white">
+            Confetti
+          </span>
         </div>
 
-        <form className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
-            <input
-              type="email"
-              placeholder="you@example.com"
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-pink"
-            />
-          </div>
+        <div className="bg-dark-surface border border-dark-border rounded-[14px] p-8">
+          <h2 className="font-display font-semibold text-[20px] text-white mb-1">
+            Reset password
+          </h2>
+          <p className="text-dark-muted text-[14px] mb-6">
+            We&apos;ll send a reset link to your email.
+          </p>
 
-          <button
-            type="submit"
-            className="w-full bg-brand-pink text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition text-sm"
-          >
-            Send reset link
-          </button>
-        </form>
+          <form className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="block text-[12.5px] font-medium text-ink-2">Email address</label>
+              <input
+                type="email"
+                placeholder="you@example.com"
+                className="w-full bg-dark border border-dark-border text-white text-[14px] px-4 py-[11px] rounded-[9px] focus:outline-none focus:border-primary focus:shadow-[0_0_0_3px_rgba(0,196,204,0.15)]"
+              />
+            </div>
 
-        <p className="text-center text-sm text-gray-400 mt-6">
-          Remembered it?{' '}
-          <Link to="/login" className="text-brand-pink font-medium hover:underline">
-            Back to sign in
+            <button
+              type="submit"
+              className="w-full bg-primary text-dark font-medium text-[14px] py-[11px] rounded-[9px] hover:brightness-90 active:translate-y-px transition"
+            >
+              Send reset link
+            </button>
+          </form>
+        </div>
+
+        <p className="text-center text-[13px] text-dark-muted mt-5">
+          <Link href="/login" className="text-primary hover:underline">
+            ← Back to sign in
           </Link>
         </p>
       </div>

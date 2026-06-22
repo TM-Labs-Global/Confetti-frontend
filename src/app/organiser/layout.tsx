@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import NotificationBell from '@/features/notifications/components/NotificationBell'
+import { AppLogo } from '@/features/shared-ui'
 
 const NAV = [
   { label: 'Dashboard',     path: '/organiser/dashboard' },
@@ -12,14 +13,7 @@ const NAV = [
   { label: 'My Plans',      path: '/organiser/plans' },
 ]
 
-function LogoMark() {
-  return (
-    <div className="relative w-8 h-8 rounded-[9px] shrink-0"
-      style={{ background: 'linear-gradient(135deg, #00C4CC 0%, #39E75F 100%)' }}>
-      <div className="absolute top-[7px] left-[7px] w-2 h-2 bg-warning rounded-[2px] rotate-[20deg]" />
-    </div>
-  )
-}
+
 
 export default function OrganizerLayout({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth()
@@ -43,9 +37,8 @@ export default function OrganizerLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen bg-canvas">
       <aside className="w-[248px] bg-dark flex flex-col shrink-0 border-r border-dark-border">
-        <div className="px-6 pt-8 pb-12 flex items-center gap-2">
-          <LogoMark />
-          <span className="font-display font-bold text-[18px] tracking-[-0.01em] text-white">Confetti</span>
+        <div className="px-6 pt-8 pb-12">
+          <AppLogo size={32} nameClassName="font-display font-bold text-[18px] tracking-[-0.01em] text-white" />
         </div>
 
         <nav className="flex-1 px-4">

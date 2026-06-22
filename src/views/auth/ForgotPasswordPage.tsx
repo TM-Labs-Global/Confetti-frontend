@@ -1,14 +1,8 @@
 'use client'
 import Link from 'next/link'
+import { AppLogo } from '@/features/shared-ui'
 
-function LogoMark() {
-  return (
-    <div className="relative w-9 h-9 rounded-[10px] shrink-0"
-      style={{ background: 'linear-gradient(135deg, #00C4CC 0%, #39E75F 100%)' }}>
-      <div className="absolute top-[8px] left-[8px] w-[9px] h-[9px] bg-warning rounded-[2px] rotate-[20deg]" />
-    </div>
-  )
-}
+
 
 export default function ForgotPasswordPage() {
   return (
@@ -18,10 +12,7 @@ export default function ForgotPasswordPage() {
       }}>
       <div className="w-full max-w-[400px]">
         <div className="flex items-center gap-3 mb-10 justify-center">
-          <LogoMark />
-          <span className="font-display font-bold text-[22px] tracking-[-0.01em] text-white">
-            Confetti
-          </span>
+          <AppLogo size={36} nameClassName="font-display font-bold text-[22px] tracking-[-0.01em] text-white" />
         </div>
 
         <div className="bg-dark-surface border border-dark-border rounded-[14px] p-8">

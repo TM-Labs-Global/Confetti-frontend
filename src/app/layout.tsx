@@ -26,7 +26,13 @@ const dmMono = DM_Mono({
 export const metadata = {
   title: 'Confetti — Event Planning & Vendor Marketplace',
   description: 'Plan your event and connect with verified vendors across Nigeria.',
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
 }
+
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

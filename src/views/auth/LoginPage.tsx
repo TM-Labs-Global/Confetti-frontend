@@ -3,6 +3,8 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/features/auth/context/AuthContext'
+import { AppLogo } from '@/features/shared-ui'
+import { CalendarDays, Store, ShieldCheck } from 'lucide-react'
 
 const DEMO = {
   organiser: { email: 'organiser@confetti.ng', password: 'password123' },
@@ -11,9 +13,9 @@ const DEMO = {
 }
 
 const ROLE_META = {
-  organiser: { emoji: '🎉', label: 'Event Organiser', desc: "I'm planning an event" },
-  vendor:    { emoji: '🛒', label: 'Vendor / Supplier', desc: "I'm offering services" },
-  admin:     { emoji: '🔐', label: 'Platform Admin', desc: 'I manage the platform' },
+  organiser: { icon: CalendarDays, label: 'Event Organiser',   desc: "I'm planning an event",  color: 'text-primary' },
+  vendor:    { icon: Store,        label: 'Vendor / Supplier', desc: "I'm offering services",  color: 'text-warning' },
+  admin:     { icon: ShieldCheck,  label: 'Platform Admin',    desc: 'I manage the platform', color: 'text-success' },
 }
 
 const DASHBOARDS = {
@@ -51,7 +53,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
       <div className="w-full max-w-[420px]">
         <div className="text-center mb-8">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-dark font-display font-bold text-lg mx-auto mb-4">🎊</div>
+          <div className="flex justify-center mb-4">
+            <AppLogo size={48} showName={false} />
+          </div>
           <h1 className="font-display font-bold text-[28px] text-ink">Welcome back</h1>
           <p className="text-ink-3 text-[14px] mt-1">Sign in to your Confetti account</p>
         </div>
@@ -83,7 +87,9 @@ export default function LoginPage() {
                       : 'border-border hover:border-primary/40'
                   }`}
                 >
-                  <span className="text-2xl">{meta.emoji}</span>
+                  <span className={`${meta.color} shrink-0`}>
+                    <meta.icon size={22} strokeWidth={1.75} />
+                  </span>
                   <div>
                     <p className="font-medium text-ink text-[14px]">{meta.label}</p>
                     <p className="text-ink-3 text-[12px]">{meta.desc}</p>

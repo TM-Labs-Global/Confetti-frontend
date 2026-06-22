@@ -1,3 +1,4 @@
+export { AppLogo }      from './AppLogo'
 export { Breadcrumb }   from './Breadcrumb'
 export { BudgetBar }    from './BudgetBar'
 export { EmptyState }   from './EmptyState'
@@ -7,3 +8,4 @@ export { StatCard }     from './StatCard'
 export { StatusBadge }  from './StatusBadge'
 export { Tabs }         from './Tabs'
 export { default as LoadingScreen } from './LoadingScreen'
+

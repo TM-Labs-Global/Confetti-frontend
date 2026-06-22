@@ -22,3 +22,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Next.js build output
+.next/
+out/
+
+# Database
+*.db
+*.db-journal
+
+# Environment variables
+.env
+.env*.local
+

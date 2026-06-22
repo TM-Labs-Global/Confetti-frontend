@@ -1,0 +1,41 @@
+/* input.css */
+
+@layer base {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 10px 14px;
+    font-family: var(--font-b);
+    font-size: 14px;
+    color: var(--ink);
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-l);
+    border-radius: var(--radius-md, 8px);
+    transition: border-color var(--transition-fast, 150ms);
+    outline: none;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 196, 204, 0.12);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--ink-3);
+  }
+}
+
+.input-error {
+  border-color: var(--warning) !important;
+}
+
+.input-error:focus {
+  box-shadow: 0 0 0 3px rgba(255, 222, 89, 0.2) !important;
+}

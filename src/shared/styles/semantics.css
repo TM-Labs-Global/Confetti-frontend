@@ -1,0 +1,11 @@
+/* semantics.css */
+
+:root {
+  --color-text-primary-semantic: var(--ink);
+  --color-text-secondary-semantic: var(--ink-2);
+  --color-text-muted-semantic: var(--ink-3);
+  
+  --color-border: var(--border-l);
+  --color-canvas: var(--light);
+  --color-surface: #FFFFFF;
+}

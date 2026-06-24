@@ -1,10 +1,10 @@
 export const EVENT_META = {
-  wedding:      { emoji: '💍', color: '#E07A8F', bg: '#FDF0F3', tagline: 'Ceremony & reception' },
-  birthday:     { emoji: '🎂', color: '#F5923E', bg: '#FEF5EE', tagline: 'Milestone celebrations' },
-  corporate:    { emoji: '💼', color: '#6C7CC7', bg: '#F0F2FB', tagline: 'Professional events' },
-  'baby-shower':{ emoji: '👶', color: '#A370DB', bg: '#F5EEFB', tagline: 'New arrival celebrations' },
-  graduation:   { emoji: '🎓', color: '#2AB56E', bg: '#EDFBF2', tagline: 'Academic achievements' },
-  anniversary:  { emoji: '🥂', color: '#D4A017', bg: '#FEF9EA', tagline: 'Years well celebrated' },
+  wedding:      { emoji: '💍', icon: 'Heart',         color: '#E07A8F', bg: '#FDF0F3', tagline: 'Ceremony & reception' },
+  birthday:     { emoji: '🎂', icon: 'Cake',          color: '#F5923E', bg: '#FEF5EE', tagline: 'Milestone celebrations' },
+  corporate:    { emoji: '💼', icon: 'Briefcase',     color: '#6C7CC7', bg: '#F0F2FB', tagline: 'Professional events' },
+  'baby-shower':{ emoji: '👶', icon: 'Baby',          color: '#A370DB', bg: '#F5EEFB', tagline: 'New arrival celebrations' },
+  graduation:   { emoji: '🎓', icon: 'GraduationCap', color: '#2AB56E', bg: '#EDFBF2', tagline: 'Academic achievements' },
+  anniversary:  { emoji: '🥂', icon: 'Wine',          color: '#D4A017', bg: '#FEF9EA', tagline: 'Years well celebrated' },
 }
 
 export const EVENT_TYPES = [
@@ -13,7 +13,7 @@ export const EVENT_TYPES = [
     name: 'Wedding',
     description: 'Traditional, white, or court wedding ceremonies and receptions',
     categories: [
-      { id: 'catering',     name: 'Catering & Jollof',         defaultPct: 30, description: 'Full catering — buffet, food stations, and service staff' },
+      { id: 'catering',     name: 'Catering & Jollof',         defaultPct: 30, description: 'Full catering with buffet, food stations, and service staff' },
       { id: 'venue',        name: 'Venue / Hall',               defaultPct: 20, description: 'Indoor or outdoor venue hire' },
       { id: 'decor',        name: 'Decoration & Rentals',       defaultPct: 12, description: 'Floral arrangements, draping, furniture hire, and setup' },
       { id: 'photography',  name: 'Photography',                defaultPct: 8,  description: 'Pre-wedding and event-day photography coverage' },

@@ -1,0 +1,61 @@
+/* button.css */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-b);
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: var(--radius-md, 8px);
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms);
+  border: 1px solid transparent;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--dark);
+}
+.btn-primary:hover {
+  background-color: rgba(0, 196, 204, 0.9);
+}
+
+.btn-warning {
+  background-color: var(--warning);
+  color: var(--dark);
+}
+.btn-warning:hover {
+  background-color: rgba(255, 222, 89, 0.9);
+}
+
+.btn-success {
+  background-color: var(--success);
+  color: var(--dark);
+}
+.btn-success:hover {
+  background-color: rgba(57, 231, 95, 0.9);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border-color: var(--border-l);
+  color: var(--ink-2);
+}
+.btn-secondary:hover {
+  background-color: rgba(16, 24, 40, 0.05);
+  color: var(--ink);
+}
+
+.btn-lg {
+  padding: 10px 24px;
+  font-size: 14px;
+  border-radius: var(--radius-lg, 12px);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 11px;
+  border-radius: var(--radius-sm, 6px);
+}

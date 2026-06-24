@@ -1,0 +1,29 @@
+/* ─────────────────────────────────────────────────
+   Design tokens — imported by src/app/globals.css
+   ───────────────────────────────────────────────── */
+
+:root {
+  /* Core brand values from timeline guide */
+  --primary:  #00C4CC;
+  --success:  #39E75F;
+  --warning:  #FFDE59;
+  --dark:     #0B0F19;
+  --surface:  #161F30;
+  --border-d: #283248;
+  --light:    #FAFAFC;
+  --border-l: #E4E7EC;
+  --ink:      #101828;
+  --ink-2:    #475467;
+  --ink-3:    #667085;
+  --font-d:   'Sora', sans-serif;
+  --font-b:   'DM Sans', sans-serif;
+  --font-m:   'DM Mono', monospace;
+
+  /* Spacing — 8pt grid */
+  --space-xs:   4px;
+  --space-sm:   8px;
+  --space-md:   16px;
+  --space-lg:   24px;
+  --space-xl:   32px;
+  --space-2xl:  48px;
+}

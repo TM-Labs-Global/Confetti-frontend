@@ -1,46 +1,261 @@
 @import "tailwindcss";
 
+@import "../shared/styles/tokens.css";
+@import "../shared/styles/colors.css";
+@import "../shared/styles/dimensions.css";
+@import "../shared/styles/effects.css";
+@import "../shared/styles/typography.css";
+@import "../shared/styles/semantics.css";
+@import "../shared/styles/button.css";
+@import "../shared/styles/input.css";
+
 @theme {
   /* Brand accents */
-  --color-primary: #00C4CC;
-  --color-success: #39E75F;
-  --color-warning: #FFDE59;
+  --color-primary: var(--primary);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
 
   /* Dark surfaces */
-  --color-dark: #0B0F19;
-  --color-dark-surface: #161F30;
-  --color-dark-border: #283248;
+  --color-dark: var(--dark);
+  --color-dark-surface: var(--surface);
+  --color-dark-border: var(--border-d);
   --color-dark-muted: #8B96AC;
 
   /* Light surfaces */
-  --color-canvas: #FAFAFC;
-  --color-border: #E4E7EC;
+  --color-canvas: var(--light);
+  --color-border: var(--border-l);
 
   /* Text */
-  --color-ink: #101828;
-  --color-ink-2: #475467;
-  --color-ink-3: #667085;
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
 
   /* Fonts — resolved via next/font CSS vars injected on <html> */
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-sora), sans-serif;
-  --font-mono: var(--font-dm-mono), ui-monospace, monospace;
+  --font-sans: var(--font-b), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-d), sans-serif;
+  --font-mono: var(--font-m), ui-monospace, monospace;
 }
 
-body {
-  font-family: var(--font-sans);
-  background-color: #FAFAFC;
-  color: #101828;
-  -webkit-font-smoothing: antialiased;
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--light);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* No spinner arrows on number inputs anywhere in the app. */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  ::selection {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Text links underline on hover by default. Card- / button-style anchors
+     (those that set a block/flex/grid display, or use Tailwind's `group`)
+     opt out so whole cards aren't underlined. Explicit `hover:underline`
+     utilities still win since they live in the utilities layer. */
+  a:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  a.flex:hover,
+  a.inline-flex:hover,
+  a.block:hover,
+  a.inline-block:hover,
+  a.grid:hover,
+  a.group:hover,
+  a.no-underline:hover {
+    text-decoration: none;
+  }
 }
 
-::selection {
-  background: #00C4CC;
-  color: #fff;
+/* ─────────────────────────────────────────────────
+   Landing theme tokens (light + dark)
+   Scoped to .landing so the rest of the app is untouched.
+   Components read these via Tailwind arbitrary values, e.g.
+   bg-[var(--ld-bg)] / text-[var(--ld-text)].
+   ───────────────────────────────────────────────── */
+.landing {
+  --ld-bg:           #080B14;
+  --ld-bg-2:         #131C30;
+  --ld-text:         #FFFFFF;
+  --ld-text-2:       #C2CAD9;
+  --ld-text-muted:   #8B96AC;
+  --ld-card:         rgba(255, 255, 255, 0.045);
+  --ld-card-2:       rgba(255, 255, 255, 0.07);
+  --ld-border:       rgba(255, 255, 255, 0.10);
+  --ld-glass:        rgba(255, 255, 255, 0.06);
+  --ld-glass-strong: rgba(255, 255, 255, 0.10);
+  --ld-grid:         rgba(255, 255, 255, 0.04);
+  color-scheme: dark;
 }
 
-:focus-visible {
-  outline: 2px solid #00C4CC;
-  outline-offset: 2px;
-  border-radius: 4px;
+.landing[data-theme='light'] {
+  --ld-bg:           #F1F2F8;
+  --ld-bg-2:         #FFFFFF;
+  --ld-text:         #0B0F19;
+  --ld-text-2:       #344054;
+  --ld-text-muted:   #667085;
+  --ld-card:         rgba(255, 255, 255, 0.75);
+  --ld-card-2:       rgba(255, 255, 255, 0.9);
+  --ld-border:       rgba(16, 24, 40, 0.08);
+  --ld-glass:        rgba(255, 255, 255, 0.62);
+  --ld-glass-strong: rgba(255, 255, 255, 0.85);
+  --ld-grid:         rgba(16, 24, 40, 0.045);
+  color-scheme: light;
+}
+
+/* Opt-in dark mode for the organiser/vendor content area. Scoped to elements
+   marked [data-app-theme='dark'] (the sidebar sits outside this scope, so it
+   stays dark by design). Overriding these CSS variables flips every existing
+   bg-canvas / bg-white / text-ink / border-border utility inside the scope. */
+[data-app-theme='dark'] {
+  /* Base tokens (used by the hand-written utilities in shared/styles) */
+  --light:    #0B0F19;
+  --border-l: #283248;
+  --ink:      #F3F5F9;
+  --ink-2:    #C2CAD9;
+  --ink-3:    #8B96AC;
+  /* Tailwind @theme aliases (used by generated utilities) */
+  --color-canvas: #0B0F19;
+  --color-border: #283248;
+  --color-ink:    #F3F5F9;
+  --color-ink-2:  #C2CAD9;
+  --color-ink-3:  #8B96AC;
+  color-scheme: dark;
+}
+/* .bg-white is hardcoded #FFFFFF in colors.css, so override it explicitly. */
+[data-app-theme='dark'] .bg-white { background-color: #161F30; }
+
+/* Inputs hardcode a white background in input.css, which leaves light text on a
+   white field (invisible) in dark mode. Flip them within the dark scope. */
+[data-app-theme='dark'] input,
+[data-app-theme='dark'] select,
+[data-app-theme='dark'] textarea {
+  background-color: #161F30;
+  border-color: var(--border-l);
+  color: var(--ink);
+}
+[data-app-theme='dark'] input::placeholder,
+[data-app-theme='dark'] textarea::placeholder {
+  color: var(--ink-3);
+}
+
+/* Dotted-grid depth layer used behind the hero */
+.ld-grid {
+  background-image: radial-gradient(var(--ld-grid) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 35%, #000 40%, transparent 100%);
+          mask-image: radial-gradient(ellipse 80% 60% at 50% 35%, #000 40%, transparent 100%);
+}
+
+/* ─────────────────────────────────────────────────
+   Landing-page motion — sophisticated, not literal.
+   All animations are disabled under prefers-reduced-motion.
+   ───────────────────────────────────────────────── */
+@keyframes aurora {
+  0%   { transform: translate(0, 0) scale(1)   rotate(0deg);   }
+  33%  { transform: translate(6%, -4%) scale(1.15) rotate(8deg); }
+  66%  { transform: translate(-5%, 5%) scale(0.95) rotate(-6deg); }
+  100% { transform: translate(0, 0) scale(1)   rotate(0deg);   }
+}
+
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  50%      { transform: translateY(-16px) rotate(var(--tilt, 0deg)); }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes shine {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+/* Gentle idle bob for category emojis so they feel alive */
+@keyframes bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-6px) rotate(-4deg); }
+}
+
+.animate-bob { animation: bob 3.2s ease-in-out infinite; }
+
+/* Friendly waving hand for the dashboard greeting (plays a couple of times) */
+@keyframes wave {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  10%, 30%      { transform: rotate(14deg); }
+  20%           { transform: rotate(-8deg); }
+  40%           { transform: rotate(-4deg); }
+  50%           { transform: rotate(10deg); }
+}
+
+.animate-wave { animation: wave 2.4s ease-in-out 2; transform-origin: 70% 70%; }
+
+/* One-shot celebratory confetti burst (explodes outward, then fades) */
+@keyframes confetti-burst {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(0.6); opacity: 0; }
+  12%  { opacity: 1; }
+  100% { transform: translate(var(--cx), var(--cy)) rotate(var(--cr)); opacity: 0; }
+}
+
+.confetti-burst-piece {
+  animation: confetti-burst 2.4s cubic-bezier(0.12, 0.7, 0.3, 1) forwards;
+}
+
+.animate-aurora  { animation: aurora 18s ease-in-out infinite; }
+.animate-float   { animation: float-soft 6s ease-in-out infinite; }
+.animate-rise    { animation: rise-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-marquee { animation: marquee 32s linear infinite; }
+
+/* Mobile drawer: backdrop fade + panel slide-in */
+@keyframes fade-in     { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+.animate-fade-in       { animation: fade-in 0.2s ease-out both; }
+.animate-slide-in-left { animation: slide-in-left 0.24s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.text-shine {
+  background-size: 200% auto;
+  animation: shine 6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-aurora,
+  .animate-float,
+  .animate-rise,
+  .animate-marquee,
+  .text-shine,
+  .confetti-burst-piece,
+  .animate-bob,
+  .animate-wave,
+  .animate-fade-in,
+  .animate-slide-in-left {
+    animation: none !important;
+  }
 }

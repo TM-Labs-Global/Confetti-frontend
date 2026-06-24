@@ -1,4 +1,4 @@
-# Confetti — Event Planning & Vendor Marketplace
+# Confette — Event Planning & Vendor Marketplace
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.3-black?logo=nextdotjs)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.0-blue?logo=react)](https://react.dev/)
@@ -6,7 +6,7 @@
 [![Prisma](https://img.shields.io/badge/Prisma-5.22-2D3748?logo=prisma)](https://www.prisma.io/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)](https://www.typescriptlang.org/)
 
-Confetti (also referred to as *Confette*) is an **AI-assisted event planning and vendor marketplace** platform built specifically for the Nigerian market. It is a full-stack web application combining a clean React 19 frontend with a robust Next.js backend, built using strict TypeScript, Tailwind CSS v4, and Prisma.
+Confette (also referred to as *Confette*) is an **AI-assisted event planning and vendor marketplace** platform built specifically for the Nigerian market. It is a full-stack web application combining a clean React 19 frontend with a robust Next.js backend, built using strict TypeScript, Tailwind CSS v4, and Prisma.
 
 ---
 
@@ -68,7 +68,7 @@ confetti-frontend/
 
 ## 🎨 Design System & Styling
 
-Confetti implements a custom premium design system defined via CSS variables.
+Confette implements a custom premium design system defined via CSS variables.
 
 ### Key CSS Tokens (`src/shared/styles/tokens.css`)
 - **Brand Palette**:

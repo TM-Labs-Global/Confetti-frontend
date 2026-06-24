@@ -1,10 +1,10 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Sparkles, ClipboardList, Store, PartyPopper } from 'lucide-react'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { EventTile } from '@/features/shared-ui'
 import { EVENT_META } from '../../data/mockCategories'
-import { fmtNaira, fmtDate } from '@/shared/utils/format'
 import { Plan } from '@/features/organiser/types/plan.types'
 
 const STATUS_META = {
@@ -23,11 +23,34 @@ interface StatCardProps {
   accent?: string
 }
 
+// Animate a number from 0 to its target with an ease-out curve on mount.
+function CountUp({ value }: { value: number }) {
+  const [n, setN] = useState(0)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setN(value); return
+    }
+    let raf = 0
+    const start = performance.now()
+    const duration = 650
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / duration)
+      setN(Math.round(value * (1 - Math.pow(1 - p, 3))))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value])
+  return <>{n}</>
+}
+
 function StatCard({ label, value, sub, accent }: StatCardProps) {
   return (
-    <div className="bg-white border border-border rounded-xl p-5">
+    <div className="bg-white border border-border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm hover:border-primary/30">
       <p className="text-[12px] text-ink-3 font-medium mb-1">{label}</p>
-      <p className={`font-display font-bold text-[28px] leading-none ${accent ?? 'text-ink'}`}>{value}</p>
+      <p className={`font-display font-bold text-[28px] leading-none ${accent ?? 'text-ink'}`}>
+        {typeof value === 'number' ? <CountUp value={value} /> : value}
+      </p>
       {sub && <p className="text-[12px] text-ink-3 mt-1.5">{sub}</p>}
     </div>
   )
@@ -49,6 +72,19 @@ export default function OrganizerDashboard() {
   const activePlans = plans.filter(p => ['open', 'bidding', 'in-progress'].includes(p.status as string))
   const recentPlans = [...plans].slice(0, 3)
 
+  const firstName = user?.name?.split(' ')[0] ?? 'there'
+  const hour = new Date().getHours()
+  const timeGreeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  const todayLabel = new Date().toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long' })
+  const subline =
+    plans.length === 0
+      ? "Let's plan something worth celebrating."
+      : totalBids > 0
+        ? `You've got ${totalBids} bid${totalBids !== 1 ? 's' : ''} waiting. Vendors love your events.`
+        : activePlans.length > 0
+          ? `${activePlans.length} event${activePlans.length !== 1 ? 's' : ''} in motion. Let's make ${activePlans.length !== 1 ? 'them' : 'it'} unforgettable.`
+          : 'Your celebrations are taking shape.'
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -59,32 +95,33 @@ export default function OrganizerDashboard() {
 
   return (
     <div>
-      <div className="mb-7">
-        <p className="text-[12px] font-mono uppercase tracking-[0.08em] text-ink-3 mb-1">
-          Welcome back
-        </p>
-        <h1 className="font-display font-bold text-[28px] text-ink leading-tight">
-          {user?.name?.split(' ')[0] ?? 'Hey'}'s dashboard
+      <div className="mb-7 animate-rise" style={{ animationDelay: '0ms' }}>
+        <p className="text-[12px] font-mono uppercase tracking-[0.08em] text-ink-3 mb-1">{todayLabel}</p>
+        <h1 className="font-display font-bold text-[22px] sm:text-[28px] text-ink leading-tight">
+          {timeGreeting}, {firstName} <span className="animate-wave inline-block">👋</span>
         </h1>
+        <p className="text-ink-2 text-[14px] mt-1.5">{subline}</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total plans"    value={plans.length}     sub={`${activePlans.length} active`} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-rise" style={{ animationDelay: '80ms' }}>
+        <StatCard label="Total events"   value={plans.length}     sub={`${activePlans.length} active`} />
         <StatCard label="Total bids in"  value={totalBids}        accent="text-primary" />
         <StatCard label="Open for bids"  value={plans.filter(p => (p.status as string) === 'open').length} />
         <StatCard label="In progress"    value={plans.filter(p => (p.status as string) === 'in-progress').length} />
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 animate-rise" style={{ animationDelay: '160ms' }}>
         {[
-          { label: 'Plan an Event', desc: 'Create a new event plan', href: '/organiser/create-plan', emoji: '✨' },
-          { label: 'My Plans',      desc: 'View and manage your plans', href: '/organiser/plans',       emoji: '📋' },
-          { label: 'Find Vendors',  desc: 'Browse vendor marketplace', href: '/organiser/marketplace',  emoji: '🛒' },
-        ].map(({ label, desc, href, emoji }) => (
+          { label: 'Create an Event', desc: 'Start a new event', href: '/organiser/create-plan', Icon: Sparkles,      tint: 'bg-gradient-to-br from-primary/30 to-primary/5 text-primary ring-1 ring-inset ring-primary/20' },
+          { label: 'My Events',     desc: 'View and manage your events', href: '/organiser/plans',     Icon: ClipboardList, tint: 'bg-gradient-to-br from-warning/35 to-warning/5 text-[#92660A] ring-1 ring-inset ring-warning/25' },
+          { label: 'Find Vendors',  desc: 'Browse vendor marketplace', href: '/organiser/marketplace',  Icon: Store,        tint: 'bg-gradient-to-br from-success/30 to-success/5 text-[#166534] ring-1 ring-inset ring-success/20' },
+        ].map(({ label, desc, href, Icon, tint }) => (
           <Link key={href} href={href}
-            className="bg-white border border-border rounded-xl p-5 flex items-start gap-3 hover:border-primary/40 hover:shadow-sm transition-all group"
+            className="bg-white border border-border rounded-xl p-5 flex items-start gap-3 hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
           >
-            <span className="text-2xl">{emoji}</span>
+            <span className={`flex h-11 w-11 items-center justify-center rounded-xl shrink-0 shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:-rotate-6 group-hover:shadow-md ${tint}`}>
+              <Icon size={19} />
+            </span>
             <div>
               <p className="font-medium text-ink text-[14px] group-hover:text-primary transition-colors">{label}</p>
               <p className="text-ink-3 text-[12px] mt-0.5">{desc}</p>
@@ -94,20 +131,22 @@ export default function OrganizerDashboard() {
       </div>
 
       {plans.length === 0 ? (
-        <div className="bg-white border border-border rounded-xl p-10 text-center">
-          <p className="text-[22px] mb-3">🎉</p>
-          <p className="font-display font-bold text-[18px] text-ink mb-1">No plans yet</p>
-          <p className="text-ink-3 text-[14px] mb-5">Create your first event plan to start receiving bids from vendors.</p>
+        <div className="bg-white border border-border rounded-xl p-10 text-center animate-rise" style={{ animationDelay: '240ms' }}>
+          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <PartyPopper size={26} />
+          </span>
+          <p className="font-display font-bold text-[18px] text-ink mb-1">No events yet</p>
+          <p className="text-ink-3 text-[14px] mb-5">Create your first event to start receiving bids from vendors.</p>
           <Link href="/organiser/create-plan"
             className="inline-flex px-6 py-2.5 bg-primary text-dark text-[13px] font-semibold rounded-lg hover:bg-primary/90 transition-colors"
           >
-            Plan an Event
+            Create an Event
           </Link>
         </div>
       ) : (
-        <div className="bg-white border border-border rounded-xl overflow-hidden">
+        <div className="bg-white border border-border rounded-xl overflow-hidden animate-rise" style={{ animationDelay: '240ms' }}>
           <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-            <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-ink-3">Recent plans</p>
+            <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-ink-3">Recent events</p>
             <Link href="/organiser/plans" className="text-[12px] text-primary hover:underline">View all</Link>
           </div>
           <div className="divide-y divide-border">

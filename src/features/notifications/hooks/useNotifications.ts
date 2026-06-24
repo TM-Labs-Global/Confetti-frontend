@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import type { AppNotification } from '../types/notification.types'
-import { fetchNotifications, markAllRead } from '../services/notificationService'
+import { fetchNotifications, markAllRead, markOneRead } from '../services/notificationService'
 
 export function useNotifications() {
   const [notifs, setNotifs] = useState<AppNotification[]>([])
@@ -17,5 +17,10 @@ export function useNotifications() {
     await markAllRead()
   }
 
-  return { notifs, unread, markAll }
+  async function markOne(id: string): Promise<void> {
+    setNotifs(prev => prev.map(n => (n.id === id ? { ...n, isRead: true } : n)))
+    await markOneRead(id)
+  }
+
+  return { notifs, unread, markAll, markOne }
 }

@@ -1,21 +1,7 @@
-'use client'
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/features/auth/context/AuthContext'
+import LandingPage from '@/views/landing/LandingPage'
 
-const DASHBOARDS = {
-  organiser: '/organiser/dashboard',
-  vendor:    '/vendor/dashboard',
-  admin:     '/admin/dashboard',
-}
-
+// Public marketing homepage. Logged-in users still see it; the nav offers a
+// "Go to dashboard" shortcut via the auth context.
 export default function RootPage() {
-  const { user } = useAuth()
-  const router   = useRouter()
-
-  useEffect(() => {
-    router.replace(user ? (DASHBOARDS[user.role] ?? '/login') : '/login')
-  }, [user, router])
-
-  return null
+  return <LandingPage />
 }

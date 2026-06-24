@@ -1,10 +1,14 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { EventTile } from '@/features/shared-ui'
+import { Pencil, BadgeCheck, Phone } from 'lucide-react'
+import { EventTile, ConfettiBurst } from '@/features/shared-ui'
+import { useAuth } from '@/features/auth/context/AuthContext'
+import { VendorProfileModal } from '@/features/vendor/components/VendorProfileModal'
 import { EVENT_META } from '../../data/mockCategories'
-import { fmtNaira, fmtDate } from '@/shared/utils/format'
+import { fmtNaira, fmtDate, fmtDateRange } from '@/shared/utils/format'
+import { budgetColor } from '@/shared/utils/palette'
 import { Plan } from '@/features/organiser/types/plan.types'
 import { VendorBid } from '@/features/vendor/types/vendor.types'
 
@@ -12,6 +16,7 @@ interface OrganizerBid extends VendorBid {
   vendor?: {
     id: string
     name: string
+    vendorProfile?: { status: string; businessName: string; phone?: string | null } | null
   }
 }
 
@@ -36,10 +41,18 @@ const BID_STATUS_META = {
 
 export default function PlanDetailPage() {
   const { id }   = useParams()
+  const { user } = useAuth()
+  const firstName = user?.name?.split(' ')[0] ?? 'there'
+  const searchParams              = useSearchParams()
   const [plan, setPlan]         = useState<OrganizerPlanDetail | null>(null)
   const [loading, setLoading]   = useState(true)
   const [copied, setCopied]     = useState(false)
   const [accepting, setAccepting] = useState<string | null>(null)
+  const [celebrate, setCelebrate] = useState(searchParams.get('published') === 'true')
+  const [viewVendor, setViewVendor] = useState<string | null>(null)
+  const [decliningId, setDecliningId] = useState<string | null>(null)
+  const [declineReason, setDeclineReason] = useState('')
+  const [acceptError, setAcceptError] = useState<string | null>(null)
 
   function loadPlan() {
     return fetch(`/api/plans/${id}`)
@@ -54,21 +67,31 @@ export default function PlanDetailPage() {
 
   async function acceptBid(bidId: string) {
     setAccepting(bidId)
-    await fetch(`/api/bids/${bidId}`, {
+    setAcceptError(null)
+    const res = await fetch(`/api/bids/${bidId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: 'accepted' }),
     })
+    if (!res.ok) {
+      // Budget guard (or any other) rejection — surface the server's message.
+      const data = await res.json().catch(() => null)
+      setAcceptError(data?.error || data?.message || 'Could not accept this bid. Please try again.')
+      setAccepting(null)
+      return
+    }
     await loadPlan()
     setAccepting(null)
   }
 
-  async function rejectBid(bidId: string) {
+  async function rejectBid(bidId: string, reason: string) {
     await fetch(`/api/bids/${bidId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'rejected' }),
+      body: JSON.stringify({ status: 'rejected', reason: reason.trim() || undefined }),
     })
+    setDecliningId(null)
+    setDeclineReason('')
     await loadPlan()
   }
 
@@ -78,7 +101,7 @@ export default function PlanDetailPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: 'open' }),
     })
-    if (res.ok) await loadPlan()
+    if (res.ok) { await loadPlan(); setCelebrate(true) }
   }
 
   if (loading) {
@@ -92,8 +115,8 @@ export default function PlanDetailPage() {
   if (!plan) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <p className="font-display font-bold text-[20px] text-ink">Plan not found</p>
-        <Link href="/organiser/plans" className="text-[13px] text-primary hover:underline">Back to My Plans</Link>
+        <p className="font-display font-bold text-[20px] text-ink">Event not found</p>
+        <Link href="/organiser/plans" className="text-[13px] text-primary hover:underline">Back to My Events</Link>
       </div>
     )
   }
@@ -104,12 +127,17 @@ export default function PlanDetailPage() {
   const st         = STATUS_META[plan.status as keyof typeof STATUS_META] ?? STATUS_META.draft
   const planBids   = plan.bids ?? []
   const totalAlloc = (plan.categories ?? []).reduce((s, c) => s + c.allocation, 0)
-  const dateLabel  = plan.dateFlexible ? 'Date not fixed yet' : (plan.date ? fmtDate(plan.date) : 'No date')
+  const acceptedTotal = planBids.filter(b => b.status === 'accepted').reduce((s, b) => s + b.amount, 0)
+  const hasAccepted   = acceptedTotal > 0
+  const remaining     = plan.totalBudget - acceptedTotal
+  const dateLabel  = fmtDateRange(plan.startDate, plan.endDate, plan.dateFlexible)
   const sortedCats = [...(plan.categories ?? [])].sort((a, b) => b.allocation - a.allocation)
+  const canEdit    = plan.status === 'draft' || plan.status === 'open' || plan.status === 'bidding'
 
-  function copyShareCode() {
+  function copyShareLink() {
     if (plan?.shareCode) {
-      navigator.clipboard?.writeText(plan.shareCode)
+      const link = `${window.location.origin}/p/${plan.shareCode}`
+      navigator.clipboard?.writeText(link)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
@@ -117,11 +145,35 @@ export default function PlanDetailPage() {
 
   return (
     <div className="max-w-[860px] mx-auto">
+      {celebrate && <ConfettiBurst variant="center" />}
+      {celebrate && (
+        <div className="bg-success/10 border border-success/30 rounded-xl px-5 py-3.5 flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🎉</span>
+            <div>
+              <p className="font-medium text-ink text-[14px]">Your event is live!</p>
+              <p className="text-ink-3 text-[12px]">Vendors can now browse it and submit bids.</p>
+            </div>
+          </div>
+          <button onClick={() => setCelebrate(false)} className="text-ink-3 hover:text-ink text-[18px] leading-none">×</button>
+        </div>
+      )}
+
       <div className="flex items-center gap-2 text-[13px] text-ink-3 mb-6">
-        <Link href="/organiser/plans" className="hover:text-ink transition-colors">My Plans</Link>
+        <Link href="/organiser/plans" className="hover:text-ink transition-colors">My Events</Link>
         <span>/</span>
         <span className="text-ink truncate">{plan.name}</span>
       </div>
+
+      {plan.status === 'in-progress' && (
+        <div className="bg-success/10 border border-success/30 rounded-xl px-5 py-4 flex items-center gap-3 mb-5">
+          <span className="text-2xl">🎊</span>
+          <div>
+            <p className="font-medium text-ink text-[14px]">Your vendors are all set, {firstName}!</p>
+            <p className="text-ink-3 text-[12px]">Every service has a confirmed vendor. Relax and enjoy your event.</p>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white border border-border rounded-xl p-6 mb-4">
         <div className="flex items-start gap-4">
@@ -140,40 +192,51 @@ export default function PlanDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mt-5 pt-5 border-t border-border">
+        <div className="flex flex-wrap items-center gap-2 mt-5 pt-5 border-t border-border">
           {plan.status === 'draft' && (
             <button onClick={publishPlan}
               className="px-5 py-2.5 bg-primary text-dark text-[13px] font-semibold rounded-lg hover:bg-primary/90 transition-colors">
-              Find Me Vendors →
+              Let the Bids Roll In →
             </button>
           )}
-          <button onClick={copyShareCode}
-            className="flex items-center gap-2 px-4 py-2.5 border border-border text-ink-2 text-[13px] font-medium rounded-lg hover:bg-canvas transition-colors">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-            </svg>
-            {copied ? 'Copied!' : `Share · ${plan.shareCode}`}
-          </button>
+          {canEdit && (
+            <Link href={`/organiser/create-plan?edit=${plan.id}`}
+              className="flex items-center gap-2 px-4 py-2.5 border border-border text-ink-2 text-[13px] font-medium rounded-lg hover:bg-canvas transition-colors">
+              <Pencil size={14} />
+              Edit plan
+            </Link>
+          )}
+          {plan.status !== 'draft' && (
+            <button onClick={copyShareLink}
+              className="flex items-center gap-2 px-4 py-2.5 border border-border text-ink-2 text-[13px] font-medium rounded-lg hover:bg-canvas transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              {copied ? 'Link copied!' : 'Copy share link'}
+              <span className="font-mono text-[11px] text-ink-3 pl-1.5 ml-1.5 border-l border-border">{plan.shareCode}</span>
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-4">
-        <div className="col-span-3 bg-white border border-border rounded-xl p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3 bg-white border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-ink-3">Budget breakdown</p>
             <p className="text-[12px] text-ink-3 tabular-nums">{fmtNaira(totalAlloc)} allocated</p>
           </div>
           <div className="space-y-3.5">
-            {sortedCats.map(cat => {
+            {sortedCats.map((cat, i) => {
               const pct      = plan.totalBudget > 0 ? (cat.allocation / plan.totalBudget) * 100 : 0
+              const barColor = budgetColor(i)
               const catBids  = planBids.filter(b => b.planCategoryId === cat.id)
               const accepted = catBids.find(b => b.status === 'accepted')
+              const diff     = accepted ? cat.allocation - accepted.amount : 0
               return (
                 <div key={cat.id}>
                   <div className="flex items-center justify-between text-[13px] mb-1">
                     <div className="flex items-center gap-2">
                       <span className="text-ink-2">{cat.name}</span>
-                      {accepted && <span className="text-[10px] px-1.5 py-0.5 rounded bg-success/15 text-[#166534]">Vendor selected</span>}
                       {!accepted && catBids.length > 0 && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">{catBids.length} bid{catBids.length !== 1 ? 's' : ''}</span>
                       )}
@@ -181,32 +244,73 @@ export default function PlanDetailPage() {
                     <span className="font-medium text-ink tabular-nums">{fmtNaira(cat.allocation)}</span>
                   </div>
                   <div className="h-1.5 bg-canvas rounded-full border border-border overflow-hidden">
-                    <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: barColor }} />
                   </div>
+                  {accepted && (
+                    <p className="text-[11px] text-ink-3 mt-1 tabular-nums">
+                      Awarded at {fmtNaira(accepted.amount)} ·{' '}
+                      {diff >= 0
+                        ? <span className="text-[#166534]">{fmtNaira(diff)} under</span>
+                        : <span className="text-red-600">{fmtNaira(-diff)} over</span>}
+                    </p>
+                  )}
                 </div>
               )
             })}
           </div>
+
+          {hasAccepted && (
+            <div className="mt-5 pt-4 border-t border-border space-y-1.5">
+              <div className="flex items-center justify-between text-[12px]">
+                <span className="text-ink-3">Committed to vendors</span>
+                <span className="font-medium text-ink tabular-nums">{fmtNaira(acceptedTotal)}</span>
+              </div>
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="font-medium text-ink">Remaining budget</span>
+                <span className={`font-semibold tabular-nums ${remaining >= 0 ? 'text-[#166534]' : 'text-red-600'}`}>
+                  {remaining >= 0 ? fmtNaira(remaining) : `−${fmtNaira(-remaining)}`}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4">
           <div className="bg-white border border-border rounded-xl p-5">
             <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-ink-3 mb-3">Bids</p>
+            {acceptError && (
+              <div className="mb-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 shrink-0 mt-0.5">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>
+                </svg>
+                <p className="text-[12px] text-red-600 leading-snug">{acceptError}</p>
+              </div>
+            )}
             {planBids.length === 0 ? (
               <p className="text-ink-3 text-[13px]">
                 {plan.status === 'draft'
-                  ? 'Publish your plan to start receiving bids.'
+                  ? 'Publish your event to start receiving bids.'
                   : 'No bids yet. Vendors will start reaching out soon.'}
               </p>
             ) : (
               <div className="space-y-3">
                 {planBids.map(bid => {
                   const bs = BID_STATUS_META[bid.status] ?? BID_STATUS_META.pending
+                  const bidCat = (plan.categories ?? []).find(c => c.id === bid.planCategoryId)
+                  const overCat = bidCat ? bid.amount - bidCat.allocation : 0
                   return (
                     <div key={bid.id} className="text-[13px]">
                       <div className="flex items-center justify-between mb-1">
                         <div className="min-w-0">
-                          <p className="font-medium text-ink truncate">{bid.vendor?.name}</p>
+                          <button
+                            onClick={() => bid.vendor?.id && setViewVendor(bid.vendor.id)}
+                            className="flex items-center gap-1 font-medium text-ink hover:text-primary transition-colors truncate"
+                          >
+                            <span className="truncate">{bid.vendor?.vendorProfile?.businessName || bid.vendor?.name}</span>
+                            {bid.vendor?.vendorProfile?.status === 'verified' && (
+                              <BadgeCheck size={13} className="text-success shrink-0" />
+                            )}
+                          </button>
                           <p className="text-ink-3 text-[11px]">{bid.planCategory?.name}</p>
                         </div>
                         <div className="text-right shrink-0 ml-3">
@@ -214,17 +318,61 @@ export default function PlanDetailPage() {
                           <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${bs.style}`}>{bs.label}</span>
                         </div>
                       </div>
-                      {bid.status === 'pending' && (
+                      {bid.pitch && <p className="text-ink-2 text-[12px] leading-relaxed mb-1.5 line-clamp-3">{bid.pitch}</p>}
+                      {bid.isCounterBid && bid.counterReason && (
+                        <p className="text-[12px] text-[#92660A] leading-relaxed mb-1.5">
+                          <span className="text-ink-3">Why above budget: </span>{bid.counterReason}
+                        </p>
+                      )}
+                      {decliningId === bid.id ? (
+                        <div className="mt-1.5 space-y-1.5">
+                          <textarea value={declineReason} onChange={e => setDeclineReason(e.target.value)}
+                            placeholder="Reason for declining (the vendor will see this)…" rows={2}
+                            className="w-full px-2.5 py-1.5 border border-border rounded-lg text-[12px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors resize-none" />
+                          <div className="flex gap-2">
+                            <button onClick={() => rejectBid(bid.id, declineReason)}
+                              className="flex-1 py-1.5 bg-red-50 text-red-600 text-[11px] font-medium rounded-lg hover:bg-red-100 transition-colors">
+                              {bid.status === 'accepted' ? 'Withdraw & notify vendor' : 'Send decline'}
+                            </button>
+                            <button onClick={() => { setDecliningId(null); setDeclineReason('') }}
+                              className="px-3 py-1.5 border border-border text-ink-2 text-[11px] font-medium rounded-lg hover:bg-canvas transition-colors">
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : bid.status === 'pending' ? (
+                        <>
+                        {overCat > 0 && (
+                          <p className="mb-1.5 flex items-start gap-1.5 text-[11px] text-[#92660A]">
+                            <span aria-hidden>⚠️</span>
+                            <span>This bid is {fmtNaira(overCat)} above the {fmtNaira(bidCat!.allocation)} you set for {bidCat!.name}.</span>
+                          </p>
+                        )}
                         <div className="flex gap-2 mt-1.5">
                           <button onClick={() => acceptBid(bid.id)} disabled={accepting === bid.id}
                             className="flex-1 py-1.5 bg-success/10 text-[#166534] text-[11px] font-medium rounded-lg hover:bg-success/20 transition-colors disabled:opacity-50">
                             Accept
                           </button>
-                          <button onClick={() => rejectBid(bid.id)}
+                          <button onClick={() => { setDecliningId(bid.id); setDeclineReason('') }}
                             className="flex-1 py-1.5 bg-red-50 text-red-600 text-[11px] font-medium rounded-lg hover:bg-red-100 transition-colors">
                             Decline
                           </button>
                         </div>
+                        </>
+                      ) : null}
+                      {bid.status === 'accepted' && decliningId !== bid.id && (
+                        <>
+                          {bid.vendor?.vendorProfile?.phone && (
+                            <a href={`tel:${bid.vendor.vendorProfile.phone.replace(/\s/g, '')}`}
+                              className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-success/10 px-2.5 py-1.5 text-[12px] font-medium text-[#166534] hover:bg-success/20 transition-colors">
+                              <Phone size={12} /> {bid.vendor.vendorProfile.phone}
+                            </a>
+                          )}
+                          <button type="button" onClick={() => { setDecliningId(bid.id); setDeclineReason('') }}
+                            className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[11px] font-medium text-ink-2 hover:border-red-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                            <Pencil size={11} /> Change decision
+                          </button>
+                        </>
                       )}
                     </div>
                   )
@@ -250,6 +398,8 @@ export default function PlanDetailPage() {
           </div>
         </div>
       </div>
+
+      {viewVendor && <VendorProfileModal userId={viewVendor} onClose={() => setViewVendor(null)} />}
     </div>
   )
 }

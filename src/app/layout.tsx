@@ -24,8 +24,8 @@ const dmMono = DM_Mono({
 })
 
 export const metadata = {
-  title: 'Confetti — Event Planning & Vendor Marketplace',
-  description: 'Plan your event and connect with verified vendors across Nigeria.',
+  title: 'Confette · Event Planning & Vendor Marketplace',
+  description: 'Create your event and connect with verified vendors across Nigeria.',
   icons: {
     icon: '/favicon.png',
     shortcut: '/favicon.png',
@@ -36,8 +36,11 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sora.variable} ${dmSans.variable} ${dmMono.variable}`}>
-      <body>
+    // suppressHydrationWarning: browser extensions (Grammarly, dark-mode tools,
+    // wallets, etc.) commonly inject attributes onto <html>/<body> before React
+    // hydrates, which otherwise trips a hydration attribute-mismatch warning.
+    <html lang="en" suppressHydrationWarning className={`${sora.variable} ${dmSans.variable} ${dmMono.variable}`}>
+      <body suppressHydrationWarning>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

@@ -1,14 +1,49 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Bell } from 'lucide-react'
 import { useNotifications } from '../hooks/useNotifications'
+import { markOneRead } from '../services/notificationService'
 import { timeAgo } from '@/shared/utils/format'
 
 const TYPE_LABELS: Record<string, string> = {
-  bid_received: 'Bid received',
-  bid_accepted: 'Bid accepted',
-  bid_updated:  'Bid updated',
-  new_plan:     'New plan',
+  bid_received:     'Bid received',
+  bid_accepted:     'Bid accepted',
+  bid_rejected:     'Bid declined',
+  bid_updated:      'Bid updated',
+  new_plan:         'New event',
+  plan_flagged:     'Event flagged',
+  plan_restored:    'Event restored',
+  plan_updated:     'Event updated',
+  vendor_verified:  'Profile verified',
+  vendor_rejected:  'Profile update needed',
+  vendor_suspended: 'Account suspended',
+  vendor_pending:   'Profile under review',
+  vendor_review:    'Vendor awaiting review',
+}
+
+// Default route per notification type when the backend hasn't attached an explicit link.
+const TYPE_ROUTES: Record<string, string> = {
+  bid_received:     '/organiser/plans',
+  bid_accepted:     '/vendor/bids',
+  bid_rejected:     '/vendor/bids',
+  bid_updated:      '/organiser/plans',
+  new_plan:         '/vendor/marketplace',
+  plan_flagged:     '/organiser/plans',
+  plan_restored:    '/organiser/plans',
+  plan_updated:     '/vendor/bids',
+  vendor_verified:  '/vendor/profile',
+  vendor_rejected:  '/vendor/profile',
+  vendor_suspended: '/vendor/profile',
+  vendor_pending:   '/vendor/profile',
+  vendor_review:    '/admin/vendors',
+}
+
+function routeFor(n: any): string | null {
+  if (n.link) return n.link
+  if (n.planId && (n.type === 'bid_received' || n.type === 'bid_updated')) return `/organiser/plans/${n.planId}`
+  if (n.planId && n.type === 'new_plan') return `/vendor/marketplace/${n.planId}`
+  return TYPE_ROUTES[n.type] ?? null
 }
 
 interface NotificationBellProps {
@@ -18,6 +53,7 @@ interface NotificationBellProps {
 
 export default function NotificationBell({ dark = false, notifications: propNotifications }: NotificationBellProps) {
   const hookData = useNotifications()
+  const router = useRouter()
   const [localNotifs, setLocalNotifs] = useState<any[] | null>(null)
   const [open, setOpen] = useState(false)
 
@@ -32,6 +68,22 @@ export default function NotificationBell({ dark = false, notifications: propNoti
     } else {
       hookData.markAll()
     }
+  }
+
+  const handleClick = (n: any) => {
+    // Mark this one read…
+    if (!n.isRead) {
+      if (propNotifications) {
+        setLocalNotifs(notifs.map(x => (x.id === n.id ? { ...x, isRead: true } : x)))
+        markOneRead(n.id)
+      } else {
+        hookData.markOne(n.id)
+      }
+    }
+    // …then open the related page.
+    const dest = routeFor(n)
+    setOpen(false)
+    if (dest) router.push(dest)
   }
 
   const btn   = dark
@@ -49,7 +101,7 @@ export default function NotificationBell({ dark = false, notifications: propNoti
       >
         <Bell size={18} />
         {unread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-red-500 text-[#fff] text-[9px] font-bold rounded-full flex items-center justify-center px-1">
             {unread > 9 ? '9+' : unread}
           </span>
         )}
@@ -79,21 +131,23 @@ export default function NotificationBell({ dark = false, notifications: propNoti
               {notifs.length === 0 ? (
                 <p className="text-ink-3 text-[13px] text-center py-10">No notifications yet</p>
               ) : notifs.map(n => (
-                <div
+                <button
                   key={n.id}
-                  className={`flex items-start gap-3 px-4 py-3.5 transition-colors ${
-                    !n.isRead ? 'bg-primary/[0.03]' : 'hover:bg-canvas'
+                  type="button"
+                  onClick={() => handleClick(n)}
+                  className={`w-full text-left flex items-start gap-3 px-4 py-3.5 transition-colors ${
+                    !n.isRead ? 'bg-primary/[0.03] hover:bg-primary/[0.07]' : 'hover:bg-canvas'
                   }`}
                 >
                   <div className={`w-1.5 h-1.5 rounded-full mt-[7px] shrink-0 ${!n.isRead ? 'bg-primary' : 'bg-transparent'}`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-mono uppercase tracking-[0.06em] text-ink-3 mb-0.5">
+                    <p className="text-[12px] font-medium tracking-[0.01em] text-ink-3 mb-0.5">
                       {TYPE_LABELS[n.type] ?? n.type}
                     </p>
                     <p className="text-[13px] text-ink leading-snug">{n.message}</p>
                     <p className="text-[11px] text-ink-3 mt-1">{timeAgo(n.createdAt)}</p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>

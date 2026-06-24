@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { EVENT_META } from '../../data/mockCategories'
-import { fmtNaira, fmtDate, timeAgo } from '@/shared/utils/format'
+import { fmtNaira, fmtDateRange, timeAgo } from '@/shared/utils/format'
+import { budgetColor } from '@/shared/utils/palette'
 import { EventTile } from '@/features/shared-ui'
 import { Plan } from '@/features/organiser/types/plan.types'
 import { VendorBid } from '@/features/vendor/types/vendor.types'
@@ -75,8 +76,8 @@ export default function AdminPlanDetailPage() {
   if (!plan) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <p className="font-display font-bold text-[20px] text-white">Plan not found</p>
-        <Link href="/admin/plans" className="text-[13px] text-primary hover:underline">Back to All Plans</Link>
+        <p className="font-display font-bold text-[20px] text-white">Event not found</p>
+        <Link href="/admin/plans" className="text-[13px] text-primary hover:underline">Back to All Events</Link>
       </div>
     )
   }
@@ -86,19 +87,19 @@ export default function AdminPlanDetailPage() {
     : { emoji: '🎉', bg: '#1e293b', color: '#00C4CC' }
   const st         = STATUS_META[plan.status as keyof typeof STATUS_META] ?? STATUS_META.draft
   const bids       = plan.bids ?? []
-  const dateLabel  = plan.dateFlexible ? 'Date not fixed yet' : (plan.date ? fmtDate(plan.date) : 'No date')
+  const dateLabel  = fmtDateRange(plan.startDate, plan.endDate, plan.dateFlexible)
   const sortedCats = [...(plan.categories ?? [])].sort((a, b) => b.allocation - a.allocation)
 
   return (
     <div className="max-w-[900px] mx-auto">
       <div className="flex items-center gap-2 text-[13px] text-dark-muted mb-6">
-        <Link href="/admin/plans" className="hover:text-white transition-colors">All Plans</Link>
+        <Link href="/admin/plans" className="hover:text-white transition-colors">All Events</Link>
         <span>/</span>
         <span className="text-white truncate">{plan.name}</span>
       </div>
 
       <div className="bg-dark-surface border border-dark-border rounded-xl p-6 mb-4">
-        <div className="flex items-start gap-4">
+        <div className="flex flex-wrap items-start gap-4">
           <EventTile type={plan.eventTypeId || ''} bg={meta.bg} color={meta.color} size="lg" />
           <div className="flex-1 min-w-0">
             <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-dark-muted mb-0.5">{plan.eventType?.name}</p>
@@ -117,12 +118,12 @@ export default function AdminPlanDetailPage() {
               <svg width="13" height="13" viewBox="0 0 24 24" fill={flagged ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>
               </svg>
-              {flagged ? 'Flagged' : 'Flag Plan'}
+              {flagged ? 'Unflag Event' : 'Flag Event'}
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-6 mt-5 pt-5 border-t border-dark-border">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-5 pt-5 border-t border-dark-border">
           <div>
             <p className="text-[11px] text-dark-muted mb-0.5">Total Budget</p>
             <p className="font-display font-bold text-[22px] text-white">{fmtNaira(plan.totalBudget)}</p>
@@ -138,11 +139,11 @@ export default function AdminPlanDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-4">
-        <div className="col-span-3 bg-dark-surface border border-dark-border rounded-xl p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3 bg-dark-surface border border-dark-border rounded-xl p-6">
           <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-dark-muted mb-4">Budget Breakdown</p>
           <div className="space-y-3.5">
-            {sortedCats.map(cat => {
+            {sortedCats.map((cat, i) => {
               const pct     = plan.totalBudget > 0 ? (cat.allocation / plan.totalBudget) * 100 : 0
               const catBids = bids.filter(b => b.planCategoryId === cat.id)
               return (
@@ -157,7 +158,7 @@ export default function AdminPlanDetailPage() {
                     <span className="font-semibold text-white tabular-nums">{fmtNaira(cat.allocation)}</span>
                   </div>
                   <div className="h-1.5 bg-dark rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: meta.color ?? '#00C4CC' }} />
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: budgetColor(i) }} />
                   </div>
                 </div>
               )
@@ -165,7 +166,7 @@ export default function AdminPlanDetailPage() {
           </div>
         </div>
 
-        <div className="col-span-2 bg-dark-surface border border-dark-border rounded-xl p-6">
+        <div className="lg:col-span-2 bg-dark-surface border border-dark-border rounded-xl p-6">
           <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-dark-muted mb-4">
             All Bids ({bids.length})
           </p>
@@ -189,7 +190,7 @@ export default function AdminPlanDetailPage() {
                       <p className="font-semibold text-white text-[13px] tabular-nums shrink-0">{fmtNaira(bid.amount)}</p>
                     </div>
                     {bid.isCounterBid && (
-                      <p className="text-[10px] text-warning mt-1.5 italic">Counter-bid — {bid.counterReason}</p>
+                      <p className="text-[10px] text-warning mt-1.5 italic">Counter-bid: {bid.counterReason}</p>
                     )}
                   </div>
                 )

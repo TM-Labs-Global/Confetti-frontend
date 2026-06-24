@@ -47,6 +47,8 @@ export default function AdminCategoriesPage() {
   const [newCatName, setNewCatName]     = useState('')
   const [newCatPct, setNewCatPct]       = useState('')
   const [addingCat, setAddingCat]       = useState(false)
+  const [addingType, setAddingType]     = useState(false)
+  const [newTypeName, setNewTypeName]   = useState('')
   const [toast, setToast]               = useState<string | null>(null)
 
   function reload() {
@@ -111,6 +113,53 @@ export default function AdminCategoriesPage() {
   const totalPct = currentType?.categories?.reduce((s, c) => s + (c.defaultPct || 0), 0) ?? 0
   const pctOk    = Math.round(totalPct) === 100
 
+  // Distinct category names across every event type, so admins can reuse an
+  // existing service name instead of retyping it.
+  const allCategoryNames = useMemo(
+    () => [...new Set(eventTypes.flatMap(t => (t.categories ?? []).map(c => c.name)))].sort(),
+    [eventTypes],
+  )
+
+  async function addEventType() {
+    const name = newTypeName.trim()
+    if (!name) return
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    const res = await fetch('/api/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'event_type', id, name }),
+    })
+    if (res.ok) {
+      setNewTypeName('')
+      setAddingType(false)
+      await reload()
+      setActiveType(id)
+      showToast(`"${name}" event type added`)
+    } else {
+      showToast('Could not add event type (it may already exist)')
+    }
+  }
+
+  // Proportionally scale the active type's category percentages to sum to 100,
+  // so an admin can fill the gap without adding a new category.
+  async function balanceTo100() {
+    const cats = currentType?.categories ?? []
+    if (!cats.length || totalPct === 0 || pctOk) return
+    const factor = 100 / totalPct
+    const scaled = cats.map(c => ({ id: c.id, pct: Math.max(0, Math.round((c.defaultPct || 0) * factor)) }))
+    const diff = 100 - scaled.reduce((s, x) => s + x.pct, 0)
+    if (scaled.length) scaled[0].pct += diff // absorb rounding on the largest (first, sorted desc)
+    await Promise.all(scaled.map(x =>
+      fetch('/api/categories', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'category', id: x.id, defaultPct: x.pct }),
+      }),
+    ))
+    await reload()
+    showToast('Balanced to 100%')
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -122,14 +171,13 @@ export default function AdminCategoriesPage() {
   return (
     <div className="max-w-[900px] mx-auto">
       <div className="mb-7">
-        <p className="text-[12px] font-mono uppercase tracking-[0.08em] text-dark-muted mb-1">Admin</p>
-        <h1 className="font-display font-bold text-[28px] text-white">Manage Categories</h1>
+        <h1 className="font-display font-bold text-[22px] sm:text-[28px] text-white">Event Types &amp; Categories</h1>
         <p className="text-dark-muted text-[14px] mt-1">
-          Pre-populated categories shown to organisers when creating plans. Changes apply to new plans only.
+          Add event types and the service categories organisers pick from when creating events. Changes apply to new events only.
         </p>
       </div>
 
-      <div className="grid grid-cols-[220px_1fr] gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
         <div className="bg-dark-surface border border-dark-border rounded-xl overflow-hidden h-fit">
           <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-dark-muted px-4 py-3 border-b border-dark-border">Event Types</p>
           {eventTypes.map(t => {
@@ -140,7 +188,7 @@ export default function AdminCategoriesPage() {
             return (
               <button key={t.id}
                 onClick={() => { setActiveType(t.id); setEditingCat(null); setAddingCat(false) }}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-dark-border last:border-0 ${isActive ? 'bg-primary/10' : 'hover:bg-white/[0.03]'}`}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors border-b border-dark-border last:border-0 ${isActive ? 'bg-primary/10' : 'hover:bg-white/[0.03]'}`}
               >
                 <EventTile type={t.id || ''} bg={meta.bg} color={meta.color} size="sm" />
                 <div className="min-w-0 flex-1">
@@ -150,6 +198,25 @@ export default function AdminCategoriesPage() {
               </button>
             )
           })}
+
+          {addingType ? (
+            <div className="p-3 border-t border-dark-border">
+              <input autoFocus type="text" value={newTypeName} onChange={e => setNewTypeName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') addEventType(); if (e.key === 'Escape') setAddingType(false) }}
+                placeholder="e.g. Housewarming"
+                className="w-full px-3 py-2 bg-dark border border-dark-border rounded-lg text-[13px] text-white placeholder:text-dark-muted focus:outline-none focus:border-primary/50 transition-colors"
+              />
+              <div className="flex gap-2 mt-2">
+                <button onClick={addEventType} className="flex-1 py-1.5 bg-primary text-dark text-[12px] font-semibold rounded-lg hover:bg-primary/90 transition-colors">Add</button>
+                <button onClick={() => { setAddingType(false); setNewTypeName('') }} className="px-3 py-1.5 border border-dark-border text-dark-muted text-[12px] rounded-lg hover:text-white transition-colors">Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => setAddingType(true)}
+              className="w-full flex items-center gap-2 px-4 py-3 text-left text-[12px] font-medium text-primary border-t border-dark-border hover:bg-primary/10 transition-colors">
+              <PlusIcon /> Add event type
+            </button>
+          )}
         </div>
 
         {currentType && (
@@ -177,7 +244,7 @@ export default function AdminCategoriesPage() {
                   </p>
                   {!pctOk && (
                     <p className="text-[10px] text-warning mt-0.5">
-                      {totalPct > 100 ? 'Over 100% — reduce some' : 'Add more to reach 100%'}
+                      {totalPct > 100 ? 'Over 100%, reduce some' : 'Add more to reach 100%'}
                     </p>
                   )}
                 </div>
@@ -243,14 +310,17 @@ export default function AdminCategoriesPage() {
                 {addingCat && (
                   <div className="px-5 py-3.5 bg-primary/5 border-t border-dark-border">
                     <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-primary mb-3">New Category</p>
-                    <div className="flex items-end gap-3">
-                      <div className="flex-1">
+                    <div className="flex flex-wrap items-end gap-3">
+                      <div className="flex-1 min-w-[180px]">
                         <label className="block text-[12px] text-dark-muted mb-1.5">Category name</label>
-                        <input autoFocus type="text" value={newCatName} onChange={e => setNewCatName(e.target.value)}
+                        <input autoFocus type="text" list="admin-category-names" value={newCatName} onChange={e => setNewCatName(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') addCategory(); if (e.key === 'Escape') setAddingCat(false) }}
-                          placeholder="e.g. Event Security"
+                          placeholder="Pick an existing service or type a new one"
                           className="w-full px-3.5 py-2.5 bg-dark border border-dark-border rounded-lg text-[13px] text-white placeholder:text-dark-muted focus:outline-none focus:border-primary/50 transition-colors"
                         />
+                        <datalist id="admin-category-names">
+                          {allCategoryNames.map(n => <option key={n} value={n} />)}
+                        </datalist>
                       </div>
                       <div className="w-24">
                         <label className="block text-[12px] text-dark-muted mb-1.5">Default %</label>
@@ -281,9 +351,17 @@ export default function AdminCategoriesPage() {
                   style={{ width: `${Math.min(totalPct, 100)}%`, background: pctOk ? '#00C4CC' : totalPct > 100 ? '#f87171' : '#FFDE59' }}
                 />
               </div>
-              <p className="text-[11px] text-dark-muted mt-2">
-                These percentages are used as Smart Split defaults when organisers create plans.
-              </p>
+              <div className="flex items-center justify-between mt-2 gap-3">
+                <p className="text-[11px] text-dark-muted">
+                  These percentages are used as Smart Split defaults when organisers create plans.
+                </p>
+                {!pctOk && totalPct > 0 && (
+                  <button onClick={balanceTo100}
+                    className="shrink-0 px-3 py-1.5 bg-primary/10 border border-primary/30 text-primary text-[12px] font-medium rounded-lg hover:bg-primary/15 transition-colors">
+                    Balance to 100%
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}

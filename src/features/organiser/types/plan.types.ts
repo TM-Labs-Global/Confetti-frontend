@@ -1,5 +1,5 @@
 /** Plan status values */
-export type PlanStatus = 'draft' | 'open' | 'bidding' | 'closed'
+export type PlanStatus = 'draft' | 'open' | 'bidding' | 'in-progress' | 'completed' | 'disputed'
 
 export interface PlanCategory {
   id: string
@@ -15,7 +15,8 @@ export interface Plan {
   eventTypeId: string
   eventType?: { id: string; name: string }
   status: PlanStatus
-  date: string | null
+  startDate: string | null
+  endDate: string | null
   dateFlexible: boolean
   state: string
   city: string
@@ -31,7 +32,8 @@ export interface Plan {
 export interface CreatePlanPayload {
   name: string
   eventTypeId: string
-  date?: string
+  startDate?: string | null
+  endDate?: string | null
   dateFlexible?: boolean
   state: string
   city?: string

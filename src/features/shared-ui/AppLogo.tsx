@@ -4,7 +4,7 @@ import confetteLogo from '@/assets/confette-logo.png'
 interface AppLogoProps {
   /** Height of the logo image in px (width auto-scales). Default: 32 */
   size?: number
-  /** When true renders the word-mark "Confetti" beside the icon. Default: true */
+  /** When true renders the word-mark "Confette" beside the icon. Default: true */
   showName?: boolean
   /** Tailwind/custom classes applied to the text label */
   nameClassName?: string
@@ -23,7 +23,7 @@ export function AppLogo({
     <div className="flex items-center gap-2">
       <Image
         src={confetteLogo}
-        alt="Confetti logo"
+        alt="Confette logo"
         height={size}
         width={size}
         className="shrink-0 block"
@@ -31,7 +31,7 @@ export function AppLogo({
       />
       {showName && (
         <span className={nameClassName} style={{ paddingBottom: '3px' }}>
-          Confetti
+          Confette
         </span>
       )}
     </div>

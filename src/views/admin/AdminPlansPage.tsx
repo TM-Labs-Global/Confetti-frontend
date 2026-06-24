@@ -21,6 +21,7 @@ const TABS = [
   { id: 'bidding',   label: 'Bidding' },
   { id: 'draft',     label: 'Draft' },
   { id: 'completed', label: 'Completed' },
+  { id: 'disputed',  label: 'Disputed' },
 ]
 
 export default function AdminPlansPage() {
@@ -28,6 +29,8 @@ export default function AdminPlansPage() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab]         = useState('all')
   const [query, setQuery]     = useState('')
+  const [eventType, setEventType] = useState('all')
+  const [location, setLocation]   = useState('all')
 
   useEffect(() => {
     fetch('/api/plans')
@@ -36,10 +39,19 @@ export default function AdminPlansPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  // Build filter option lists from the loaded events.
+  const eventTypes = Array.from(
+    new Map(plans.filter(p => p.eventTypeId).map(p => [p.eventTypeId as string, p.eventType?.name ?? p.eventTypeId])).entries(),
+  )
+  const locations = Array.from(new Set(plans.map(p => p.state).filter(Boolean))).sort()
+
   const filtered = plans.filter(p => {
     const matchTab   = tab === 'all' || (p.status as string) === tab
-    const matchQuery = !query || p.name.toLowerCase().includes(query.toLowerCase())
-    return matchTab && matchQuery
+    const haystack   = `${p.name} ${p.city ?? ''} ${p.state ?? ''} ${p.eventType?.name ?? ''}`.toLowerCase()
+    const matchQuery = !query || haystack.includes(query.toLowerCase())
+    const matchType  = eventType === 'all' || p.eventTypeId === eventType
+    const matchLoc   = location === 'all' || p.state === location
+    return matchTab && matchQuery && matchType && matchLoc
   })
 
   if (loading) {
@@ -53,20 +65,33 @@ export default function AdminPlansPage() {
   return (
     <div className="max-w-[900px] mx-auto">
       <div className="mb-7">
-        <p className="text-[12px] font-mono uppercase tracking-[0.08em] text-dark-muted mb-1">Platform</p>
-        <h1 className="font-display font-bold text-[28px] text-white">All Plans</h1>
+        <h1 className="font-display font-bold text-[22px] sm:text-[28px] text-white">All Events</h1>
       </div>
 
-      <div className="relative mb-5">
-        <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search plans…"
-          className="w-full pl-10 pr-4 py-2.5 bg-dark-surface border border-dark-border rounded-xl text-[13px] text-white placeholder:text-dark-muted focus:outline-none focus:border-primary/50 transition-colors"
-        />
+      <div className="flex flex-col sm:flex-row gap-3 mb-5">
+        <div className="relative flex-1">
+          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search events, location…"
+            className="w-full pl-10 pr-4 py-2.5 bg-dark-surface border border-dark-border rounded-xl text-[13px] text-white placeholder:text-dark-muted focus:outline-none focus:border-primary/50 transition-colors"
+          />
+        </div>
+        <select value={eventType} onChange={e => setEventType(e.target.value)}
+          className="sm:w-[170px] px-3.5 py-2.5 bg-dark-surface border border-dark-border rounded-xl text-[13px] text-white focus:outline-none focus:border-primary/50 transition-colors"
+        >
+          <option value="all">All categories</option>
+          {eventTypes.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+        </select>
+        <select value={location} onChange={e => setLocation(e.target.value)}
+          className="sm:w-[160px] px-3.5 py-2.5 bg-dark-surface border border-dark-border rounded-xl text-[13px] text-white focus:outline-none focus:border-primary/50 transition-colors"
+        >
+          <option value="all">All locations</option>
+          {locations.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
       </div>
 
-      <div className="flex gap-1 border-b border-dark-border mb-5">
+      <div className="flex flex-wrap gap-1 border-b border-dark-border mb-5">
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`px-4 py-2.5 text-[13px] font-medium -mb-px border-b-2 transition-colors ${
@@ -84,7 +109,7 @@ export default function AdminPlansPage() {
       <div className="bg-dark-surface border border-dark-border rounded-xl overflow-hidden">
         {filtered.length === 0 ? (
           <div className="py-16 text-center">
-            <p className="font-display font-semibold text-white text-[15px] mb-1">No plans found</p>
+            <p className="font-display font-semibold text-white text-[15px] mb-1">No events found</p>
             <p className="text-dark-muted text-[13px]">Try a different tab or search term.</p>
           </div>
         ) : (

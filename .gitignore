@@ -35,3 +35,8 @@ out/
 .env
 .env*.local
 
+# Backend lives in its own repo (TM-Labs-Global/Confetti-backend)
+/server/
+
+
+CLAUDE.md

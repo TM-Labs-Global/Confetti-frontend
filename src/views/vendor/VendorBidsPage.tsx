@@ -1,9 +1,9 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { EVENT_META } from '../../data/mockCategories'
-import { fmtNaira, fmtDate } from '@/shared/utils/format'
-import { EventTile } from '@/features/shared-ui'
+import { EVENT_META, EVENT_TYPES } from '../../data/mockCategories'
+import { fmtNaira } from '@/shared/utils/format'
+import { EventTile, DateRangeFilter, type DateFilter } from '@/features/shared-ui'
 import { VendorBid } from '@/features/vendor/types/vendor.types'
 
 const BID_STATUS_META = {
@@ -19,10 +19,30 @@ const TABS = [
   { id: 'rejected', label: 'Rejected' },
 ]
 
+function monthKey(dateStr: string | null | undefined): string {
+  if (!dateStr) return 'flexible'
+  const d = new Date(dateStr)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+function dayKey(dateStr: string | null | undefined): string | null {
+  if (!dateStr) return null
+  const d = new Date(dateStr)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+function monthLabel(key: string): string {
+  if (key === 'flexible') return 'Flexible date'
+  const [y, m] = key.split('-').map(Number)
+  return new Date(y, m - 1, 1).toLocaleDateString('en-NG', { month: 'short', year: 'numeric' })
+}
+
 export default function VendorBidsPage() {
   const [bids, setBids]       = useState<VendorBid[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab]         = useState('all')
+  const [search, setSearch]   = useState('')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [stateFilter, setStateFilter] = useState('all')
+  const [dateFilter, setDateFilter] = useState<DateFilter>({ kind: 'all' })
 
   useEffect(() => {
     fetch('/api/bids')
@@ -31,7 +51,29 @@ export default function VendorBidsPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const filtered = tab === 'all' ? bids : bids.filter(b => (b.status as string) === tab)
+  const states = useMemo(
+    () => [...new Set(bids.map(b => b.plan?.state).filter(Boolean) as string[])].sort(),
+    [bids],
+  )
+  const months = useMemo(() => {
+    const keys = [...new Set(bids.map(b => monthKey(b.plan?.dateFlexible ? null : b.plan?.startDate)))]
+    return keys.sort((a, b) => (a === 'flexible' ? 1 : b === 'flexible' ? -1 : a.localeCompare(b)))
+  }, [bids])
+
+  const filtered = bids.filter(b => {
+    if (tab !== 'all' && (b.status as string) !== tab) return false
+    if (search && !(b.plan?.name ?? '').toLowerCase().includes(search.toLowerCase())) return false
+    if (typeFilter !== 'all' && b.plan?.eventTypeId !== typeFilter) return false
+    if (stateFilter !== 'all' && b.plan?.state !== stateFilter) return false
+
+    const planDay = b.plan?.dateFlexible ? null : dayKey(b.plan?.startDate)
+    if (dateFilter.kind === 'flexible' && planDay !== null) return false
+    if (dateFilter.kind === 'month' && monthKey(b.plan?.dateFlexible ? null : b.plan?.startDate) !== dateFilter.key) return false
+    if (dateFilter.kind === 'range') {
+      if (!planDay || planDay < dateFilter.from || planDay > dateFilter.to) return false
+    }
+    return true
+  })
 
   if (loading) {
     return (
@@ -44,36 +86,65 @@ export default function VendorBidsPage() {
   return (
     <div>
       <div className="mb-7">
-        <p className="text-[12px] font-mono uppercase tracking-[0.08em] text-ink-3 mb-1">Vendor</p>
-        <h1 className="font-display font-bold text-[28px] text-ink">My Bids</h1>
+        <h1 className="font-display font-bold text-[22px] sm:text-[28px] text-ink">My Bids</h1>
       </div>
 
-      <div className="flex gap-1 mb-5">
+      <div className="flex flex-wrap gap-1 mb-5">
         {TABS.map(t => {
           const count = t.id === 'all' ? bids.length : bids.filter(b => (b.status as string) === t.id).length
           return (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-all ${
-                tab === t.id ? 'bg-ink text-white' : 'text-ink-3 hover:text-ink hover:bg-canvas'
+                tab === t.id ? 'bg-primary text-dark' : 'text-ink-3 hover:text-ink hover:bg-canvas'
               }`}
             >
               {t.label}
-              <span className={`ml-1.5 text-[11px] ${tab === t.id ? 'text-white/70' : 'text-ink-3'}`}>{count}</span>
+              <span className={`ml-1.5 text-[11px] ${tab === t.id ? 'text-dark/60' : 'text-ink-3'}`}>{count}</span>
             </button>
           )
         })}
       </div>
 
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        <div className="relative flex-1 min-w-[220px]">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by event…"
+            className="w-full pl-9 pr-4 py-2.5 border border-border rounded-lg text-[13px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors bg-white"
+          />
+        </div>
+        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
+          className="w-[140px] shrink-0 px-3 py-2.5 border border-border rounded-lg text-[13px] text-ink bg-white focus:outline-none focus:border-primary transition-colors"
+        >
+          <option value="all">All events</option>
+          {EVENT_TYPES.map(et => <option key={et.id} value={et.id}>{et.name}</option>)}
+        </select>
+        <select value={stateFilter} onChange={e => setStateFilter(e.target.value)}
+          className="w-[150px] shrink-0 px-3 py-2.5 border border-border rounded-lg text-[13px] text-ink bg-white focus:outline-none focus:border-primary transition-colors"
+        >
+          <option value="all">All locations</option>
+          {states.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <DateRangeFilter value={dateFilter} onChange={setDateFilter} months={months} monthLabel={monthLabel} />
+      </div>
+
       {filtered.length === 0 ? (
         <div className="bg-white border border-border rounded-xl p-12 text-center">
           <p className="text-[24px] mb-3">📋</p>
-          <p className="font-display font-bold text-[18px] text-ink mb-1">No bids yet</p>
-          <p className="text-ink-3 text-[14px] mb-5">Browse open plans and submit your first bid.</p>
-          <Link href="/vendor/marketplace"
-            className="inline-flex px-6 py-2.5 bg-warning text-dark text-[13px] font-semibold rounded-lg hover:bg-warning/90 transition-colors"
-          >
-            Browse Plans
-          </Link>
+          <p className="font-display font-bold text-[18px] text-ink mb-1">
+            {bids.length === 0 ? 'No bids yet' : 'No bids match your filters'}
+          </p>
+          <p className="text-ink-3 text-[14px] mb-5">
+            {bids.length === 0 ? 'Browse open events and submit your first bid.' : 'Try a different status, event, location, or date.'}
+          </p>
+          {bids.length === 0 && (
+            <Link href="/vendor/marketplace"
+              className="inline-flex px-6 py-2.5 bg-warning text-dark text-[13px] font-semibold rounded-lg hover:bg-warning/90 transition-colors"
+            >
+              Browse Events
+            </Link>
+          )}
         </div>
       ) : (
         <div className="bg-white border border-border rounded-xl overflow-hidden">

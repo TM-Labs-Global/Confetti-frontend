@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { EventTile } from '@/features/shared-ui'
+import { EventTile, ConfettiBurst } from '@/features/shared-ui'
 import { EVENT_META } from '../../data/mockCategories'
-import { fmtNaira, fmtDate } from '@/shared/utils/format'
+import { fmtNaira, fmtDateRange } from '@/shared/utils/format'
 import { Plan } from '@/features/organiser/types/plan.types'
 
 const STATUS_META = {
@@ -56,12 +56,13 @@ export default function PlanSummaryPage() {
 
   return (
     <div>
+      {showBanner && <ConfettiBurst variant="center" />}
       {showBanner && (
         <div className="bg-success/10 border border-success/30 rounded-xl px-5 py-3.5 flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
             <span className="text-xl">🎉</span>
             <div>
-              <p className="font-medium text-ink text-[14px]">Your plan is live!</p>
+              <p className="font-medium text-ink text-[14px]">Your event is live!</p>
               <p className="text-ink-3 text-[12px]">Vendors can now browse and submit bids.</p>
             </div>
           </div>
@@ -69,15 +70,15 @@ export default function PlanSummaryPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <p className="text-[12px] font-mono uppercase tracking-[0.08em] text-ink-3 mb-1">Organiser</p>
-          <h1 className="font-display font-bold text-[28px] text-ink">My Plans</h1>
+          <h1 className="font-display font-bold text-[22px] sm:text-[28px] text-ink">My Events</h1>
         </div>
         <Link href="/organiser/create-plan"
           className="px-5 py-2.5 bg-primary text-dark text-[13px] font-semibold rounded-lg hover:bg-primary/90 transition-colors"
         >
-          + New Plan
+          + New Event
         </Link>
       </div>
 
@@ -90,13 +91,13 @@ export default function PlanSummaryPage() {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search plans…"
+            placeholder="Search events…"
             className="w-full pl-9 pr-4 py-2.5 border border-border rounded-lg text-[13px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors bg-white"
           />
         </div>
       </div>
 
-      <div className="flex gap-1 mb-5">
+      <div className="flex flex-wrap gap-1 mb-5">
         {TABS.map(t => {
           const count = t.id === 'all' ? plans.length : plans.filter(p => (p.status as string) === t.id).length
           return (
@@ -105,12 +106,12 @@ export default function PlanSummaryPage() {
               onClick={() => setTab(t.id)}
               className={`px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-all ${
                 tab === t.id
-                  ? 'bg-ink text-white'
+                  ? 'bg-primary text-dark'
                   : 'text-ink-3 hover:text-ink hover:bg-canvas'
               }`}
             >
               {t.label}
-              <span className={`ml-1.5 text-[11px] ${tab === t.id ? 'text-white/70' : 'text-ink-3'}`}>{count}</span>
+              <span className={`ml-1.5 text-[11px] ${tab === t.id ? 'text-dark/60' : 'text-ink-3'}`}>{count}</span>
             </button>
           )
         })}
@@ -119,15 +120,15 @@ export default function PlanSummaryPage() {
       {filtered.length === 0 ? (
         <div className="bg-white border border-border rounded-xl p-12 text-center">
           <p className="text-[24px] mb-3">📭</p>
-          <p className="font-display font-bold text-[18px] text-ink mb-1">No plans found</p>
+          <p className="font-display font-bold text-[18px] text-ink mb-1">No events found</p>
           <p className="text-ink-3 text-[14px] mb-5">
-            {plans.length === 0 ? 'Create your first event plan to get started.' : 'Try a different filter or search term.'}
+            {plans.length === 0 ? 'Create your first event to get started.' : 'Try a different filter or search term.'}
           </p>
           {plans.length === 0 && (
             <Link href="/organiser/create-plan"
               className="inline-flex px-6 py-2.5 bg-primary text-dark text-[13px] font-semibold rounded-lg hover:bg-primary/90 transition-colors"
             >
-              Plan an Event
+              Create an Event
             </Link>
           )}
         </div>
@@ -139,7 +140,7 @@ export default function PlanSummaryPage() {
                 ? EVENT_META[plan.eventTypeId as keyof typeof EVENT_META]
                 : { emoji: '🎉', bg: '#F5F5F5', color: '#A3A3A3' }
               const st       = STATUS_META[plan.status as keyof typeof STATUS_META] ?? STATUS_META.draft
-              const dateLabel = plan.dateFlexible ? 'Flexible date' : (plan.date ? fmtDate(plan.date) : 'No date')
+              const dateLabel = fmtDateRange(plan.startDate, plan.endDate, plan.dateFlexible)
               return (
                 <Link key={plan.id} href={`/organiser/plans/${plan.id}`}
                   className="flex items-center gap-4 px-5 py-4 hover:bg-canvas transition-colors"

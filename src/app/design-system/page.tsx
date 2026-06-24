@@ -69,7 +69,7 @@ export default function DesignSystemPage() {
               style={{ background: 'linear-gradient(135deg, #00C4CC 0%, #39E75F 100%)' }}>
               <div className="absolute top-[9px] left-[9px] w-[10px] h-[10px] bg-warning rounded-[2px] rotate-[20deg]" />
             </div>
-            <span className="font-display font-bold text-[24px] tracking-[-0.01em] text-ink">Confetti</span>
+            <span className="font-display font-bold text-[24px] tracking-[-0.01em] text-ink">Confette</span>
           </div>
           <h1 className="font-display font-bold text-[38px] text-ink leading-tight mb-2">Design System</h1>
           <p className="text-ink-3 text-[16px]">Colours · Typography · Components</p>
@@ -112,7 +112,7 @@ export default function DesignSystemPage() {
             </div>
             <div>
               <p className="text-[11px] font-mono text-ink-3 mb-1">font-sans · DM Sans</p>
-              <p className="text-[16px] text-ink-2 leading-relaxed">Connect with trusted vendors across Nigeria. From Jollof catering to Afrobeats DJs — find everything in one place.</p>
+              <p className="text-[16px] text-ink-2 leading-relaxed">Connect with trusted vendors across Nigeria. From Jollof catering to Afrobeats DJs, find everything in one place.</p>
             </div>
             <div>
               <p className="text-[11px] font-mono text-ink-3 mb-1">font-mono · DM Mono</p>
@@ -265,10 +265,10 @@ export default function DesignSystemPage() {
               <PageHeader
                 eyebrow="Organiser"
                 title="My Plans"
-                description="4 plans · 2 open for bids"
+                description="4 events · 2 open for bids"
                 action={
                   <button className="flex items-center gap-2 px-5 py-2.5 bg-primary text-dark text-[13px] font-semibold rounded-xl hover:bg-primary/90 transition-colors">
-                    + Plan an Event
+                    + Create an Event
                   </button>
                 }
               />
@@ -283,9 +283,9 @@ export default function DesignSystemPage() {
         <Section title="EmptyState · 3 variants">
           <div className="space-y-4">
             <EmptyState
-              heading="No plans yet"
-              description="Create your first plan and start collecting bids from vendors."
-              action={{ label: 'Plan an Event', href: '/organiser/create-plan', variant: 'primary' }}
+              heading="No events yet"
+              description="Create your first event and start collecting bids from vendors."
+              action={{ label: 'Create an Event', href: '/organiser/create-plan', variant: 'primary' }}
             />
             <EmptyState
               heading="You haven't placed any bids yet"

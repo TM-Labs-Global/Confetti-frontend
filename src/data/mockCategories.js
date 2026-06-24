@@ -13,7 +13,7 @@ export const EVENT_TYPES = [
     name: 'Wedding',
     description: 'Traditional, white, or court wedding ceremonies and receptions',
     categories: [
-      { id: 'catering',     name: 'Catering & Jollof',         defaultPct: 30, description: 'Full catering — buffet, food stations, and service staff' },
+      { id: 'catering',     name: 'Catering & Jollof',         defaultPct: 30, description: 'Full catering with buffet, food stations, and service staff' },
       { id: 'venue',        name: 'Venue / Hall',               defaultPct: 20, description: 'Indoor or outdoor venue hire' },
       { id: 'decor',        name: 'Decoration & Rentals',       defaultPct: 12, description: 'Floral arrangements, draping, furniture hire, and setup' },
       { id: 'photography',  name: 'Photography',                defaultPct: 8,  description: 'Pre-wedding and event-day photography coverage' },

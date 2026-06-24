@@ -32,3 +32,19 @@ export async function me(): Promise<AuthUser | null> {
   const data = await res.json()
   return data.user as AuthUser
 }
+
+async function post(path: string, body?: unknown): Promise<void> {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error((data as { error?: string }).error ?? 'Request failed')
+}
+
+export const verifyEmail = (token: string) => post('/api/auth/verify-email', { token })
+export const resendVerification = () => post('/api/auth/resend-verification')
+export const forgotPassword = (email: string) => post('/api/auth/forgot-password', { email })
+export const resetPassword = (token: string, password: string) =>
+  post('/api/auth/reset-password', { token, password })

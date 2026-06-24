@@ -3,45 +3,37 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/features/auth/context/AuthContext'
-import { AppLogo } from '@/features/shared-ui'
-import { CalendarDays, Store, ShieldCheck } from 'lucide-react'
+import { AppLogo, PasswordInput } from '@/features/shared-ui'
 
-const DEMO = {
-  organiser: { email: 'organiser@confetti.ng', password: 'password123' },
-  vendor:    { email: 'vendor@confetti.ng',    password: 'password123' },
-  admin:     { email: 'admin@confetti.ng',     password: 'password123' },
-}
-
-const ROLE_META = {
-  organiser: { icon: CalendarDays, label: 'Event Organiser',   desc: "I'm planning an event",  color: 'text-primary' },
-  vendor:    { icon: Store,        label: 'Vendor / Supplier', desc: "I'm offering services",  color: 'text-warning' },
-  admin:     { icon: ShieldCheck,  label: 'Platform Admin',    desc: 'I manage the platform', color: 'text-success' },
-}
-
-const DASHBOARDS = {
+const DASHBOARDS: Record<string, string> = {
   organiser: '/organiser/dashboard',
-  vendor:    '/vendor/dashboard',
-  admin:     '/admin/dashboard',
+  vendor: '/vendor/dashboard',
+  admin: '/admin/dashboard',
 }
 
 export default function LoginPage() {
   const { login } = useAuth()
-  const router    = useRouter()
-  const [mode, setMode]         = useState('demo')
-  const [demoRole, setDemoRole] = useState<'organiser' | 'vendor' | 'admin'>('organiser')
-  const [email, setEmail]       = useState('')
+  const router = useRouter()
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    // Read straight from the form so browser-autofilled values are captured even
+    // if React's onChange hasn't fired yet (avoids the "click twice" issue).
+    const fd = new FormData(e.currentTarget)
+    const emailVal = ((fd.get('email') as string) ?? email).trim()
+    const passwordVal = (fd.get('password') as string) ?? password
+    if (!emailVal || !passwordVal) return setError('Email and password are required')
+    setEmail(emailVal)
+    setPassword(passwordVal)
     setError('')
     setLoading(true)
     try {
-      const creds = mode === 'demo' ? DEMO[demoRole] : { email, password }
-      const user = await login(creds)
-      router.replace(DASHBOARDS[user.role as keyof typeof DASHBOARDS] ?? '/organiser/dashboard')
+      const user = await login({ email: emailVal, password: passwordVal })
+      router.replace(DASHBOARDS[user.role] ?? '/organiser/dashboard')
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -50,107 +42,66 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center bg-canvas p-4">
       <div className="w-full max-w-[420px]">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
+        <div className="mb-8 text-center">
+          <Link href="/" className="mb-4 inline-flex justify-center" aria-label="Confette home">
             <AppLogo size={48} showName={false} />
-          </div>
-          <h1 className="font-display font-bold text-[28px] text-ink">Welcome back</h1>
-          <p className="text-ink-3 text-[14px] mt-1">Sign in to your Confetti account</p>
+          </Link>
+          <h1 className="font-display text-[28px] font-bold text-ink">Welcome back</h1>
+          <p className="mt-1 text-[14px] text-ink-3">Sign in to your Confette account</p>
         </div>
 
-        <div className="bg-white border border-border rounded-2xl p-6 shadow-sm">
-          <div className="flex gap-1 p-1 bg-canvas border border-border rounded-lg mb-5">
-            {['demo', 'email'].map(m => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`flex-1 py-2 rounded-md text-[13px] font-medium transition-all ${
-                  mode === m ? 'bg-white border border-border text-ink shadow-sm' : 'text-ink-3 hover:text-ink'
-                }`}
-              >
-                {m === 'demo' ? 'Demo login' : 'Email & password'}
-              </button>
-            ))}
+        <form onSubmit={handleSubmit} className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email" className="mb-1.5 block text-[13px] font-medium text-ink-2">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                required
+                className="w-full rounded-lg border border-border px-4 py-3 text-[14px] text-ink placeholder:text-ink-3 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10"
+              />
+            </div>
+
+            <div>
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-[13px] font-medium text-ink-2">Password</span>
+                <Link href="/forgot-password" className="text-[12px] text-primary hover:underline">Forgot?</Link>
+              </div>
+              <PasswordInput
+                label=""
+                value={password}
+                onChange={setPassword}
+                autoComplete="current-password"
+                required
+              />
+            </div>
           </div>
 
-          {mode === 'demo' && (
-            <div className="space-y-2 mb-5">
-              {Object.entries(ROLE_META).map(([role, meta]) => (
-                <button
-                  key={role}
-                  onClick={() => setDemoRole(role as 'organiser' | 'vendor' | 'admin')}
-                  className={`w-full flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all ${
-                    demoRole === role
-                      ? 'border-primary ring-2 ring-primary/20 bg-primary/[0.02]'
-                      : 'border-border hover:border-primary/40'
-                  }`}
-                >
-                  <span className={`${meta.color} shrink-0`}>
-                    <meta.icon size={22} strokeWidth={1.75} />
-                  </span>
-                  <div>
-                    <p className="font-medium text-ink text-[14px]">{meta.label}</p>
-                    <p className="text-ink-3 text-[12px]">{meta.desc}</p>
-                  </div>
-                  {demoRole === role && (
-                    <svg className="ml-auto text-primary shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
-                      <polyline points="5 8 7 10 11 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {mode === 'email' && (
-            <div className="space-y-4 mb-5">
-              <div>
-                <label className="block text-[13px] font-medium text-ink-2 mb-1.5">Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full px-4 py-3 border border-border rounded-lg text-[14px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
-                />
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[13px] font-medium text-ink-2">Password</label>
-                  <Link href="/forgot-password" className="text-[12px] text-primary hover:underline">Forgot?</Link>
-                </div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 border border-border rounded-lg text-[14px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
-                />
-              </div>
-            </div>
-          )}
-
           {error && (
-            <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-[13px]">
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-600">
               {error}
             </div>
           )}
 
           <button
-            onClick={handleSubmit}
+            type="submit"
             disabled={loading}
-            className="w-full py-3 bg-primary text-dark font-semibold text-[14px] rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-5 w-full rounded-xl bg-primary py-3 text-[14px] font-semibold text-dark transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? 'Signing in…' : mode === 'demo' ? `Continue as ${ROLE_META[demoRole].label}` : 'Sign in'}
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
-        </div>
+        </form>
 
-        <p className="text-center text-[13px] text-ink-3 mt-5">
-          Don't have an account?{' '}
-          <Link href="/signup" className="text-primary font-medium hover:underline">Sign up</Link>
+        <p className="mt-5 text-center text-[13px] text-ink-3">
+          Don&apos;t have an account?{' '}
+          <Link href="/signup" className="font-medium text-primary hover:underline">Sign up</Link>
         </p>
       </div>
     </div>

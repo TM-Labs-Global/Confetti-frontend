@@ -6,12 +6,6 @@ import { fmtNaira, fmtDate } from '@/shared/utils/format'
 import { EventTile } from '@/features/shared-ui'
 import { Plan } from '@/features/organiser/types/plan.types'
 
-interface AdminEventType {
-  id: string
-  name: string
-  categories?: any[]
-}
-
 const STATUS_META = {
   draft:        { label: 'Draft',       style: 'bg-[#F3F4F6] text-[#374151]' },
   open:         { label: 'Open',        style: 'bg-primary/10 text-primary' },
@@ -29,7 +23,7 @@ interface StatCardProps {
 
 function StatCard({ label, value, accent }: StatCardProps) {
   return (
-    <div className="bg-dark-surface border border-dark-border rounded-xl p-5">
+    <div className="bg-dark-surface border border-dark-border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-black/20">
       <p className="text-[12px] font-medium uppercase tracking-[0.07em] text-dark-muted mb-2">{label}</p>
       <p className={`font-display font-bold text-[28px] leading-none ${accent ?? 'text-white'}`}>{value}</p>
     </div>
@@ -38,16 +32,16 @@ function StatCard({ label, value, accent }: StatCardProps) {
 
 export default function AdminDashboard() {
   const [plans, setPlans]         = useState<Plan[]>([])
-  const [eventTypes, setEventTypes] = useState<AdminEventType[]>([])
+  const [vendors, setVendors]     = useState<Array<{ vendorProfile: { status: string } | null }>>([])
   const [loading, setLoading]     = useState(true)
 
   useEffect(() => {
     Promise.all([
       fetch('/api/plans').then(r => r.ok ? r.json() : { plans: [] }),
-      fetch('/api/categories').then(r => r.ok ? r.json() : { eventTypes: [] }),
-    ]).then(([plansData, catsData]) => {
+      fetch('/api/vendors').then(r => r.ok ? r.json() : { vendors: [] }),
+    ]).then(([plansData, vendorsData]) => {
       setPlans(plansData.plans ?? [])
-      setEventTypes(catsData.eventTypes ?? [])
+      setVendors(vendorsData.vendors ?? [])
     }).finally(() => setLoading(false))
   }, [])
 
@@ -59,33 +53,53 @@ export default function AdminDashboard() {
     )
   }
 
-  const openPlans    = plans.filter(p => p.status !== 'draft').length
-  const totalBids    = plans.reduce((s, p) => s + (p.bidCount ?? 0), 0)
-  const totalCats    = eventTypes.reduce((s, et) => s + (et.categories?.length ?? 0), 0)
-  const recentPlans  = [...plans].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 4)
+  const openPlans      = plans.filter(p => p.status !== 'draft').length
+  const totalBids      = plans.reduce((s, p) => s + (p.bidCount ?? 0), 0)
+  const pendingVendors = vendors.filter(v => v.vendorProfile?.status === 'pending').length
+  const flaggedPlans   = plans.filter(p => p.status === 'disputed').length
+  const recentPlans    = [...plans].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 4)
 
   return (
     <div className="max-w-[900px] mx-auto">
       <div className="mb-8">
-        <p className="text-[12px] font-mono uppercase tracking-[0.08em] text-dark-muted mb-1">Platform Overview</p>
-        <h1 className="font-display font-bold text-[28px] text-white">Admin Dashboard</h1>
+        <h1 className="font-display font-bold text-[22px] sm:text-[28px] text-white">Admin Dashboard</h1>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total Plans"  value={plans.length}       />
-        <StatCard label="Live Plans"   value={openPlans}          accent="text-primary" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard label="Total Events" value={plans.length}       />
+        <StatCard label="Live Events"  value={openPlans}          accent="text-primary" />
         <StatCard label="Total Bids"   value={totalBids}          accent="text-warning" />
-        <StatCard label="Event Types"  value={eventTypes.length}  />
+        <StatCard label="Vendors"      value={vendors.length}     />
       </div>
 
-      <div className="bg-dark-surface border border-dark-border rounded-xl overflow-hidden mb-6">
+      {/* Needs attention — the two queues an admin actually acts on. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+        <Link href="/admin/vendors"
+          className={`rounded-xl border p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 group ${pendingVendors > 0 ? 'border-warning/40 bg-warning/[0.07] hover:bg-warning/10' : 'border-dark-border bg-dark-surface hover:border-primary/40'}`}>
+          <p className="text-[12px] font-medium uppercase tracking-[0.07em] text-dark-muted mb-2">Vendors awaiting review</p>
+          <div className="flex items-end justify-between">
+            <p className={`font-display font-bold text-[28px] leading-none ${pendingVendors > 0 ? 'text-warning' : 'text-white'}`}>{pendingVendors}</p>
+            <span className="inline-flex items-center gap-1 text-[12px] text-primary">{pendingVendors > 0 ? 'Review now' : 'All clear'}{pendingVendors > 0 && <span className="transition-transform group-hover:translate-x-0.5">→</span>}</span>
+          </div>
+        </Link>
+        <Link href="/admin/plans"
+          className={`rounded-xl border p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 group ${flaggedPlans > 0 ? 'border-red-500/40 bg-red-500/[0.07] hover:bg-red-500/10' : 'border-dark-border bg-dark-surface hover:border-primary/40'}`}>
+          <p className="text-[12px] font-medium uppercase tracking-[0.07em] text-dark-muted mb-2">Flagged events</p>
+          <div className="flex items-end justify-between">
+            <p className={`font-display font-bold text-[28px] leading-none ${flaggedPlans > 0 ? 'text-red-400' : 'text-white'}`}>{flaggedPlans}</p>
+            <span className="inline-flex items-center gap-1 text-[12px] text-primary">{flaggedPlans > 0 ? 'Resolve' : 'None flagged'}{flaggedPlans > 0 && <span className="transition-transform group-hover:translate-x-0.5">→</span>}</span>
+          </div>
+        </Link>
+      </div>
+
+      <div className="bg-dark-surface border border-dark-border rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-dark-border">
-          <p className="font-display font-semibold text-[14px] text-white">Recent Plans</p>
-          <Link href="/admin/plans" className="text-[12px] text-primary hover:underline">View all</Link>
+          <p className="font-display font-semibold text-[14px] text-white">Recent Events</p>
+          <Link href="/admin/plans" className="text-[12px] text-primary hover:text-primary/70 transition-colors">View all</Link>
         </div>
         <div className="divide-y divide-dark-border">
           {recentPlans.length === 0 ? (
-            <p className="text-dark-muted text-[13px] text-center py-10">No plans yet</p>
+            <p className="text-dark-muted text-[13px] text-center py-10">No events yet</p>
           ) : recentPlans.map(plan => {
             const meta = (plan.eventTypeId && plan.eventTypeId in EVENT_META)
               ? EVENT_META[plan.eventTypeId as keyof typeof EVENT_META]
@@ -100,26 +114,15 @@ export default function AdminDashboard() {
                   <p className="text-[13px] font-medium text-white truncate group-hover:text-primary transition-colors">{plan.name}</p>
                   <p className="text-dark-muted text-[11px] mt-0.5">{plan.city}, {plan.state}</p>
                 </div>
-                <div className="flex items-center gap-5 shrink-0">
+                <div className="flex items-center gap-3 sm:gap-5 shrink-0">
                   <p className="text-[13px] font-semibold text-white tabular-nums">{fmtNaira(plan.totalBudget)}</p>
                   <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${st.style}`}>{st.label}</span>
-                  <p className="text-[12px] text-primary">{plan.bidCount ?? 0} bids</p>
+                  <p className="hidden sm:block text-[12px] text-primary">{plan.bidCount ?? 0} bids</p>
                 </div>
               </Link>
             )
           })}
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Link href="/admin/categories" className="bg-dark-surface border border-dark-border rounded-xl p-5 hover:border-primary/40 transition-colors group">
-          <p className="font-display font-semibold text-[15px] text-white mb-1 group-hover:text-primary transition-colors">Manage Categories</p>
-          <p className="text-dark-muted text-[13px]">{eventTypes.length} event types · {totalCats} categories</p>
-        </Link>
-        <Link href="/admin/plans" className="bg-dark-surface border border-dark-border rounded-xl p-5 hover:border-primary/40 transition-colors group">
-          <p className="font-display font-semibold text-[15px] text-white mb-1 group-hover:text-primary transition-colors">All Plans</p>
-          <p className="text-dark-muted text-[13px]">{plans.length} total · {openPlans} live</p>
-        </Link>
       </div>
     </div>
   )

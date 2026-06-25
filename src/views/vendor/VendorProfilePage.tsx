@@ -293,7 +293,7 @@ function EditForm({ form, set, toggleSpecialty, categoryNames, errors, complete,
             placeholder="Full-service catering with 8 years across Lagos…" className={`${inputCls} resize-none`} />
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="State" required>
             <SearchableSelect value={form.state} onChange={v => set('state', v)} options={NIGERIAN_STATES}
               placeholder="Select state" searchPlaceholder="Search states…" />
@@ -321,7 +321,7 @@ function EditForm({ form, set, toggleSpecialty, categoryNames, errors, complete,
         <div className="border-t border-border pt-5">
           <p className="text-[13px] font-medium text-ink-2 mb-1">Portfolio & socials <span className="text-red-500">*</span></p>
           <p className="text-[12px] text-ink-3 mb-3">At least one so organisers can see your work. These are your portfolio.</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <input type="text" value={form.instagram} onChange={e => set('instagram', e.target.value)} placeholder="Instagram (@handle)" className={inputCls} />
             </div>

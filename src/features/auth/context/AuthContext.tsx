@@ -8,6 +8,7 @@ interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<AuthUser>
   logout: () => Promise<void>
   register: (payload: RegisterPayload) => Promise<AuthUser>
+  refresh: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -52,8 +53,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }
 
+  // Re-fetch the current user (e.g. after they verify their email) so the UI
+  // updates without a full reload.
+  async function refresh(): Promise<void> {
+    const res = await fetch('/api/auth/me')
+    const data = res.ok ? await res.json() : null
+    setUser(data?.user ?? null)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, refresh }}>
       {children}
     </AuthContext.Provider>
   )

@@ -10,7 +10,7 @@ const STATUS_META = {
   draft:        { label: 'Draft',       style: 'bg-[#F3F4F6] text-[#374151]' },
   open:         { label: 'Open',        style: 'bg-primary/10 text-primary' },
   bidding:      { label: 'Bidding',     style: 'bg-warning/20 text-[#92660A]' },
-  'in-progress':{ label: 'In Progress', style: 'bg-success/15 text-[#166534]' },
+  'in-progress':{ label: 'Vendors booked', style: 'bg-success/15 text-[#166534]' },
   completed:    { label: 'Completed',   style: 'bg-[#F3F4F6] text-[#374151]' },
   disputed:     { label: 'Disputed',    style: 'bg-red-100 text-red-600' },
 }

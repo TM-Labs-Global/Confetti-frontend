@@ -1,4 +1,4 @@
-# Confette — Event Planning & Vendor Marketplace
+# Confette - Event Planning & Vendor Marketplace
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.3-black?logo=nextdotjs)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.0-blue?logo=react)](https://react.dev/)
@@ -42,7 +42,7 @@ confetti-frontend/
 ├── prisma/                 # Database schema, migrations, and seed scripts
 ├── public/                 # Static assets (favicons, Open Graph media)
 ├── src/
-│   ├── app/                # Next.js App Router — entry points & routing only
+│   ├── app/                # Next.js App Router - entry points & routing only
 │   │   ├── api/            # API Route Handlers (Auth, Plans, Bids, Marketplace)
 │   │   ├── organiser/      # Organiser pages and layouts
 │   │   ├── vendor/         # Vendor pages and layouts

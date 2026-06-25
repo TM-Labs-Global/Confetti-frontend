@@ -1,5 +1,5 @@
 // Brand social icons as inline SVGs (official Simple Icons paths). The
-// project's lucide-react has no brand glyphs, so we ship these directly —
+// project's lucide-react has no brand glyphs, so we ship these directly -
 // no extra dependency. 24×24 viewBox, fill: currentColor.
 
 const PATHS: Record<string, string> = {

@@ -165,7 +165,7 @@ export default function AdminVendorsPage() {
 
             return (
               <div key={v.id} className="bg-dark-surface border border-dark-border rounded-xl p-5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-display font-semibold text-[16px] text-white">{p?.businessName || v.name}</h3>

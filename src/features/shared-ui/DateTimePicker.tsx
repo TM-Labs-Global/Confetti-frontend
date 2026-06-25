@@ -250,7 +250,7 @@ export function DateTimeRangePicker({ startValue, endValue, onChange, disabled, 
   const today = minDate ?? new Date().toISOString().slice(0, 10)
 
   function handleStart(start: string) {
-    // Don't auto-fill the end — the organiser sets it themselves. Only clear a
+    // Don't auto-fill the end - the organiser sets it themselves. Only clear a
     // previously-chosen end if it now falls before the new start.
     const end = endValue && endValue >= start ? endValue : ''
     onChange({ start, end })

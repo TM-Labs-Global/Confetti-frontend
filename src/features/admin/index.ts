@@ -1,2 +1,2 @@
-// Admin feature — components, hooks, services, and types will be added here.
+// Admin feature - components, hooks, services, and types will be added here.
 // See Update-CODEBASE.md for the full structure.

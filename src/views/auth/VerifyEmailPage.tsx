@@ -39,7 +39,7 @@ export default function VerifyEmailPage() {
       await resendVerification()
       setResent(true)
     } catch {
-      /* ignore — keep UX simple */
+      /* ignore - keep UX simple */
     } finally {
       setResending(false)
     }

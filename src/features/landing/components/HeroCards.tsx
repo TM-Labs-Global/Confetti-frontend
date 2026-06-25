@@ -1,11 +1,11 @@
 import { BadgeCheck, ShieldCheck } from 'lucide-react'
 
 // Floating glassmorphic "in-product" cards that frame the hero headline.
-// Decorative — hidden on small screens and frozen under reduced-motion.
+// Decorative - hidden on small screens and frozen under reduced-motion.
 export function HeroCards() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
-      {/* Incoming bid — top left */}
+      {/* Incoming bid - top left */}
       <div
         className="animate-float absolute left-[6%] top-[30%] w-[248px] rounded-2xl border border-[var(--ld-border)] bg-[var(--ld-glass-strong)] p-4 shadow-2xl backdrop-blur-xl"
         style={{ ['--tilt' as string]: '-5deg', animationDelay: '0.4s' }}
@@ -23,7 +23,7 @@ export function HeroCards() {
         </div>
       </div>
 
-      {/* Escrow funded — bottom right */}
+      {/* Escrow funded - bottom right */}
       <div
         className="animate-float absolute right-[7%] top-[42%] w-[230px] rounded-2xl border border-[var(--ld-border)] bg-[var(--ld-glass-strong)] p-4 shadow-2xl backdrop-blur-xl"
         style={{ ['--tilt' as string]: '5deg', animationDelay: '1.6s' }}
@@ -40,7 +40,7 @@ export function HeroCards() {
         </div>
       </div>
 
-      {/* Verified vendor pill — left lower */}
+      {/* Verified vendor pill - left lower */}
       <div
         className="animate-float absolute left-[11%] top-[64%] flex items-center gap-2 rounded-full border border-[var(--ld-border)] bg-[var(--ld-glass-strong)] px-3.5 py-2 shadow-xl backdrop-blur-xl"
         style={{ ['--tilt' as string]: '3deg', animationDelay: '1s' }}

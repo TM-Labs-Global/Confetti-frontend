@@ -24,7 +24,7 @@ const STATUS_META = {
   draft:        { label: 'Draft',       style: 'bg-[#F3F4F6] text-[#374151]' },
   open:         { label: 'Open',        style: 'bg-primary/10 text-primary' },
   bidding:      { label: 'Bidding',     style: 'bg-warning/20 text-[#92660A]' },
-  'in-progress':{ label: 'In Progress', style: 'bg-success/15 text-[#166634]' },
+  'in-progress':{ label: 'Vendors booked', style: 'bg-success/15 text-[#166634]' },
   completed:    { label: 'Completed',   style: 'bg-[#F3F4F6] text-[#374151]' },
   disputed:     { label: 'Disputed',    style: 'bg-red-100 text-red-600' },
 }
@@ -52,8 +52,19 @@ export default function AdminPlanDetailPage() {
       .finally(() => setLoading(false))
   }, [id])
 
+  // Restoring from "disputed" should put the event back to its real working
+  // status, derived from its bids, never blindly to "open".
+  function restoreStatus(): string {
+    const cats = plan?.categories ?? []
+    const accepted = (plan?.bids ?? []).filter(b => b.status === 'accepted')
+    const allAwarded = cats.length > 0 && cats.every(c => accepted.some(b => b.planCategoryId === c.id))
+    if (allAwarded) return 'in-progress'
+    if ((plan?.bids ?? []).length > 0) return 'bidding'
+    return 'open'
+  }
+
   async function toggleFlag() {
-    const newStatus = flagged ? 'open' : 'disputed'
+    const newStatus = flagged ? restoreStatus() : 'disputed'
     const res = await fetch(`/api/plans/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -87,6 +98,7 @@ export default function AdminPlanDetailPage() {
     : { emoji: '🎉', bg: '#1e293b', color: '#00C4CC' }
   const st         = STATUS_META[plan.status as keyof typeof STATUS_META] ?? STATUS_META.draft
   const bids       = plan.bids ?? []
+  const outcome    = (plan as { outcome?: string }).outcome ?? null
   const dateLabel  = fmtDateRange(plan.startDate, plan.endDate, plan.dateFlexible)
   const sortedCats = [...(plan.categories ?? [])].sort((a, b) => b.allocation - a.allocation)
 
@@ -105,6 +117,11 @@ export default function AdminPlanDetailPage() {
             <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-dark-muted mb-0.5">{plan.eventType?.name}</p>
             <h1 className="font-display font-bold text-[24px] text-white leading-tight">{plan.name}</h1>
             <p className="text-dark-muted text-[13px] mt-1">{dateLabel} · {plan.city}, {plan.state}</p>
+            {plan.status === 'completed' && (
+              <p className="mt-1.5 text-[12px] text-[#39E75F]">
+                Feedback: {outcome === 'great' ? 'It went great 🎉' : outcome === 'issues' ? 'It had some issues 😕' : 'No feedback'}
+              </p>
+            )}
           </div>
           <div className="flex items-start gap-3 shrink-0">
             <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${st.style}`}>{st.label}</span>

@@ -18,7 +18,7 @@ export function isPasswordValid(pw: string): boolean {
 }
 
 export interface PasswordStrength {
-  /** 0–4: how many policy rules are satisfied */
+  /** 0-4: how many policy rules are satisfied */
   score: number
   /** Whether the password meets the full policy */
   valid: boolean

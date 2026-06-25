@@ -2,7 +2,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { EventTile, MoneyInput, DateTimeRangePicker, SearchableSelect } from '@/features/shared-ui'
-import * as Icons from 'lucide-react'
 import { X, ArrowRight, Sparkles } from 'lucide-react'
 import { EVENT_META } from '../../data/mockCategories'
 import { fmtNaira, fmtDateRange } from '@/shared/utils/format'
@@ -132,19 +131,14 @@ function Step1({ form, onChange, eventTypes }: Step1Props) {
         {eventTypes.map(type => {
           const meta = (type.id && type.id in EVENT_META)
             ? EVENT_META[type.id as keyof typeof EVENT_META]
-            : { emoji: '🎉', icon: 'PartyPopper', color: '#6C7CC7', bg: '#F5F5F5', tagline: '' }
+            : { emoji: '🎉', icon: 'PartyPopper', color: '#A3A3A3', bg: '#F5F5F5', tagline: '' }
           const isSelected = form.eventType === type.id
-          const IconComponent = (meta.icon in Icons ? Icons[meta.icon as keyof typeof Icons] : Icons.PartyPopper) as React.ComponentType<any>
           return (
             <button key={type.id} onClick={() => onChange('eventType', type.id)}
               className={`group p-4 rounded-xl border text-left transition-all ${isSelected ? 'border-primary ring-2 ring-primary/20 bg-primary/[0.02]' : 'border-border bg-white hover:border-primary/40 hover:shadow-sm'}`}
             >
-              <span
-                className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6"
-                style={{ background: meta.bg, color: meta.color }}
-              >
-                <IconComponent size={22} />
-              </span>
+              <EventTile type={type.id} bg={meta.bg} color={meta.color} size="md"
+                className="mb-3 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6" />
               <p className="font-display font-semibold text-ink text-[14px] leading-tight">{type.name}</p>
               <p className="text-ink-3 text-[11px] mt-0.5">{meta.tagline}</p>
             </button>
@@ -447,17 +441,17 @@ function Step4({ form, getCatsForType, onPublish, onSave, onBack, saving, isEdit
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <button onClick={onBack} disabled={!!saving}
           className="py-3.5 px-5 border border-border text-ink-2 text-[14px] font-medium rounded-xl hover:bg-canvas transition-colors disabled:opacity-50">
           ← Back
         </button>
         <button onClick={onSave} disabled={!!saving}
-          className="flex-1 py-3.5 border border-border text-ink-2 text-[14px] font-medium rounded-xl hover:bg-canvas transition-colors disabled:opacity-50">
+          className="sm:flex-1 py-3.5 border border-border text-ink-2 text-[14px] font-medium rounded-xl hover:bg-canvas transition-colors disabled:opacity-50">
           {saving === 'draft' ? 'Saving…' : 'Save as draft'}
         </button>
         <button onClick={onPublish} disabled={!!saving}
-          className="group flex-[2] inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-primary text-dark text-[14px] font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50">
+          className="group sm:flex-[2] inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-primary text-dark text-[14px] font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50">
           <Sparkles size={17} className="transition-transform duration-200 group-hover:scale-110 group-hover:rotate-12" />
           {saving === 'open' ? 'Publishing…' : isEdit ? 'Save & Publish' : 'Let the Bids Roll In'}
         </button>

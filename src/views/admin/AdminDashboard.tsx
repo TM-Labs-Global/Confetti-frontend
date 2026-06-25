@@ -10,7 +10,7 @@ const STATUS_META = {
   draft:        { label: 'Draft',       style: 'bg-[#F3F4F6] text-[#374151]' },
   open:         { label: 'Open',        style: 'bg-primary/10 text-primary' },
   bidding:      { label: 'Bidding',     style: 'bg-warning/20 text-[#92660A]' },
-  'in-progress':{ label: 'In Progress', style: 'bg-success/15 text-[#166634]' },
+  'in-progress':{ label: 'Vendors booked', style: 'bg-success/15 text-[#166634]' },
   completed:    { label: 'Completed',   style: 'bg-[#F3F4F6] text-[#374151]' },
   disputed:     { label: 'Disputed',    style: 'bg-red-100 text-red-600' },
 }
@@ -72,7 +72,7 @@ export default function AdminDashboard() {
         <StatCard label="Vendors"      value={vendors.length}     />
       </div>
 
-      {/* Needs attention — the two queues an admin actually acts on. */}
+      {/* Needs attention - the two queues an admin actually acts on. */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
         <Link href="/admin/vendors"
           className={`rounded-xl border p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 group ${pendingVendors > 0 ? 'border-warning/40 bg-warning/[0.07] hover:bg-warning/10' : 'border-dark-border bg-dark-surface hover:border-primary/40'}`}>

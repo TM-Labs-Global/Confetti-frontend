@@ -30,7 +30,7 @@
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
 
-  /* Fonts — resolved via next/font CSS vars injected on <html> */
+  /* Fonts - resolved via next/font CSS vars injected on <html> */
   --font-sans: var(--font-b), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-d), sans-serif;
   --font-mono: var(--font-m), ui-monospace, monospace;
@@ -81,6 +81,10 @@
   a.grid:hover,
   a.group:hover,
   a.no-underline:hover {
+    text-decoration: none;
+  }
+  /* The marketing landing page has its own link/button styling - opt it out. */
+  .landing a:hover {
     text-decoration: none;
   }
 }
@@ -166,7 +170,7 @@
 }
 
 /* ─────────────────────────────────────────────────
-   Landing-page motion — sophisticated, not literal.
+   Landing-page motion - sophisticated, not literal.
    All animations are disabled under prefers-reduced-motion.
    ───────────────────────────────────────────────── */
 @keyframes aurora {

@@ -13,6 +13,7 @@ const BID_STATUS_META = {
   pending:  { label: 'Pending',  style: 'bg-warning/20 text-[#92660A]' },
   accepted: { label: 'Accepted', style: 'bg-success/15 text-[#166534]' },
   rejected: { label: 'Rejected', style: 'bg-red-100 text-red-600' },
+  held:     { label: 'On hold',  style: 'bg-[#EEF2F7] text-[#475467]' },
 }
 
 // Count a number up from 0 with an ease-out curve on mount.
@@ -131,14 +132,14 @@ export default function VendorDashboard() {
         <p className="text-ink-2 text-[14px] mt-1.5">{subline}</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-8 animate-rise" style={{ animationDelay: '80ms' }}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-rise" style={{ animationDelay: '80ms' }}>
         <StatCard label="Total bids"  value={bids.length} />
         <StatCard label="Active bids" value={activeBids}   accent="text-warning" />
         <StatCard label="Accepted"    value={acceptedBids} accent="text-success" />
         <StatCard label="Open events" value={plans.length} />
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6 animate-rise" style={{ animationDelay: '160ms' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 animate-rise" style={{ animationDelay: '160ms' }}>
         {[
           { label: 'Browse Events', desc: 'Find events to bid on', href: '/vendor/marketplace', Icon: Search,        tint: 'bg-gradient-to-br from-primary/30 to-primary/5 text-primary ring-1 ring-inset ring-primary/20' },
           { label: 'My Bids',      desc: 'Track your submissions',  href: '/vendor/bids',        Icon: ClipboardList, tint: 'bg-gradient-to-br from-warning/35 to-warning/5 text-[#92660A] ring-1 ring-inset ring-warning/25' },

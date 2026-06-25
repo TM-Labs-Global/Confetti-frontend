@@ -11,7 +11,7 @@ import { LandingShell } from '@/features/landing/components/LandingShell'
 import { LandingNav } from '@/features/landing/components/LandingNav'
 import { HeroCards } from '@/features/landing/components/HeroCards'
 import { SocialLinks } from '@/features/landing/components/SocialLinks'
-import { AppLogo, ConfettiBurst, ComingSoon } from '@/features/shared-ui'
+import { AppLogo, ConfettiBurst } from '@/features/shared-ui'
 
 // Unsplash image helper (host allow-listed in next.config.ts).
 const ux = (id: string, w = 800) =>
@@ -29,7 +29,7 @@ const EVENTS = [
 // About-section hero image (real joyful wedding-exit moment).
 const ABOUT_IMG = ux('1583939003579-730e3918a45a', 1000)
 
-// Vendor service categories — shown in the hero marquee (distinct from the
+// Vendor service categories - shown in the hero marquee (distinct from the
 // event-type grid below) to convey the breadth of vendors on the platform.
 const SERVICES = [
   { emoji: '🍲', name: 'Catering' },
@@ -221,7 +221,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Vendor-services marquee (breadth of vendors — distinct from the event grid) */}
+        {/* Vendor-services marquee (breadth of vendors - distinct from the event grid) */}
         <div className="relative z-10 mt-16">
           <p className="mb-4 text-center text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--ld-text-muted)]">
             Vendors for every part of your day
@@ -419,8 +419,8 @@ export default function LandingPage() {
               Your money is safe until the job is done
             </h2>
             <p className="mt-4 text-[16px] leading-relaxed text-[var(--ld-text-2)]">
-              No more paying upfront and praying. With Confette, funds are locked in escrow and
-              released stage by stage as your vendor delivers, protecting organisers and vendors alike.
+              No more paying upfront and praying. Confette will lock funds in escrow and release them
+              stage by stage as your vendor delivers, protecting organisers and vendors alike.
             </p>
 
             <div className="mt-8 space-y-4">
@@ -477,7 +477,7 @@ export default function LandingPage() {
       <section className="border-y border-[var(--ld-border)] bg-[var(--ld-bg-2)] py-20 sm:py-28">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-2xl text-center">
-            <SectionLabel color="var(--warning)">Loved across Naija</SectionLabel>
+            <SectionLabel color="var(--warning)">Loved across Nigeria</SectionLabel>
             <h2 className="mt-3 font-display text-[30px] font-bold tracking-[-0.01em] text-[var(--ld-text)] sm:text-[40px]">
               The streets are talking 🗣️
             </h2>
@@ -524,7 +524,6 @@ export default function LandingPage() {
                   >
                     <item.icon size={22} strokeWidth={1.9} />
                   </span>
-                  <ComingSoon />
                 </div>
                 <h3 className="mt-4 font-display text-[16px] font-semibold text-[var(--ld-text)]">{item.title}</h3>
                 <p className="mt-1.5 text-[13.5px] leading-relaxed text-[var(--ld-text-2)]">{item.body}</p>

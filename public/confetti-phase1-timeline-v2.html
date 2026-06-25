@@ -433,7 +433,7 @@ tbody tr:nth-child(even) td { background: #F8FAFC; }
 
   <!-- CORRECTION NOTICE -->
   <div class="correction">
-    <div class="correction__title">Correction from v1.0 — AI categories removed</div>
+    <div class="correction__title">Correction from v1.0 - AI categories removed</div>
     <div class="correction__body">
       The original Phase 1 Timeline listed "AI Category Suggestions" as a feature and required Code to return ≥8 categories within 5 seconds. <b>This conflicts with PRD v1.1 §1.4</b>, which explicitly defers AI category generation from Phase 1 due to token cost and scalability concerns.<br><br>
       <b>Phase 1 ships with pre-populated, Admin-managed vendor categories.</b> The Admin Dashboard manages all event types and category lists, and changes are reflected instantly in the User App without a code deployment. AI-assisted suggestions are a candidate for a future phase.
@@ -445,22 +445,22 @@ tbody tr:nth-child(even) td { background: #F8FAFC; }
     <div class="section__phase">Overview</div>
     <h2 class="section__title">Phase 1 at a Glance</h2>
     <p class="section__desc">
-      Phase 1 delivers the complete foundational product layer across all three surfaces — User App, Vendor Dashboard, and Admin Dashboard — structured over four weeks. The frontend scaffold is already in place. Development begins at Day 4.
+      Phase 1 delivers the complete foundational product layer across all three surfaces - User App, Vendor Dashboard, and Admin Dashboard - structured over four weeks. The frontend scaffold is already in place. Development begins at Day 4.
     </p>
 
     <div class="glance-grid">
       <div class="glance-card glance-card--done">
-        <div class="glance-card__period">Days 1–3 · Complete</div>
+        <div class="glance-card__period">Days 1-3 · Complete</div>
         <div class="glance-card__title">Setup &amp; Infrastructure</div>
         <div class="glance-card__outputs">Design system, frontend scaffold, brand tokens, routing, auth context, layouts, placeholder pages, GitHub repo.</div>
       </div>
       <div class="glance-card">
-        <div class="glance-card__period">Days 4–14 · Active</div>
+        <div class="glance-card__period">Days 4-14 · Active</div>
         <div class="glance-card__title">Core Feature Development</div>
         <div class="glance-card__outputs">Auth, plan creation wizard, pre-populated categories, budget allocation, save/share, vendor marketplace, bid flow, Admin views &amp; category management, notification bell.</div>
       </div>
       <div class="glance-card">
-        <div class="glance-card__period">Weeks 3–4</div>
+        <div class="glance-card__period">Weeks 3-4</div>
         <div class="glance-card__title">Hosting, Testing &amp; QA</div>
         <div class="glance-card__outputs">Staging deployment, end-to-end testing across all three surfaces, responsiveness QA, performance, bug fixes, acceptance sign-off.</div>
       </div>
@@ -468,19 +468,19 @@ tbody tr:nth-child(even) td { background: #F8FAFC; }
 
     <div class="alert">
       <div class="alert__title">Note on infrastructure tasks</div>
-      <div class="alert__body">DevOps (hosting, CI/CD, domain, environments) and legal docs (Terms of Service, Privacy Policy, Escrow Policy) run in parallel with feature development. These are not frontend tasks but are required before staging deployment in Weeks 3–4.</div>
+      <div class="alert__body">DevOps (hosting, CI/CD, domain, environments) and legal docs (Terms of Service, Privacy Policy, Escrow Policy) run in parallel with feature development. These are not frontend tasks but are required before staging deployment in Weeks 3-4.</div>
     </div>
   </section>
 
   <hr class="divider">
 
-  <!-- DAY 4–14 -->
+  <!-- DAY 4-14 -->
   <section class="section">
-    <div class="section__phase">Days 4–14</div>
+    <div class="section__phase">Days 4-14</div>
     <h2 class="section__title">Core Feature Development</h2>
     <div class="section__badge section__badge--active">&#9679; In Progress</div>
     <p class="section__desc">
-      All three surfaces are built in parallel. The goal is a working end-to-end prototype in staging — plan creation through to bid submission — without live payments.
+      All three surfaces are built in parallel. The goal is a working end-to-end prototype in staging - plan creation through to bid submission - without live payments.
     </p>
 
     <!-- AUTH -->
@@ -492,7 +492,7 @@ tbody tr:nth-child(even) td { background: #F8FAFC; }
           <tbody>
             <tr>
               <td>Sign Up &amp; Login</td>
-              <td>Email/password registration with email verification. OAuth via Google and Facebook — role selection (Organiser or Vendor) prompted on first OAuth login.</td>
+              <td>Email/password registration with email verification. OAuth via Google and Facebook - role selection (Organiser or Vendor) prompted on first OAuth login.</td>
               <td><span class="tag tag--all">All roles</span></td>
             </tr>
             <tr>
@@ -512,12 +512,12 @@ tbody tr:nth-child(even) td { background: #F8FAFC; }
             </tr>
             <tr>
               <td>Role-Based Redirect</td>
-              <td>After login, users are automatically routed to the correct product surface. Admin role is assigned by the backend only — not selectable on signup.</td>
+              <td>After login, users are automatically routed to the correct product surface. Admin role is assigned by the backend only - not selectable on signup.</td>
               <td><span class="tag tag--all">All roles</span></td>
             </tr>
             <tr>
               <td>Profile &amp; Account</td>
-              <td>Update display name, profile photo, and phone number. Change password. Delete account — guarded, no active plans or open escrow allowed.</td>
+              <td>Update display name, profile photo, and phone number. Change password. Delete account - guarded, no active plans or open escrow allowed.</td>
               <td><span class="tag tag--user">User</span></td>
             </tr>
           </tbody>
@@ -533,23 +533,23 @@ tbody tr:nth-child(even) td { background: #F8FAFC; }
           <thead><tr><th>Feature</th><th>Description</th><th>Role</th></tr></thead>
           <tbody>
             <tr>
-              <td>Step 1 — Plan Details</td>
+              <td>Step 1 - Plan Details</td>
               <td>Event type selector (Wedding, Birthday, Corporate, Baby Shower, Graduation, Anniversary, or custom type). Total budget in ₦. Four-field location entry (Country, State, City, Address). Date and time picker. Plan name.</td>
               <td><span class="tag tag--user">User</span></td>
             </tr>
             <tr>
-              <td>Step 2 — Category Selection</td>
-              <td>Pre-populated set of 8–10 vendor categories loads automatically based on the selected event type. Categories are Admin-managed (see Admin Dashboard section). User can toggle categories on/off — at least one must remain selected — and add custom categories (e.g. Tent Hire, Photo Booth). Custom categories are labelled and removable at any time.</td>
+              <td>Step 2 - Category Selection</td>
+              <td>Pre-populated set of 8-10 vendor categories loads automatically based on the selected event type. Categories are Admin-managed (see Admin Dashboard section). User can toggle categories on/off - at least one must remain selected - and add custom categories (e.g. Tent Hire, Photo Booth). Custom categories are labelled and removable at any time.</td>
               <td><span class="tag tag--user">User</span></td>
             </tr>
             <tr>
-              <td>Step 3 — Budget Allocation</td>
+              <td>Step 3 - Budget Allocation</td>
               <td>Manual allocation: enter exact amount per category. Smart Split: one-click proportional redistribution using each category's pre-set suggested budget percentage. Even Split: distributes total budget equally across all selected categories. Live progress bar tracks allocated vs. remaining. Real-time over-budget alert with exact overspend shown.</td>
               <td><span class="tag tag--user">User</span></td>
             </tr>
             <tr>
-              <td>Step 4 — Summary &amp; Review</td>
-              <td>Ranked visual breakdown with bar charts, percentages, allocated amounts, and remaining balance. Step navigation — click any step indicator to return without losing data.</td>
+              <td>Step 4 - Summary &amp; Review</td>
+              <td>Ranked visual breakdown with bar charts, percentages, allocated amounts, and remaining balance. Step navigation - click any step indicator to return without losing data.</td>
               <td><span class="tag tag--user">User</span></td>
             </tr>
           </tbody>
@@ -618,7 +618,7 @@ tbody tr:nth-child(even) td { background: #F8FAFC; }
             </tr>
             <tr>
               <td>Submit a Bid</td>
-              <td>Bid amount and pitch message. Vendors can preview before submitting. One active bid per plan — prevents spam.</td>
+              <td>Bid amount and pitch message. Vendors can preview before submitting. One active bid per plan - prevents spam.</td>
               <td><span class="tag tag--vendor">Vendor</span></td>
             </tr>
             <tr>
@@ -675,7 +675,7 @@ tbody tr:nth-child(even) td { background: #F8FAFC; }
             </tr>
             <tr>
               <td>Manage Vendor Categories</td>
-              <td>Create, edit, rename, or deactivate vendor categories — including each category's default suggested budget percentage — per event type. Changes take effect immediately in the User App without a deployment. Supports unlimited categories.</td>
+              <td>Create, edit, rename, or deactivate vendor categories - including each category's default suggested budget percentage - per event type. Changes take effect immediately in the User App without a deployment. Supports unlimited categories.</td>
               <td><span class="tag tag--admin">Admin</span></td>
             </tr>
           </tbody>
@@ -712,15 +712,15 @@ tbody tr:nth-child(even) td { background: #F8FAFC; }
 
     <div class="milestone">
       <div class="milestone__label">Phase 1 Development Milestone</div>
-      <div class="milestone__text">A working prototype in staging where an Organiser can create a plan from pre-populated categories, a Vendor can browse matching plans and submit a bid, and an Admin can manage categories and view/manage both — without live payments.</div>
+      <div class="milestone__text">A working prototype in staging where an Organiser can create a plan from pre-populated categories, a Vendor can browse matching plans and submit a bid, and an Admin can manage categories and view/manage both - without live payments.</div>
     </div>
   </section>
 
   <hr class="divider">
 
-  <!-- WEEKS 3–4 -->
+  <!-- WEEKS 3-4 -->
   <section class="section">
-    <div class="section__phase">Weeks 3–4</div>
+    <div class="section__phase">Weeks 3-4</div>
     <h2 class="section__title">Hosting, Testing &amp; QA</h2>
     <p class="section__desc">
       Development is complete. The focus shifts to deploying to a stable staging environment, running full end-to-end tests across all three surfaces, resolving bugs, and confirming every acceptance criterion before Phase 1 is signed off.
@@ -801,8 +801,8 @@ tbody tr:nth-child(even) td { background: #F8FAFC; }
           <thead><tr><th>Deliverable</th><th>Acceptance Criteria</th></tr></thead>
           <tbody>
             <tr>
-              <td>Auth — All Surfaces</td>
-              <td>All three user roles can register, verify email, log in, and be routed to the correct dashboard. Admin role cannot be selected on signup — server-assigned only.</td>
+              <td>Auth - All Surfaces</td>
+              <td>All three user roles can register, verify email, log in, and be routed to the correct dashboard. Admin role cannot be selected on signup - server-assigned only.</td>
             </tr>
             <tr>
               <td>Plan Creation Wizard</td>
@@ -862,7 +862,7 @@ tbody tr:nth-child(even) td { background: #F8FAFC; }
     </div>
 
     <div class="milestone">
-      <div class="milestone__label">Phase 1 Complete — Sign-Off Criteria</div>
+      <div class="milestone__label">Phase 1 Complete - Sign-Off Criteria</div>
       <div class="milestone__text">All three surfaces are live in staging. Auth, plan creation with Admin-managed categories, budget allocation, vendor marketplace, bid submission, and admin views all pass end-to-end testing. No critical bugs outstanding. Phase 1 accepted and Phase 2 (Payments &amp; Escrow) approved to begin.</div>
     </div>
   </section>

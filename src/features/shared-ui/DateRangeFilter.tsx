@@ -53,7 +53,7 @@ export function DateRangeFilter({ value, onChange, months, monthLabel }: Props) 
     value.kind === 'all' ? 'Any date'
       : value.kind === 'flexible' ? 'Flexible date'
         : value.kind === 'month' ? monthLabel(value.key)
-          : `${shortDate(value.from)} – ${shortDate(value.to)}`
+          : `${shortDate(value.from)} - ${shortDate(value.to)}`
 
   function pickDay(day: number) {
     const picked = ymd(cursor.year, cursor.month, day)

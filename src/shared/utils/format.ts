@@ -39,8 +39,8 @@ export function fmtDateRange(
 
   const endDate   = new Date(end)
   const sameDay   = startDate.toDateString() === endDate.toDateString()
-  if (sameDay) return `${fmtDate(startDate)}, ${fmtTime(startDate)} – ${fmtTime(endDate)}`
-  return `${fmtDateTime(startDate)} – ${fmtDateTime(endDate)}`
+  if (sameDay) return `${fmtDate(startDate)}, ${fmtTime(startDate)} - ${fmtTime(endDate)}`
+  return `${fmtDateTime(startDate)} - ${fmtDateTime(endDate)}`
 }
 
 /**

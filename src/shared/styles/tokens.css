@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────
-   Design tokens — imported by src/app/globals.css
+   Design tokens - imported by src/app/globals.css
    ───────────────────────────────────────────────── */
 
 :root {
@@ -19,7 +19,7 @@
   --font-b:   'DM Sans', sans-serif;
   --font-m:   'DM Mono', monospace;
 
-  /* Spacing — 8pt grid */
+  /* Spacing - 8pt grid */
   --space-xs:   4px;
   --space-sm:   8px;
   --space-md:   16px;

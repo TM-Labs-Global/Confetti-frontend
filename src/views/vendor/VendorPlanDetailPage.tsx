@@ -24,6 +24,7 @@ const BID_STATUS_META = {
   pending:  { label: 'Pending',  style: 'bg-warning/20 text-[#92660A]' },
   accepted: { label: 'Accepted', style: 'bg-success/15 text-[#166534]' },
   rejected: { label: 'Rejected', style: 'bg-red-100 text-red-600' },
+  held:     { label: 'On hold',  style: 'bg-[#EEF2F7] text-[#475467]' },
 }
 
 export default function VendorPlanDetailPage() {
@@ -34,10 +35,17 @@ export default function VendorPlanDetailPage() {
   const [plan, setPlan]         = useState<MarketplacePlanDetail | null>(null)
   const [loading, setLoading]   = useState(true)
   const [bidForm, setBidForm]   = useState({ planCategoryId: '', amount: '', pitch: '', isCounterBid: false, counterReason: '' })
-  const [editing, setEditing]   = useState<{ id: string; categoryName: string; amount: string; pitch: string } | null>(null)
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [toast, setToast]       = useState<{ msg: string; type: string } | null>(null)
   const [celebrate, setCelebrate] = useState(0)
+  // Client-only clock so the withdraw window flips live without a hydration mismatch.
+  const [nowTs, setNowTs] = useState<number | null>(null)
+  useEffect(() => {
+    setNowTs(Date.now())
+    const t = setInterval(() => setNowTs(Date.now()), 60_000)
+    return () => clearInterval(t)
+  }, [])
 
   function loadPlan() {
     return fetch(`/api/marketplace/${id}`)
@@ -85,25 +93,18 @@ export default function VendorPlanDetailPage() {
     }
   }
 
-  async function saveEdit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!editing || !editing.amount) return
-    setSubmitting(true)
+  async function withdrawBid(bidId: string) {
+    setWithdrawingId(bidId)
     try {
-      const res = await fetch(`/api/bids/${editing.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: Number(editing.amount), pitch: editing.pitch }),
-      })
+      const res = await fetch(`/api/bids/${bidId}`, { method: 'DELETE' })
       const data = await res.json().catch(() => null)
-      if (!res.ok) { showToast(data?.error ?? 'Could not update your bid', 'error'); return }
-      setEditing(null)
-      showToast('Bid updated')
+      if (!res.ok) { showToast(data?.error ?? 'Could not withdraw your bid', 'error'); return }
+      showToast('Bid withdrawn')
       await loadPlan()
     } catch {
       showToast('Network error. Check your connection and try again.', 'error')
     } finally {
-      setSubmitting(false)
+      setWithdrawingId(null)
     }
   }
 
@@ -137,6 +138,12 @@ export default function VendorPlanDetailPage() {
   const hasEligible  = sortedCats.some(c => c.eligible !== false)
   const selectedCat = sortedCats.find(c => c.id === bidForm.planCategoryId)
   const isOver      = selectedCat && selectedCat.allocation != null && bidForm.amount && Number(bidForm.amount) > selectedCat.allocation
+  // An accepted bid can't be withdrawn in the last 48h; a pending one can be
+  // pulled until the event starts. Nothing can be done once it has started.
+  const startTs       = plan.startDate ? new Date(plan.startDate).getTime() : null
+  const within48h     = !plan.dateFlexible && nowTs != null && startTs != null && nowTs >= startTs - 48 * 60 * 60 * 1000
+  const eventStarted  = !plan.dateFlexible && nowTs != null && startTs != null && nowTs >= startTs
+  const isCompleted   = plan.status === 'completed'
 
   return (
     <div className="max-w-[860px] mx-auto">
@@ -152,6 +159,13 @@ export default function VendorPlanDetailPage() {
         <span>/</span>
         <span className="text-ink truncate">{plan.name}</span>
       </div>
+
+      {isCompleted && (
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-border bg-canvas px-5 py-3.5">
+          <span className="text-xl">✅</span>
+          <p className="text-[13px] text-ink-2">This event has wrapped up. Thanks for being part of it!</p>
+        </div>
+      )}
 
       <div className="bg-white border border-border rounded-xl p-6 mb-4">
         <div className="flex items-start gap-4">
@@ -197,12 +211,18 @@ export default function VendorPlanDetailPage() {
                             <span className={`px-1.5 py-0.5 rounded-full font-medium text-[10px] ${BID_STATUS_META[myBidHere.status]?.style ?? ''}`}>
                               {BID_STATUS_META[myBidHere.status]?.label}
                             </span>
-                            {myBidHere.canUpdate && myBidHere.status !== 'rejected' && (
+                            {(myBidHere.status === 'pending' || myBidHere.status === 'accepted') && (myBidHere.status === 'accepted' ? !within48h : !eventStarted) && (
                               <button
-                                onClick={() => setEditing({ id: myBidHere.id, categoryName: cat.name, amount: String(myBidHere.amount), pitch: myBidHere.pitch ?? '' })}
-                                className="text-warning font-medium hover:underline"
+                                onClick={() => {
+                                  const msg = myBidHere.status === 'accepted'
+                                    ? 'Withdraw this accepted bid? The organiser will be notified and the category reopened.'
+                                    : 'Withdraw this bid?'
+                                  if (window.confirm(msg)) withdrawBid(myBidHere.id)
+                                }}
+                                disabled={withdrawingId === myBidHere.id}
+                                className="text-red-600 font-medium hover:underline disabled:opacity-50"
                               >
-                                Edit
+                                {withdrawingId === myBidHere.id ? 'Withdrawing…' : 'Withdraw'}
                               </button>
                             )}
                           </div>
@@ -224,7 +244,7 @@ export default function VendorPlanDetailPage() {
                       </span>
                     ) : !eligible ? (
                       <span className="text-[11px] text-ink-3 italic">Not needed for your services</span>
-                    ) : verified ? (
+                    ) : verified && !eventStarted ? (
                       <button onClick={() => setBidForm(f => ({ ...f, planCategoryId: cat.id, amount: '' }))}
                         className="text-[12px] text-warning font-medium hover:underline"
                       >
@@ -239,35 +259,7 @@ export default function VendorPlanDetailPage() {
         </div>
 
         <div className="lg:col-span-2">
-          {editing ? (
-            <div className="bg-white border border-warning/40 rounded-xl p-5 sticky top-4">
-              <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-ink-3 mb-1">Edit your bid</p>
-              <p className="text-[13px] font-medium text-ink mb-4">{editing.categoryName}</p>
-              <form onSubmit={saveEdit} className="space-y-4">
-                <div>
-                  <label className="block text-[12px] font-medium text-ink-2 mb-1">Your bid amount</label>
-                  <MoneyInput value={editing.amount} onChange={v => setEditing(s => s && { ...s, amount: v })} alignRight={false} />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-medium text-ink-2 mb-1">Pitch (optional)</label>
-                  <textarea value={editing.pitch} onChange={e => setEditing(s => s && { ...s, pitch: e.target.value })}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-border rounded-lg text-[13px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-warning focus:ring-2 focus:ring-warning/10 transition-colors resize-none"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button type="submit" disabled={submitting || !editing.amount}
-                    className="flex-1 py-3 bg-warning text-dark text-[13px] font-semibold rounded-xl hover:bg-warning/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                    {submitting ? 'Saving…' : 'Save changes'}
-                  </button>
-                  <button type="button" onClick={() => setEditing(null)}
-                    className="px-4 py-3 border border-border text-ink-2 text-[13px] font-medium rounded-xl hover:bg-canvas transition-colors">
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          ) : acceptedBid ? (
+          {acceptedBid ? (
             <div className="bg-white border border-success/40 rounded-xl p-5 sticky top-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xl">🎉</span>
@@ -277,6 +269,11 @@ export default function VendorPlanDetailPage() {
                 The organiser accepted your bid of <span className="font-mono text-ink">{fmtNaira(acceptedBid.amount)}</span>. They&apos;ll reach out to lock in the details.
               </p>
               <Link href="/vendor/bids" className="text-[12px] text-warning font-medium hover:underline">View in My Bids →</Link>
+            </div>
+          ) : eventStarted ? (
+            <div className="bg-white border border-border rounded-xl p-5 sticky top-4">
+              <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-ink-3 mb-3">Bidding closed</p>
+              <p className="text-[13px] text-ink-2 leading-relaxed">This event has already started, so it&apos;s no longer open for new bids.</p>
             </div>
           ) : !hasEligible ? (
             <div className="bg-white border border-border rounded-xl p-5 sticky top-4">

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Pencil, BadgeCheck, Phone } from 'lucide-react'
+import { Pencil, BadgeCheck, Phone, Lock, CheckCircle2, Clock } from 'lucide-react'
 import { EventTile, ConfettiBurst } from '@/features/shared-ui'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { VendorProfileModal } from '@/features/vendor/components/VendorProfileModal'
@@ -28,7 +28,7 @@ const STATUS_META = {
   draft:        { label: 'Draft',       style: 'bg-[#F3F4F6] text-[#374151]' },
   open:         { label: 'Open',        style: 'bg-primary/10 text-primary' },
   bidding:      { label: 'Bidding',     style: 'bg-warning/20 text-[#92660A]' },
-  'in-progress':{ label: 'In Progress', style: 'bg-success/15 text-[#166534]' },
+  'in-progress':{ label: 'Vendors booked', style: 'bg-success/15 text-[#166534]' },
   completed:    { label: 'Completed',   style: 'bg-[#F3F4F6] text-[#374151]' },
   disputed:     { label: 'Disputed',    style: 'bg-red-100 text-red-600' },
 }
@@ -53,6 +53,17 @@ export default function PlanDetailPage() {
   const [decliningId, setDecliningId] = useState<string | null>(null)
   const [declineReason, setDeclineReason] = useState('')
   const [acceptError, setAcceptError] = useState<string | null>(null)
+  const [completing, setCompleting] = useState(false)
+  const [showCloseout, setShowCloseout] = useState(false)
+  // Resolved on the client only, so the time-based UI never causes a hydration
+  // mismatch (server has no stable "now").
+  const [nowTs, setNowTs] = useState<number | null>(null)
+  useEffect(() => {
+    setNowTs(Date.now())
+    // Tick so the 48h-lock / event-passed UI flips live without a reload.
+    const t = setInterval(() => setNowTs(Date.now()), 60_000)
+    return () => clearInterval(t)
+  }, [])
 
   function loadPlan() {
     return fetch(`/api/plans/${id}`)
@@ -74,7 +85,7 @@ export default function PlanDetailPage() {
       body: JSON.stringify({ status: 'accepted' }),
     })
     if (!res.ok) {
-      // Budget guard (or any other) rejection — surface the server's message.
+      // Budget guard (or any other) rejection - surface the server's message.
       const data = await res.json().catch(() => null)
       setAcceptError(data?.error || data?.message || 'Could not accept this bid. Please try again.')
       setAccepting(null)
@@ -102,6 +113,20 @@ export default function PlanDetailPage() {
       body: JSON.stringify({ status: 'open' }),
     })
     if (res.ok) { await loadPlan(); setCelebrate(true) }
+  }
+
+  async function completeEvent(outcome: 'great' | 'issues') {
+    setCompleting(true)
+    try {
+      await fetch(`/api/plans/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed', outcome }),
+      })
+      await loadPlan()
+    } finally {
+      setCompleting(false)
+    }
   }
 
   if (loading) {
@@ -134,6 +159,26 @@ export default function PlanDetailPage() {
   const sortedCats = [...(plan.categories ?? [])].sort((a, b) => b.allocation - a.allocation)
   const canEdit    = plan.status === 'draft' || plan.status === 'open' || plan.status === 'bidding'
 
+  // ── Event-time lifecycle ──────────────────────────────────────────────
+  // Vendors can't be changed within 48h of the start (protects booked vendors);
+  // once the event has ended the organiser closes it out.
+  const LOCK_MS    = 48 * 60 * 60 * 1000
+  const startTs    = plan.startDate ? new Date(plan.startDate).getTime() : null
+  const endTs      = plan.endDate ? new Date(plan.endDate).getTime() : startTs
+  const outcome    = (plan as { outcome?: string }).outcome ?? null
+  const isCompleted = plan.status === 'completed'
+  // Only apply time rules after the client clock resolves (nowTs !== null).
+  const vendorsLocked = !plan.dateFlexible && nowTs != null && startTs != null && nowTs >= startTs - LOCK_MS
+  const eventStarted  = !plan.dateFlexible && nowTs != null && startTs != null && nowTs >= startTs
+  const eventPassed   = !plan.dateFlexible && nowTs != null && endTs != null && nowTs > endTs
+  const needsCloseout = eventPassed && !isCompleted
+  // Editing closes once the event has started (even while still "bidding").
+  const editable      = canEdit && !eventStarted
+  // Manual close-out is offered for events that are clearly under way or undated
+  // (flexible) but never for a purely-future dated event.
+  const canManualComplete = !isCompleted && nowTs != null && (plan.dateFlexible || (startTs != null && nowTs >= startTs))
+  const closeoutOpen = needsCloseout || showCloseout
+
   function copyShareLink() {
     if (plan?.shareCode) {
       const link = `${window.location.origin}/p/${plan.shareCode}`
@@ -165,7 +210,46 @@ export default function PlanDetailPage() {
         <span className="text-ink truncate">{plan.name}</span>
       </div>
 
-      {plan.status === 'in-progress' && (
+      {isCompleted ? (
+        <div className="bg-success/10 border border-success/30 rounded-xl px-5 py-4 flex items-center gap-3 mb-5">
+          <span className="text-2xl">✅</span>
+          <div>
+            <p className="font-medium text-ink text-[14px]">This event is done and dusted.</p>
+            <p className="text-ink-3 text-[12px]">
+              Feedback: {outcome === 'great' ? 'It went great 🎉' : outcome === 'issues' ? 'It had some issues 😕' : 'No feedback'}
+              {' · '}It&apos;s now closed, thanks for using Confette.
+            </p>
+          </div>
+        </div>
+      ) : closeoutOpen ? (
+        <div className="bg-white border border-border rounded-xl px-5 py-4 mb-5">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">📅</span>
+            <div className="flex-1">
+              <p className="font-medium text-ink text-[14px]">How did the event go, {firstName}?</p>
+              <p className="text-ink-3 text-[12px] mb-3">
+                {needsCloseout ? 'The date has passed. ' : ''}Let us know how it went, then we&apos;ll close it out.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => completeEvent('great')} disabled={completing}
+                  className="px-4 py-2 rounded-lg bg-success/10 text-[#166534] text-[13px] font-medium hover:bg-success/20 transition-colors disabled:opacity-50">
+                  🎉 It went great
+                </button>
+                <button onClick={() => completeEvent('issues')} disabled={completing}
+                  className="px-4 py-2 rounded-lg bg-warning/15 text-[#92660A] text-[13px] font-medium hover:bg-warning/25 transition-colors disabled:opacity-50">
+                  😕 It had some issues
+                </button>
+                {!needsCloseout && (
+                  <button onClick={() => setShowCloseout(false)} disabled={completing}
+                    className="px-4 py-2 rounded-lg border border-border text-ink-2 text-[13px] font-medium hover:bg-canvas transition-colors disabled:opacity-50">
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : plan.status === 'in-progress' && (
         <div className="bg-success/10 border border-success/30 rounded-xl px-5 py-4 flex items-center gap-3 mb-5">
           <span className="text-2xl">🎊</span>
           <div>
@@ -199,7 +283,7 @@ export default function PlanDetailPage() {
               Let the Bids Roll In →
             </button>
           )}
-          {canEdit && (
+          {editable && (
             <Link href={`/organiser/create-plan?edit=${plan.id}`}
               className="flex items-center gap-2 px-4 py-2.5 border border-border text-ink-2 text-[13px] font-medium rounded-lg hover:bg-canvas transition-colors">
               <Pencil size={14} />
@@ -215,6 +299,24 @@ export default function PlanDetailPage() {
               {copied ? 'Link copied!' : 'Copy share link'}
               <span className="font-mono text-[11px] text-ink-3 pl-1.5 ml-1.5 border-l border-border">{plan.shareCode}</span>
             </button>
+          )}
+          {canManualComplete && !closeoutOpen && (
+            <button onClick={() => setShowCloseout(true)}
+              className="flex items-center gap-2 px-4 py-2.5 border border-border text-ink-2 text-[13px] font-medium rounded-lg hover:bg-canvas transition-colors">
+              <CheckCircle2 size={14} /> Mark event done
+            </button>
+          )}
+          {!editable && plan.status !== 'draft' && (
+            <p className="w-full flex items-center gap-1.5 text-[12px] text-ink-3 mt-1">
+              <Lock size={12} />
+              {plan.status === 'completed'
+                ? 'This event is closed, so its details are locked.'
+                : plan.status === 'disputed'
+                  ? 'Locked while an admin reviews this event.'
+                  : eventStarted
+                    ? 'This event has already started, so it can no longer be edited.'
+                    : 'Editing is locked once vendors are booked. Withdraw a vendor first to make changes.'}
+            </p>
           )}
         </div>
       </div>
@@ -268,7 +370,7 @@ export default function PlanDetailPage() {
               <div className="flex items-center justify-between text-[13px]">
                 <span className="font-medium text-ink">Remaining budget</span>
                 <span className={`font-semibold tabular-nums ${remaining >= 0 ? 'text-[#166534]' : 'text-red-600'}`}>
-                  {remaining >= 0 ? fmtNaira(remaining) : `−${fmtNaira(-remaining)}`}
+                  {remaining >= 0 ? fmtNaira(remaining) : `-${fmtNaira(-remaining)}`}
                 </span>
               </div>
             </div>
@@ -278,6 +380,12 @@ export default function PlanDetailPage() {
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-white border border-border rounded-xl p-5">
             <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-ink-3 mb-3">Bids</p>
+            {planBids.some(b => b.status === 'pending') && !eventStarted && (
+              <p className="mb-3 flex items-start gap-1.5 rounded-lg bg-canvas px-3 py-2 text-[11px] text-ink-3">
+                <Clock size={13} className="shrink-0 mt-px text-ink-3" />
+                You can accept or decline bids until the event starts. Once you book a vendor, you can&apos;t drop them in the last 48 hours.
+              </p>
+            )}
             {acceptError && (
               <div className="mb-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 shrink-0 mt-0.5">
@@ -348,16 +456,20 @@ export default function PlanDetailPage() {
                             <span>This bid is {fmtNaira(overCat)} above the {fmtNaira(bidCat!.allocation)} you set for {bidCat!.name}.</span>
                           </p>
                         )}
-                        <div className="flex gap-2 mt-1.5">
-                          <button onClick={() => acceptBid(bid.id)} disabled={accepting === bid.id}
-                            className="flex-1 py-1.5 bg-success/10 text-[#166534] text-[11px] font-medium rounded-lg hover:bg-success/20 transition-colors disabled:opacity-50">
-                            Accept
-                          </button>
-                          <button onClick={() => { setDecliningId(bid.id); setDeclineReason('') }}
-                            className="flex-1 py-1.5 bg-red-50 text-red-600 text-[11px] font-medium rounded-lg hover:bg-red-100 transition-colors">
-                            Decline
-                          </button>
-                        </div>
+                        {!eventStarted ? (
+                          <div className="flex gap-2 mt-1.5">
+                            <button onClick={() => acceptBid(bid.id)} disabled={accepting === bid.id}
+                              className="flex-1 py-1.5 bg-success/10 text-[#166534] text-[11px] font-medium rounded-lg hover:bg-success/20 transition-colors disabled:opacity-50">
+                              Accept
+                            </button>
+                            <button onClick={() => { setDecliningId(bid.id); setDeclineReason('') }}
+                              className="flex-1 py-1.5 bg-red-50 text-red-600 text-[11px] font-medium rounded-lg hover:bg-red-100 transition-colors">
+                              Decline
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="mt-1.5 text-[11px] text-ink-3">This event has started, so bids are closed.</p>
+                        )}
                         </>
                       ) : null}
                       {bid.status === 'accepted' && decliningId !== bid.id && (
@@ -368,10 +480,16 @@ export default function PlanDetailPage() {
                               <Phone size={12} /> {bid.vendor.vendorProfile.phone}
                             </a>
                           )}
-                          <button type="button" onClick={() => { setDecliningId(bid.id); setDeclineReason('') }}
-                            className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[11px] font-medium text-ink-2 hover:border-red-400 hover:text-red-600 hover:bg-red-50 transition-colors">
-                            <Pencil size={11} /> Change decision
-                          </button>
+                          {vendorsLocked ? (
+                            <p className="mt-2 text-[11px] text-ink-3">
+                              {eventPassed ? 'This event has passed, so this vendor is final.' : "It's within 48 hours of the event, so this vendor is locked in."}
+                            </p>
+                          ) : (
+                            <button type="button" onClick={() => { setDecliningId(bid.id); setDeclineReason('') }}
+                              className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[12px] font-medium text-ink-2 cursor-pointer hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-600 transition-colors">
+                              <Pencil size={12} /> Change decision
+                            </button>
+                          )}
                         </>
                       )}
                     </div>

@@ -10,12 +10,14 @@ const BID_STATUS_META = {
   pending:  { label: 'Pending',  style: 'bg-warning/20 text-[#92660A]' },
   accepted: { label: 'Accepted', style: 'bg-success/15 text-[#166534]' },
   rejected: { label: 'Rejected', style: 'bg-red-100 text-red-600' },
+  held:     { label: 'On hold',  style: 'bg-[#EEF2F7] text-[#475467]' },
 }
 
 const TABS = [
   { id: 'all',      label: 'All' },
   { id: 'pending',  label: 'Pending' },
   { id: 'accepted', label: 'Accepted' },
+  { id: 'held',     label: 'On hold' },
   { id: 'rejected', label: 'Rejected' },
 ]
 
@@ -167,10 +169,16 @@ export default function VendorBidsPage() {
                         <span className="text-[10px] px-1.5 py-0.5 bg-warning/20 text-[#92660A] rounded-full font-medium">Counter bid</span>
                       )}
                     </div>
+                    {bid.pitch && <p className="text-ink-3 text-[11px] mt-1 line-clamp-1">Pitch: {bid.pitch}</p>}
+                    {bid.isCounterBid && bid.counterReason && (
+                      <p className="text-[#92660A] text-[11px] mt-0.5 line-clamp-1">Why above budget: {bid.counterReason}</p>
+                    )}
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-semibold text-ink text-[14px] tabular-nums">{fmtNaira(bid.amount)}</p>
-                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${bs.style}`}>{bs.label}</span>
+                    {bid.plan?.status === 'completed'
+                      ? <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#F3F4F6] text-[#374151]">Event done</span>
+                      : <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${bs.style}`}>{bs.label}</span>}
                   </div>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink-3 shrink-0">
                     <path d="m9 18 6-6-6-6"/>

@@ -53,6 +53,7 @@ export interface VendorBid {
     name: string
     state: string
     city: string
+    status?: string
     startDate?: string | null
     endDate?: string | null
     dateFlexible?: boolean

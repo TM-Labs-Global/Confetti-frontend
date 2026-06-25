@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
 import { useAuth } from '@/features/auth/context/AuthContext'
+import { VerifyEmailGate } from '@/features/auth/components/VerifyEmailGate'
 import NotificationBell from '@/features/notifications/components/NotificationBell'
 import { AppLogo } from './AppLogo'
 import { AppThemeToggle } from './AppThemeToggle'
@@ -80,6 +81,11 @@ export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle
   useEffect(() => { setDrawer(false) }, [pathname])
 
   if (!mounted || loading || !user || user.role !== role) return null
+
+  // Block the portal until the user verifies their email (admins are exempt).
+  if (user.role !== 'admin' && !user.emailVerified) {
+    return <VerifyEmailGate email={user.email} />
+  }
 
   const s        = SURFACE[surface]
   const a        = ACCENT[accent]

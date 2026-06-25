@@ -5,6 +5,7 @@ import { Sparkles, ClipboardList, Store, PartyPopper } from 'lucide-react'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { EventTile } from '@/features/shared-ui'
 import { EVENT_META } from '../../data/mockCategories'
+import { fmtGuests } from '@/shared/utils/format'
 import { Plan } from '@/features/organiser/types/plan.types'
 
 const STATUS_META = {
@@ -162,7 +163,7 @@ export default function OrganizerDashboard() {
                   <EventTile type={plan.eventTypeId || ''} bg={meta.bg} color={meta.color} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-ink text-[14px] truncate">{plan.name}</p>
-                    <p className="text-ink-3 text-[12px] mt-0.5">{plan.city}, {plan.state}</p>
+                    <p className="text-ink-3 text-[12px] mt-0.5">{plan.city}, {plan.state}{fmtGuests(plan.guestCount) ? ` · ${fmtGuests(plan.guestCount)}` : ''}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${st.style}`}>{st.label}</span>

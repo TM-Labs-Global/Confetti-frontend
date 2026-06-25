@@ -59,6 +59,15 @@ export function parseMoneyInput(formatted: string): string {
   return formatted.replace(/\D/g, '')
 }
 
+/**
+ * Human-friendly guest count, e.g. "150 guests" / "1 guest". Returns '' when the
+ * count is missing or zero, so callers can conditionally render it.
+ */
+export function fmtGuests(count: number | null | undefined): string {
+  if (!count || count < 1) return ''
+  return `${Number(count).toLocaleString('en-NG')} ${count === 1 ? 'guest' : 'guests'}`
+}
+
 export function timeAgo(isoString: string | Date): string {
   const diff = Date.now() - new Date(isoString).getTime()
   const mins = Math.floor(diff / 60000)

@@ -7,6 +7,8 @@ export interface PlanCategory {
   categoryId: string
   name: string
   allocation: number
+  /** Optional free-text brief telling vendors what the organiser wants for this service. */
+  brief?: string | null
 }
 
 export interface Plan {
@@ -20,6 +22,8 @@ export interface Plan {
   dateFlexible: boolean
   state: string
   city: string
+  /** Expected headcount. Anchors how vendors price most services. */
+  guestCount: number | null
   totalBudget: number
   shareCode: string
   organiserId: string
@@ -37,7 +41,8 @@ export interface CreatePlanPayload {
   dateFlexible?: boolean
   state: string
   city?: string
+  guestCount?: number | null
   totalBudget: number
-  categories: Array<{ id: string; name: string; allocation: number }>
+  categories: Array<{ id: string; name: string; allocation: number; brief?: string }>
   status?: PlanStatus
 }

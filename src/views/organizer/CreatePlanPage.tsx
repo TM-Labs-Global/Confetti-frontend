@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { EventTile, MoneyInput, DateTimeRangePicker, SearchableSelect } from '@/features/shared-ui'
 import { X, ArrowRight, Sparkles } from 'lucide-react'
 import { EVENT_META } from '../../data/mockCategories'
-import { fmtNaira, fmtDateRange } from '@/shared/utils/format'
+import { fmtNaira, fmtDateRange, fmtGuests } from '@/shared/utils/format'
 import { budgetColor } from '@/shared/utils/palette'
 
 interface EventCategory {
@@ -29,11 +29,21 @@ interface FormState {
   dateFlexible: boolean
   state: string
   city: string
+  guestCount: string
   totalBudget: string
   selectedCategories: string[]
   customCategories: Array<{ id: string; name: string; defaultPct?: number }>
   allocations: Record<string, string | number>
+  // Optional per-category brief (keyed by category id) telling vendors what's wanted.
+  briefs: Record<string, string>
   allocationMode: string
+}
+
+const EMPTY_FORM: FormState = {
+  eventType: null, eventTypeName: '', name: '', startDate: '', endDate: '', dateFlexible: false,
+  state: '', city: '', guestCount: '', totalBudget: '',
+  selectedCategories: [], customCategories: [],
+  allocations: {}, briefs: {}, allocationMode: 'smart',
 }
 
 interface WizardProgressProps {
@@ -202,6 +212,21 @@ function Step1({ form, onChange, eventTypes }: Step1Props) {
           </div>
 
           <div>
+            <label className="block text-[13px] font-medium text-ink-2 mb-1.5">How many guests?</label>
+            <input
+              type="text" inputMode="numeric" value={form.guestCount}
+              onChange={e => onChange('guestCount', e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, ''))}
+              placeholder="e.g. 150"
+              className="w-full px-4 py-3 border border-border rounded-lg text-[14px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
+            />
+            <p className="text-[12px] text-ink-3 mt-1.5">
+              {Number(form.guestCount) > 0
+                ? `Planning for ${fmtGuests(Number(form.guestCount))}. You can refine this later.`
+                : 'Vendors price catering, drinks, and rentals by headcount. A rough number is fine.'}
+            </p>
+          </div>
+
+          <div>
             <label className="block text-[13px] font-medium text-ink-2 mb-1.5">Total budget</label>
             <MoneyInput value={form.totalBudget} onChange={v => onChange('totalBudget', v)} alignRight={false} />
             {Number(form.totalBudget) > 0 && (
@@ -299,6 +324,7 @@ function Step2({ form, onChange, getCatsForType }: Step2Props) {
 }
 
 function Step3({ form, onChange, getCatsForType }: Step3Props) {
+  const [openBrief, setOpenBrief] = useState<Record<string, boolean>>({})
   const presetCats = getCatsForType(form.eventType)
   const allCats    = useMemo(() => [
     ...presetCats.filter(c => form.selectedCategories.includes(c.id)),
@@ -327,11 +353,12 @@ function Step3({ form, onChange, getCatsForType }: Step3Props) {
   }
 
   function setAmt(id: string, val: string) { onChange('allocations', { ...form.allocations, [id]: val }) }
+  function setBrief(id: string, val: string) { onChange('briefs', { ...form.briefs, [id]: val }) }
 
   return (
     <div>
       <h2 className="font-display font-bold text-[22px] sm:text-[30px] text-ink leading-tight mb-1">Let's talk budget</h2>
-      <p className="text-ink-3 text-[15px] mb-8">Spread your {fmtNaira(totalBudget)} across your selected services. Smart Split is a starting point. Tweak any figure you like.</p>
+      <p className="text-ink-3 text-[15px] mb-8">Spread your {fmtNaira(totalBudget)} across your selected services. Smart Split is a starting point. Tweak any figure you like, and add a quick brief so vendors know exactly what you want.</p>
 
       <div className="flex gap-1 p-1 bg-canvas border border-border rounded-lg mb-6 w-fit">
         {[{ id: 'smart', label: 'Smart Split' }, { id: 'even', label: 'Even Split' }].map(m => (
@@ -362,15 +389,36 @@ function Step3({ form, onChange, getCatsForType }: Step3Props) {
         {allCats.map((cat, i) => {
           const amt = Number(form.allocations[cat.id]) || 0
           const pct = totalBudget > 0 ? ((amt / totalBudget) * 100).toFixed(1) : '0.0'
+          const briefOpen = openBrief[cat.id] || !!form.briefs[cat.id]
           return (
-            <div key={cat.id} className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? 'border-t border-border' : ''}`}>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-ink">{cat.name}</p>
-                <p className="text-[11px] text-ink-3 mt-0.5">{pct}%</p>
+            <div key={cat.id} className={`px-5 py-4 ${i > 0 ? 'border-t border-border' : ''}`}>
+              <div className="flex items-center gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-medium text-ink">{cat.name}</p>
+                  <p className="text-[11px] text-ink-3 mt-0.5">{pct}%</p>
+                </div>
+                <div className="w-44">
+                  <MoneyInput value={form.allocations[cat.id] ?? ''} onChange={v => setAmt(cat.id, v)} />
+                </div>
               </div>
-              <div className="w-44">
-                <MoneyInput value={form.allocations[cat.id] ?? ''} onChange={v => setAmt(cat.id, v)} />
-              </div>
+              {briefOpen ? (
+                <textarea
+                  value={form.briefs[cat.id] ?? ''}
+                  onChange={e => setBrief(cat.id, e.target.value)}
+                  autoFocus={!!openBrief[cat.id] && !form.briefs[cat.id]}
+                  placeholder={`What do you want for ${cat.name.toLowerCase()}? Menu, style, hours, deliverables…`}
+                  rows={2}
+                  className="mt-3 w-full px-3 py-2 border border-border rounded-lg text-[13px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors resize-none"
+                />
+              ) : (
+                <button
+                  onClick={() => setOpenBrief(s => ({ ...s, [cat.id]: true }))}
+                  className="mt-2 inline-flex items-center gap-1 text-[12px] text-ink-3 hover:text-primary transition-colors"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                  Add a brief for vendors
+                </button>
+              )}
             </div>
           )
         })}
@@ -391,6 +439,7 @@ function Step4({ form, getCatsForType, onPublish, onSave, onBack, saving, isEdit
   const totalBudget = Number(form.totalBudget) || 0
   const totalAlloc  = allCats.reduce((s, c) => s + (Number(form.allocations[c.id]) || 0), 0)
   const location    = [form.city, form.state].filter(Boolean).join(', ')
+  const guestLabel  = fmtGuests(Number(form.guestCount))
   const dateLabel   = fmtDateRange(form.startDate || null, form.endDate || null, form.dateFlexible)
   const sorted      = [...allCats].sort((a, b) => (Number(form.allocations[b.id]) || 0) - (Number(form.allocations[a.id]) || 0))
 
@@ -405,7 +454,7 @@ function Step4({ form, getCatsForType, onPublish, onSave, onBack, saving, isEdit
           <div className="flex-1 min-w-0">
             <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-ink-3 mb-0.5">{form.eventTypeName}</p>
             <h3 className="font-display font-bold text-[20px] text-ink leading-tight">{form.name || 'Unnamed Event'}</h3>
-            <p className="text-ink-3 text-[13px] mt-1">{dateLabel} · {location || 'Location not set'}</p>
+            <p className="text-ink-3 text-[13px] mt-1">{dateLabel} · {location || 'Location not set'}{guestLabel ? ` · ${guestLabel}` : ''}</p>
           </div>
           <div className="text-right shrink-0">
             <p className="text-[11px] text-ink-3 mb-0.5">Total budget</p>
@@ -429,6 +478,9 @@ function Step4({ form, getCatsForType, onPublish, onSave, onBack, saving, isEdit
                 <div className="h-1.5 bg-canvas rounded-full border border-border overflow-hidden">
                   <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: budgetColor(i) }} />
                 </div>
+                {form.briefs[cat.id]?.trim() && (
+                  <p className="text-[12px] text-ink-3 mt-1.5 leading-relaxed">{form.briefs[cat.id]}</p>
+                )}
               </div>
             )
           })}
@@ -471,12 +523,7 @@ export default function CreatePlanPage() {
   const [saving, setSaving] = useState<'open' | 'draft' | null>(null)
   const [loadingPlan, setLoadingPlan] = useState(isEdit)
   const [hydrated, setHydrated] = useState(false)
-  const [form, setForm] = useState<FormState>({
-    eventType: null, eventTypeName: '', name: '', startDate: '', endDate: '', dateFlexible: false,
-    state: '', city: '', totalBudget: '',
-    selectedCategories: [], customCategories: [],
-    allocations: {}, allocationMode: 'smart',
-  })
+  const [form, setForm] = useState<FormState>(EMPTY_FORM)
 
   // Restore an in-progress draft on refresh (new plans only; edit loads from the server).
   useEffect(() => {
@@ -485,7 +532,9 @@ export default function CreatePlanPage() {
       const saved = localStorage.getItem(DRAFT_KEY)
       if (saved) {
         const d = JSON.parse(saved)
-        if (d.form) setForm(d.form)
+        // Merge over EMPTY_FORM so drafts saved before guestCount/briefs existed
+        // still hydrate cleanly.
+        if (d.form) setForm({ ...EMPTY_FORM, ...d.form, briefs: d.form.briefs ?? {} })
         if (d.step) setStep(d.step)
       }
     } catch { /* ignore corrupt draft */ }
@@ -518,7 +567,11 @@ export default function CreatePlanPage() {
           .filter((c: any) => !presetIds.has(c.categoryId))
           .map((c: any) => ({ id: c.categoryId, name: c.name, defaultPct: 0 }))
         const allocations: Record<string, number> = {}
-        ;(plan.categories ?? []).forEach((c: any) => { allocations[c.categoryId] = c.allocation })
+        const briefs: Record<string, string> = {}
+        ;(plan.categories ?? []).forEach((c: any) => {
+          allocations[c.categoryId] = c.allocation
+          if (c.brief) briefs[c.categoryId] = c.brief
+        })
         setForm({
           eventType: plan.eventTypeId,
           eventTypeName: plan.eventType?.name ?? '',
@@ -528,10 +581,12 @@ export default function CreatePlanPage() {
           dateFlexible: !!plan.dateFlexible,
           state: plan.state ?? '',
           city: plan.city ?? '',
+          guestCount: plan.guestCount != null ? String(plan.guestCount) : '',
           totalBudget: String(plan.totalBudget ?? ''),
           selectedCategories: (plan.categories ?? []).map((c: any) => c.categoryId),
           customCategories: custom,
           allocations,
+          briefs,
           allocationMode: 'manual',
         })
         setLoadingPlan(false)
@@ -550,7 +605,7 @@ export default function CreatePlanPage() {
       setForm(f => ({
         ...f, eventType: value, eventTypeName: et?.name ?? '',
         selectedCategories: cats.map(c => c.id),
-        customCategories: [], allocations: {}, allocationMode: 'smart',
+        customCategories: [], allocations: {}, briefs: {}, allocationMode: 'smart',
       }))
       return
     }
@@ -605,12 +660,14 @@ export default function CreatePlanPage() {
       dateFlexible: form.dateFlexible,
       state: form.state,
       city: form.city,
+      guestCount: form.guestCount ? Number(form.guestCount) : null,
       totalBudget: form.totalBudget,
       status,
       categories: allCats.map(c => ({
         id: c.id,
         name: c.name,
         allocation: Number(form.allocations[c.id]) || 0,
+        brief: form.briefs[c.id]?.trim() || undefined,
       })),
     }
     try {

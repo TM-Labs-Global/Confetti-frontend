@@ -4,10 +4,10 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { AppLogo, EventTile } from '@/features/shared-ui'
 import { EVENT_META } from '../../data/mockCategories'
-import { fmtNaira, fmtDateRange } from '@/shared/utils/format'
+import { fmtNaira, fmtDateRange, fmtGuests } from '@/shared/utils/format'
 import { budgetColor } from '@/shared/utils/palette'
 
-interface PublicCategory { id: string; name: string; allocation: number }
+interface PublicCategory { id: string; name: string; allocation: number; brief?: string | null }
 interface PublicPlan {
   id: string
   name: string
@@ -17,6 +17,7 @@ interface PublicPlan {
   dateFlexible: boolean
   state: string
   city: string
+  guestCount: number | null
   totalBudget: number
   shareCode: string
   eventType?: { id: string; name: string }
@@ -80,7 +81,7 @@ export default function PublicPlanPage() {
             <div className="min-w-0 flex-1">
               <p className="mb-0.5 font-mono text-[11px] uppercase tracking-[0.08em] text-ink-3">{plan.eventType?.name}</p>
               <h1 className="font-display text-[24px] font-bold leading-tight text-ink">{plan.name}</h1>
-              <p className="mt-1 text-[13px] text-ink-3">{dateLabel} · {location || 'Location to be confirmed'}</p>
+              <p className="mt-1 text-[13px] text-ink-3">{dateLabel} · {location || 'Location to be confirmed'}{fmtGuests(plan.guestCount) ? ` · ${fmtGuests(plan.guestCount)}` : ''}</p>
               {plan.organiser?.name && <p className="mt-1 text-[12px] text-ink-3">Organised by {plan.organiser.name}</p>}
             </div>
             <div className="shrink-0 text-right">
@@ -104,6 +105,9 @@ export default function PublicPlanPage() {
                   <div className="h-1.5 overflow-hidden rounded-full border border-border bg-canvas">
                     <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: budgetColor(i) }} />
                   </div>
+                  {cat.brief && (
+                    <p className="mt-1.5 text-[12px] leading-relaxed text-ink-3">{cat.brief}</p>
+                  )}
                 </div>
               )
             })}

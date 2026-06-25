@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { EVENT_META } from '../../data/mockCategories'
-import { fmtNaira, fmtDateRange, timeAgo } from '@/shared/utils/format'
+import { fmtNaira, fmtDateRange, fmtGuests, timeAgo } from '@/shared/utils/format'
 import { budgetColor } from '@/shared/utils/palette'
 import { EventTile } from '@/features/shared-ui'
 import { Plan } from '@/features/organiser/types/plan.types'
@@ -116,7 +116,7 @@ export default function AdminPlanDetailPage() {
           <div className="flex-1 min-w-0">
             <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-dark-muted mb-0.5">{plan.eventType?.name}</p>
             <h1 className="font-display font-bold text-[24px] text-white leading-tight">{plan.name}</h1>
-            <p className="text-dark-muted text-[13px] mt-1">{dateLabel} · {plan.city}, {plan.state}</p>
+            <p className="text-dark-muted text-[13px] mt-1">{dateLabel} · {plan.city}, {plan.state}{fmtGuests(plan.guestCount) ? ` · ${fmtGuests(plan.guestCount)}` : ''}</p>
             {plan.status === 'completed' && (
               <p className="mt-1.5 text-[12px] text-[#39E75F]">
                 Feedback: {outcome === 'great' ? 'It went great 🎉' : outcome === 'issues' ? 'It had some issues 😕' : 'No feedback'}
@@ -125,18 +125,21 @@ export default function AdminPlanDetailPage() {
           </div>
           <div className="flex items-start gap-3 shrink-0">
             <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${st.style}`}>{st.label}</span>
-            <button onClick={toggleFlag}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-[12px] font-medium transition-colors ${
-                flagged
-                  ? 'border-red-500/40 bg-red-500/10 text-red-400'
-                  : 'border-dark-border text-dark-muted hover:border-red-500/30 hover:text-red-400'
-              }`}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill={flagged ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>
-              </svg>
-              {flagged ? 'Unflag Event' : 'Flag Event'}
-            </button>
+            {/* A completed event is terminal — it can no longer be flagged. */}
+            {plan.status !== 'completed' && (
+              <button onClick={toggleFlag}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-[12px] font-medium transition-colors ${
+                  flagged
+                    ? 'border-red-500/40 bg-red-500/10 text-red-400'
+                    : 'border-dark-border text-dark-muted hover:border-red-500/30 hover:text-red-400'
+                }`}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill={flagged ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>
+                </svg>
+                {flagged ? 'Unflag Event' : 'Flag Event'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -177,6 +180,9 @@ export default function AdminPlanDetailPage() {
                   <div className="h-1.5 bg-dark rounded-full overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: budgetColor(i) }} />
                   </div>
+                  {cat.brief && (
+                    <p className="text-[12px] text-dark-muted mt-1.5 leading-relaxed">{cat.brief}</p>
+                  )}
                 </div>
               )
             })}

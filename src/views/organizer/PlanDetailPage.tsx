@@ -7,7 +7,7 @@ import { EventTile, ConfettiBurst } from '@/features/shared-ui'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { VendorProfileModal } from '@/features/vendor/components/VendorProfileModal'
 import { EVENT_META } from '../../data/mockCategories'
-import { fmtNaira, fmtDate, fmtDateRange } from '@/shared/utils/format'
+import { fmtNaira, fmtDate, fmtDateRange, fmtGuests } from '@/shared/utils/format'
 import { budgetColor } from '@/shared/utils/palette'
 import { Plan } from '@/features/organiser/types/plan.types'
 import { VendorBid } from '@/features/vendor/types/vendor.types'
@@ -268,7 +268,7 @@ export default function PlanDetailPage() {
               <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${st.style}`}>{st.label}</span>
             </div>
             <h1 className="font-display font-bold text-[24px] text-ink leading-tight">{plan.name}</h1>
-            <p className="text-ink-3 text-[13px] mt-1">{dateLabel} · {plan.city}, {plan.state}</p>
+            <p className="text-ink-3 text-[13px] mt-1">{dateLabel} · {plan.city}, {plan.state}{fmtGuests(plan.guestCount) ? ` · ${fmtGuests(plan.guestCount)}` : ''}</p>
           </div>
           <div className="text-right shrink-0">
             <p className="text-[11px] text-ink-3 mb-0.5">Total budget</p>
@@ -348,6 +348,9 @@ export default function PlanDetailPage() {
                   <div className="h-1.5 bg-canvas rounded-full border border-border overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: barColor }} />
                   </div>
+                  {cat.brief && (
+                    <p className="text-[12px] text-ink-3 mt-1.5 leading-relaxed">{cat.brief}</p>
+                  )}
                   {accepted && (
                     <p className="text-[11px] text-ink-3 mt-1 tabular-nums">
                       Awarded at {fmtNaira(accepted.amount)} ·{' '}
@@ -503,6 +506,7 @@ export default function PlanDetailPage() {
             <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-ink-3 mb-3">Details</p>
             <dl className="space-y-2.5">
               {[
+                { label: 'Guests',     value: fmtGuests(plan.guestCount) || 'Not set' },
                 { label: 'Categories', value: `${(plan.categories ?? []).length} services` },
                 { label: 'Share code', value: plan.shareCode },
                 { label: 'Created',    value: fmtDate(plan.createdAt) },

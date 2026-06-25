@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { EVENT_META } from '../../data/mockCategories'
-import { fmtNaira, fmtDateRange } from '@/shared/utils/format'
+import { fmtNaira, fmtDateRange, fmtGuests } from '@/shared/utils/format'
 import { EventTile, MoneyInput, ConfettiBurst } from '@/features/shared-ui'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { Plan, PlanCategory } from '@/features/organiser/types/plan.types'
@@ -162,8 +162,14 @@ export default function VendorPlanDetailPage() {
 
       {isCompleted && (
         <div className="mb-4 flex items-center gap-3 rounded-xl border border-border bg-canvas px-5 py-3.5">
-          <span className="text-xl">✅</span>
-          <p className="text-[13px] text-ink-2">This event has wrapped up. Thanks for being part of it!</p>
+          {/* Only a vendor who was actually booked gets the "part of it" thanks;
+              a vendor whose bids were never accepted gets neutral, honest copy. */}
+          <span className="text-xl">{acceptedBid ? '✅' : '🏁'}</span>
+          <p className="text-[13px] text-ink-2">
+            {acceptedBid
+              ? 'This event has wrapped up. Thanks for being part of it!'
+              : 'This event has wrapped up. It went ahead with other vendors this time.'}
+          </p>
         </div>
       )}
 
@@ -173,7 +179,7 @@ export default function VendorPlanDetailPage() {
           <div className="flex-1 min-w-0">
             <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-ink-3 mb-0.5">{plan.eventType?.name}</p>
             <h1 className="font-display font-bold text-[20px] sm:text-[24px] text-ink leading-tight">{plan.name}</h1>
-            <p className="text-ink-3 text-[13px] mt-1">{dateLabel} · {plan.city}, {plan.state}</p>
+            <p className="text-ink-3 text-[13px] mt-1">{dateLabel} · {plan.city}, {plan.state}{fmtGuests(plan.guestCount) ? ` · ${fmtGuests(plan.guestCount)}` : ''}</p>
           </div>
         </div>
       </div>
@@ -199,6 +205,11 @@ export default function VendorPlanDetailPage() {
                       <div className="h-1.5 bg-canvas rounded-full border border-border overflow-hidden mb-2">
                         <div className="h-full bg-warning/60 rounded-full" style={{ width: `${pct}%` }} />
                       </div>
+                    )}
+                    {eligible && cat.brief && (
+                      <p className="text-[12px] text-ink-2 leading-relaxed mb-2">
+                        <span className="text-ink-3">What they want: </span>{cat.brief}
+                      </p>
                     )}
                     {myBidHere ? (
                       <div className="text-[12px]">
@@ -325,6 +336,12 @@ export default function VendorPlanDetailPage() {
                   ))}
                 </select>
               </div>
+
+              {selectedCat?.brief && (
+                <div className="rounded-lg border border-border bg-canvas px-3 py-2.5 text-[12px] text-ink-2 leading-relaxed">
+                  <span className="text-ink-3">What they want: </span>{selectedCat.brief}
+                </div>
+              )}
 
               <div>
                 <label className="block text-[12px] font-medium text-ink-2 mb-1">Your bid amount</label>

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { EventTile, ConfettiBurst, DateRangeFilter, type DateFilter } from '@/features/shared-ui'
 import { EVENT_META } from '../../data/mockCategories'
-import { fmtNaira, fmtDateRange } from '@/shared/utils/format'
+import { fmtNaira, fmtDateRange, fmtGuests } from '@/shared/utils/format'
 import { Plan } from '@/features/organiser/types/plan.types'
 
 function monthKey(dateStr: string | null | undefined): string {
@@ -206,7 +206,7 @@ export default function PlanSummaryPage() {
                   <EventTile type={plan.eventTypeId || ''} bg={meta.bg} color={meta.color} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-ink text-[14px] truncate">{plan.name}</p>
-                    <p className="text-ink-3 text-[12px] mt-0.5">{dateLabel} · {plan.city}, {plan.state}</p>
+                    <p className="text-ink-3 text-[12px] mt-0.5">{dateLabel} · {plan.city}, {plan.state}{fmtGuests(plan.guestCount) ? ` · ${fmtGuests(plan.guestCount)}` : ''}</p>
                   </div>
                   <div className="text-right shrink-0 mr-2">
                     <p className="font-medium text-ink text-[13px] tabular-nums">{fmtNaira(plan.totalBudget)}</p>

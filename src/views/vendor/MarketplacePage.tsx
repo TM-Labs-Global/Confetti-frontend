@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { EVENT_META, EVENT_TYPES } from '../../data/mockCategories'
-import { fmtNaira, fmtDateRange } from '@/shared/utils/format'
+import { fmtNaira, fmtDateRange, fmtGuests } from '@/shared/utils/format'
 import { EventTile, DateRangeFilter, type DateFilter } from '@/features/shared-ui'
 import { Plan } from '@/features/organiser/types/plan.types'
 
@@ -137,6 +137,7 @@ export default function MarketplacePage() {
                 <div className="space-y-2 text-[13px] text-ink-3 mb-4">
                   <p>📍 {plan.city}, {plan.state}</p>
                   <p>📅 {dateLabel}</p>
+                  {fmtGuests(plan.guestCount) && <p>👥 {fmtGuests(plan.guestCount)}</p>}
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-border">

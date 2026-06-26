@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { AppLogo } from '@/features/shared-ui'
 import { Menu, X, Sun, Moon } from 'lucide-react'
-import { useLandingTheme } from './LandingShell'
+import { useLandingTheme, useFeaturedVendors } from './LandingShell'
 
 const DASHBOARDS: Record<string, string> = {
   organiser: '/organiser/dashboard',
@@ -16,6 +16,7 @@ const LINKS = [
   { label: 'About', href: '#about' },
   { label: 'How it works', href: '#how-it-works' },
   { label: 'Events', href: '#events' },
+  { label: 'Vendors', href: '#vendors' },
   { label: 'Escrow', href: '#escrow' },
   { label: 'FAQ', href: '#faq' },
   { label: 'Contact', href: '#contact' },
@@ -37,8 +38,13 @@ function ThemeToggle({ className = '' }: { className?: string }) {
 
 export function LandingNav() {
   const { user } = useAuth()
+  const { vendors } = useFeaturedVendors()
   const [open, setOpen] = useState(false)
   const dashboard = user ? DASHBOARDS[user.role] ?? '/login' : null
+
+  // Drop the "Vendors" anchor when the showcase section is hidden (no verified vendors).
+  const hasVendors = !!vendors && vendors.length > 0
+  const links = hasVendors ? LINKS : LINKS.filter(l => l.href !== '#vendors')
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4">
@@ -48,7 +54,7 @@ export function LandingNav() {
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">
-          {LINKS.map(l => (
+          {links.map(l => (
             <a key={l.href} href={l.href} className="text-[14px] font-medium text-[var(--ld-text-muted)] transition-colors hover:text-[var(--ld-text)]">
               {l.label}
             </a>
@@ -90,7 +96,7 @@ export function LandingNav() {
       {open && (
         <div className="mx-auto mt-2 max-w-6xl rounded-2xl border border-[var(--ld-border)] bg-[var(--ld-glass-strong)] p-4 backdrop-blur-xl md:hidden">
           <div className="flex flex-col gap-1">
-            {LINKS.map(l => (
+            {links.map(l => (
               <a
                 key={l.href}
                 href={l.href}

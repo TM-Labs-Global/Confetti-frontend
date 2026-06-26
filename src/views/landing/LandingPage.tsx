@@ -11,6 +11,7 @@ import { LandingShell } from '@/features/landing/components/LandingShell'
 import { LandingNav } from '@/features/landing/components/LandingNav'
 import { HeroCards } from '@/features/landing/components/HeroCards'
 import { SocialLinks } from '@/features/landing/components/SocialLinks'
+import { FeaturedVendors, VendorsFooterLink } from '@/features/landing/components/FeaturedVendors'
 import { AppLogo, ConfettiBurst } from '@/features/shared-ui'
 
 // Unsplash image helper (host allow-listed in next.config.ts).
@@ -335,6 +336,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ───────────────── Vendors showcase (live; hides when no verified vendors) ───────────────── */}
+      <FeaturedVendors />
+
       {/* ───────────────── How it works ───────────────── */}
       <section id="how-it-works" className="relative overflow-hidden py-20 sm:py-28">
         <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -649,6 +653,7 @@ export default function LandingPage() {
             <ul className="mt-4 space-y-2.5 text-[14px]">
               <li><a href="#how-it-works" className="text-[var(--ld-text-muted)] transition-colors hover:text-[var(--ld-text)]">How it works</a></li>
               <li><a href="#events" className="text-[var(--ld-text-muted)] transition-colors hover:text-[var(--ld-text)]">Events</a></li>
+              <VendorsFooterLink />
               <li><a href="#escrow" className="text-[var(--ld-text-muted)] transition-colors hover:text-[var(--ld-text)]">Escrow</a></li>
               <li><a href="#faq" className="text-[var(--ld-text-muted)] transition-colors hover:text-[var(--ld-text)]">FAQ</a></li>
             </ul>

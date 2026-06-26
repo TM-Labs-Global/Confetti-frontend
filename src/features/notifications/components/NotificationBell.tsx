@@ -21,6 +21,7 @@ const TYPE_LABELS: Record<string, string> = {
   vendor_pending:         'Profile under review',
   vendor_review:          'Vendor awaiting review',
   booked_vendor_suspended:'Booked vendor suspended',
+  vendor_invited:         'Invitation',
 }
 
 // Default route per notification type when the backend hasn't attached an explicit link.
@@ -39,6 +40,7 @@ const TYPE_ROUTES: Record<string, string> = {
   vendor_pending:          '/vendor/profile',
   vendor_review:           '/admin/vendors',
   booked_vendor_suspended: '/organiser/plans',
+  vendor_invited:          '/vendor/marketplace',
 }
 
 function routeFor(n: any): string | null {

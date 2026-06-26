@@ -217,13 +217,13 @@ function InviteToBidModal({
     () => new Set(invites.filter(i => i.vendorId === vendor.userId).map(i => `${i.planId}:${i.planCategoryId}`)),
     [invites, vendor.userId],
   )
+  const [now] = useState(() => Date.now())
   const invitable = useMemo(() => {
-    const now = Date.now()
     return plans.filter(p =>
       ['open', 'bidding'].includes(p.status as string) &&
       (p.dateFlexible || !p.startDate || new Date(p.startDate).getTime() > now)
     )
-  }, [plans])
+  }, [plans, now])
   const selectedPlan = invitable.find(p => p.id === planId)
   // Categories on the chosen event that this vendor actually offers.
   const matchingCats = (selectedPlan?.categories ?? []).filter(c => vendorServices.includes(c.name))

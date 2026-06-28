@@ -12,6 +12,7 @@ import { LandingNav } from '@/features/landing/components/LandingNav'
 import { HeroCards } from '@/features/landing/components/HeroCards'
 import { SocialLinks } from '@/features/landing/components/SocialLinks'
 import { FeaturedVendors, VendorsFooterLink } from '@/features/landing/components/FeaturedVendors'
+import { FeaturedEvents } from '@/features/landing/components/FeaturedEvents'
 import { AppLogo, ConfettiBurst } from '@/features/shared-ui'
 
 // Unsplash image helper (host allow-listed in next.config.ts).
@@ -336,6 +337,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ───────────────── Live events (hides when no open events) ───────────────── */}
+      <FeaturedEvents />
+
       {/* ───────────────── Vendors showcase (live; hides when no verified vendors) ───────────────── */}
       <FeaturedVendors />
 
@@ -608,7 +612,7 @@ export default function LandingPage() {
 
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
             {[
-              { icon: Mail, label: 'Email us', value: 'hello@confette.ng', href: 'mailto:hello@confette.ng' },
+              { icon: Mail, label: 'Email us', value: 'events@confette.co', href: 'mailto:events@confette.co' },
               { icon: Phone, label: 'Call us', value: '+234 800 000 0000', href: 'tel:+2348000000000' },
               { icon: MapPin, label: 'Find us', value: 'Lagos, Nigeria', href: null },
             ].map(c => {
@@ -674,7 +678,7 @@ export default function LandingPage() {
             <h3 className="font-display text-[14px] font-semibold text-[var(--ld-text)]">Company</h3>
             <ul className="mt-4 space-y-2.5 text-[14px]">
               <li><a href="#contact" className="text-[var(--ld-text-muted)] transition-colors hover:text-[var(--ld-text)]">Contact us</a></li>
-              <li><a href="mailto:hello@confette.ng" className="text-[var(--ld-text-muted)] transition-colors hover:text-[var(--ld-text)]">hello@confette.ng</a></li>
+              <li><a href="mailto:events@confette.co" className="text-[var(--ld-text-muted)] transition-colors hover:text-[var(--ld-text)]">events@confette.co</a></li>
             </ul>
           </div>
         </div>

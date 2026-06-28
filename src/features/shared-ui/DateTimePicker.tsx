@@ -96,12 +96,25 @@ export function DateTimePicker({
   }, [open])
 
   const grid = buildMonthGrid(cursor.year, cursor.month)
-  const minParts = min ? parse(`${min}T00:00`) : null
+  // `min` may be a date (YYYY-MM-DD) or a full datetime. Days before the min day
+  // are disabled; on the min day itself, times before the min time are disabled.
+  const minParts = min ? parse(min.includes('T') ? min : `${min}T00:00`) : null
   const minStamp = minParts ? new Date(minParts.y, minParts.m, minParts.d).getTime() : null
+  const minMinutes = minParts ? minParts.h * 60 + minParts.min : 0
+  const dayIsMin = (p: Parts | null) => !!(p && minParts && p.y === minParts.y && p.m === minParts.m && p.d === minParts.d)
+  const timePast = (h24: number, mm: number, p: Parts | null) => dayIsMin(p) && h24 * 60 + mm < minMinutes
 
   function pickDay(day: number) {
     const base: Parts = parts ?? { y: cursor.year, m: cursor.month, d: day, h: defaultHour, min: 0 }
-    onChange(build({ ...base, y: cursor.year, m: cursor.month, d: day }))
+    const next: Parts = { ...base, y: cursor.year, m: cursor.month, d: day }
+    // On the earliest selectable day, bump a now-past time up to the first valid
+    // 15-minute slot, so a picked time can never land in the past.
+    if (dayIsMin(next) && next.h * 60 + next.min < minMinutes) {
+      const m = Math.min(Math.ceil(minMinutes / 15) * 15, 23 * 60 + 45)
+      next.h = Math.floor(m / 60)
+      next.min = m % 60
+    }
+    onChange(build(next))
   }
 
   function setTime(h: number, min: number) {
@@ -193,7 +206,10 @@ export function DateTimePicker({
               }}
               className="select-bare rounded-lg border border-border bg-white px-2 py-1.5 font-mono text-[13px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10"
             >
-              {Array.from({ length: 12 }, (_, i) => i + 1).map(h => <option key={h} value={h}>{pad(h)}</option>)}
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(h => {
+                const h24 = meridiem === 'PM' ? (h % 12) + 12 : h % 12
+                return <option key={h} value={h} disabled={timePast(h24, 45, parts)}>{pad(h)}</option>
+              })}
             </select>
             <span className="font-mono text-ink-3">:</span>
             <select
@@ -201,25 +217,31 @@ export function DateTimePicker({
               onChange={e => setTime(parts ? parts.h : (meridiem === 'PM' ? 18 : 6), +e.target.value)}
               className="select-bare rounded-lg border border-border bg-white px-2 py-1.5 font-mono text-[13px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10"
             >
-              {[0, 15, 30, 45].map(m => <option key={m} value={m}>{pad(m)}</option>)}
+              {[0, 15, 30, 45].map(m => (
+                <option key={m} value={m} disabled={timePast(parts ? parts.h : (meridiem === 'PM' ? 18 : 6), m, parts)}>{pad(m)}</option>
+              ))}
             </select>
             <div className="ml-auto flex rounded-lg border border-border p-0.5">
-              {(['AM', 'PM'] as const).map(mer => (
+              {(['AM', 'PM'] as const).map(mer => {
+                const merPast = mer === 'AM' && timePast(11, 45, parts)
+                return (
                 <button
                   key={mer}
                   type="button"
+                  disabled={merPast}
                   onClick={() => {
                     const h12 = hour12
                     const h24 = mer === 'PM' ? (h12 % 12) + 12 : h12 % 12
                     setTime(h24, parts?.min ?? 0)
                   }}
-                  className={`rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors ${
+                  className={`rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
                     meridiem === mer ? 'bg-primary text-dark' : 'text-ink-3 hover:text-ink'
                   }`}
                 >
                   {mer}
                 </button>
-              ))}
+                )
+              })}
             </div>
           </div>
 
@@ -247,7 +269,11 @@ interface DateTimeRangePickerProps {
 }
 
 export function DateTimeRangePicker({ startValue, endValue, onChange, disabled, minDate }: DateTimeRangePickerProps) {
-  const today = minDate ?? new Date().toISOString().slice(0, 10)
+  // Earliest a fixed-date event can start: right now — so neither a past day nor
+  // a past time *today* can be picked. An explicit minDate (date only) overrides.
+  const now = new Date()
+  const nowLocal = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
+  const startMin = minDate ? `${minDate}T00:00` : nowLocal
 
   function handleStart(start: string) {
     // Don't auto-fill the end - the organiser sets it themselves. Only clear a
@@ -260,14 +286,14 @@ export function DateTimeRangePicker({ startValue, endValue, onChange, disabled, 
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div>
         <label className="mb-1.5 block text-[12px] font-medium text-ink-3">Starts</label>
-        <DateTimePicker value={startValue} onChange={handleStart} min={today} disabled={disabled} placeholder="Start date & time" defaultHour={18} />
+        <DateTimePicker value={startValue} onChange={handleStart} min={startMin} disabled={disabled} placeholder="Start date & time" defaultHour={18} />
       </div>
       <div>
         <label className="mb-1.5 block text-[12px] font-medium text-ink-3">Ends</label>
         <DateTimePicker
           value={endValue}
           onChange={end => onChange({ start: startValue, end })}
-          min={dateOnly(startValue) || today}
+          min={startValue || startMin}
           disabled={disabled}
           placeholder="End date & time"
           defaultHour={22}

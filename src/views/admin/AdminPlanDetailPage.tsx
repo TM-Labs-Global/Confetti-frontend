@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { EVENT_META } from '../../data/mockCategories'
@@ -40,6 +40,10 @@ export default function AdminPlanDetailPage() {
   const [plan, setPlan]       = useState<AdminPlanDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [flagged, setFlagged] = useState(false)
+  const [flagging, setFlagging] = useState(false)
+  // Synchronous guard so a rapid double-click can't fire two requests (which
+  // would create duplicate flag/restore notifications).
+  const busyRef = useRef(false)
 
   useEffect(() => {
     fetch(`/api/plans/${id}`)
@@ -64,15 +68,23 @@ export default function AdminPlanDetailPage() {
   }
 
   async function toggleFlag() {
+    if (busyRef.current) return
+    busyRef.current = true
+    setFlagging(true)
     const newStatus = flagged ? restoreStatus() : 'disputed'
-    const res = await fetch(`/api/plans/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
-    })
-    if (res.ok) {
-      setFlagged(!flagged)
-      setPlan(p => p ? { ...p, status: newStatus as any } : null)
+    try {
+      const res = await fetch(`/api/plans/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (res.ok) {
+        setFlagged(!flagged)
+        setPlan(p => p ? { ...p, status: newStatus as any } : null)
+      }
+    } finally {
+      busyRef.current = false
+      setFlagging(false)
     }
   }
 
@@ -127,8 +139,8 @@ export default function AdminPlanDetailPage() {
             <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${st.style}`}>{st.label}</span>
             {/* A completed event is terminal — it can no longer be flagged. */}
             {plan.status !== 'completed' && (
-              <button onClick={toggleFlag}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-[12px] font-medium transition-colors ${
+              <button onClick={toggleFlag} disabled={flagging}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-[12px] font-medium transition-colors disabled:opacity-50 ${
                   flagged
                     ? 'border-red-500/40 bg-red-500/10 text-red-400'
                     : 'border-dark-border text-dark-muted hover:border-red-500/30 hover:text-red-400'

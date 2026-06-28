@@ -66,26 +66,20 @@
     border-radius: 4px;
   }
 
-  /* Text links underline on hover by default. Card- / button-style anchors
-     (those that set a block/flex/grid display, or use Tailwind's `group`)
-     opt out so whole cards aren't underlined. Explicit `hover:underline`
-     utilities still win since they live in the utilities layer. */
-  a:hover {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-  a.flex:hover,
-  a.inline-flex:hover,
-  a.block:hover,
-  a.inline-block:hover,
-  a.grid:hover,
-  a.group:hover,
-  a.no-underline:hover {
+  /* Links and buttons never underline on hover / tap / click. Where a text
+     link should underline, opt in explicitly with the `hover:underline`
+     utility (it lives in a later layer, so it still wins). */
+  a,
+  a:hover,
+  a:focus,
+  a:active {
     text-decoration: none;
   }
-  /* The marketing landing page has its own link/button styling - opt it out. */
-  .landing a:hover {
-    text-decoration: none;
+  /* Remove the grey tap-flash box on mobile for interactive elements. */
+  a,
+  button,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 

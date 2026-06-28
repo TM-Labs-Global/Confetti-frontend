@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { AppLogo, ConfettiBurst } from '@/features/shared-ui'
 import { verifyEmail, resendVerification } from '@/features/auth/services/authService'
@@ -16,7 +16,8 @@ const DASHBOARDS: Record<string, string> = {
 export default function VerifyEmailPage() {
   const params = useSearchParams()
   const token = params.get('token')
-  const { user } = useAuth()
+  const router = useRouter()
+  const { user, refresh } = useAuth()
 
   const [status, setStatus] = useState<'idle' | 'verifying' | 'success' | 'error'>(token ? 'verifying' : 'idle')
   const [message, setMessage] = useState('')
@@ -25,13 +26,29 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     if (!token) return
+    let cancelled = false
     verifyEmail(token)
-      .then(() => setStatus('success'))
+      // Re-fetch the session so emailVerified flips to true (and we know the
+      // role) before we move them on — the email-verify gate then lets them in.
+      .then(() => refresh())
+      .then(() => { if (!cancelled) setStatus('success') })
       .catch(err => {
+        if (cancelled) return
         setStatus('error')
         setMessage((err as Error).message)
       })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
+
+  // Once verified, send them straight to their dashboard — no need to click
+  // anything or come back to the gate. (A short beat to enjoy the confetti.)
+  useEffect(() => {
+    if (status !== 'success') return
+    const dest = user ? DASHBOARDS[user.role] ?? '/login' : '/login'
+    const t = setTimeout(() => router.replace(dest), 1500)
+    return () => clearTimeout(t)
+  }, [status, user, router])
 
   async function handleResend() {
     setResending(true)
@@ -70,12 +87,14 @@ export default function VerifyEmailPage() {
               <ConfettiBurst variant="center" />
               <CheckCircle2 className="mx-auto mb-4 text-success" size={48} />
               <h1 className="font-display text-[22px] font-bold text-ink">Email verified 🎉</h1>
-              <p className="mt-2 text-[14px] text-ink-2">Your account is all set. Welcome to the party.</p>
+              <p className="mt-2 text-[14px] text-ink-2">
+                {user ? 'Your account is all set. Taking you to your dashboard…' : 'Your email is confirmed. Taking you to sign in…'}
+              </p>
               <Link
                 href={dashboard}
-                className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-primary py-3 text-[14px] font-semibold text-dark transition-colors hover:bg-primary/90"
+                className="mt-5 inline-flex items-center justify-center text-[13px] font-medium text-primary hover:underline"
               >
-                {user ? 'Go to dashboard' : 'Sign in'}
+                {user ? 'Go to dashboard now' : 'Sign in now'}
               </Link>
             </>
           )}

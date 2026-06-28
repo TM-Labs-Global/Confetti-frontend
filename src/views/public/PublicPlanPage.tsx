@@ -75,18 +75,20 @@ export default function PublicPlanPage() {
       <main className="mx-auto max-w-[760px] px-5 py-10">
         <p className="mb-2 text-[12px] font-medium uppercase tracking-[0.08em] text-ink-3">Shared event</p>
 
-        <div className="mb-4 rounded-2xl border border-border bg-white p-6">
-          <div className="flex items-start gap-4">
-            <EventTile type={plan.eventType?.id || ''} bg={meta.bg} color={meta.color} size="lg" />
-            <div className="min-w-0 flex-1">
-              <p className="mb-0.5 font-mono text-[11px] uppercase tracking-[0.08em] text-ink-3">{plan.eventType?.name}</p>
-              <h1 className="font-display text-[24px] font-bold leading-tight text-ink">{plan.name}</h1>
-              <p className="mt-1 text-[13px] text-ink-3">{dateLabel} · {location || 'Location to be confirmed'}{fmtGuests(plan.guestCount) ? ` · ${fmtGuests(plan.guestCount)}` : ''}</p>
-              {plan.organiser?.name && <p className="mt-1 text-[12px] text-ink-3">Organised by {plan.organiser.name}</p>}
+        <div className="mb-4 rounded-2xl border border-border bg-white p-5 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
+              <EventTile type={plan.eventType?.id || ''} bg={meta.bg} color={meta.color} size="lg" />
+              <div className="min-w-0 flex-1">
+                <p className="mb-0.5 font-mono text-[11px] uppercase tracking-[0.08em] text-ink-3">{plan.eventType?.name}</p>
+                <h1 className="font-display text-[20px] sm:text-[24px] font-bold leading-tight text-ink break-words">{plan.name}</h1>
+                <p className="mt-1 text-[13px] text-ink-3">{dateLabel} · {location || 'Location to be confirmed'}{fmtGuests(plan.guestCount) ? ` · ${fmtGuests(plan.guestCount)}` : ''}</p>
+                {plan.organiser?.name && <p className="mt-1 text-[12px] text-ink-3">Organised by {plan.organiser.name}</p>}
+              </div>
             </div>
-            <div className="shrink-0 text-right">
+            <div className="shrink-0 border-t border-border pt-3 sm:border-0 sm:pt-0 sm:text-right">
               <p className="mb-0.5 text-[11px] text-ink-3">Total budget</p>
-              <p className="font-display text-[24px] font-bold text-ink">{fmtNaira(plan.totalBudget)}</p>
+              <p className="font-display text-[22px] sm:text-[24px] font-bold text-ink tabular-nums">{fmtNaira(plan.totalBudget)}</p>
             </div>
           </div>
         </div>

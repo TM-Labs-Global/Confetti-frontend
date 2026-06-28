@@ -37,7 +37,7 @@ function validate(f: FormState): Partial<Record<keyof FormState, string>> {
 }
 
 export default function VendorProfilePage() {
-  const { user } = useAuth()
+  const { user, refresh } = useAuth()
   const [form, setForm] = useState<FormState>(EMPTY)
   const [status, setStatus] = useState<VendorProfile['status'] | null>(null)
   const [rejectionReason, setRejectionReason] = useState<string | null>(null)
@@ -130,6 +130,9 @@ export default function VendorProfilePage() {
         setRejectionReason(data.profile.rejectionReason ?? null)
         setEditing(false)
         setCelebrate(c => c + 1)
+        // Refresh the auth user so the dashboard / gate reflect the new profile
+        // status (e.g. "under review") instead of "set up profile".
+        await refresh()
       }
     } finally {
       setSaving(false)
@@ -336,7 +339,9 @@ function EditForm({ form, set, toggleSpecialty, categoryNames, errors, complete,
               <input type="text" value={form.tiktok} onChange={e => set('tiktok', e.target.value)} placeholder="TikTok (@handle)" className={inputCls} />
             </div>
             <div>
-              <input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="WhatsApp / phone" className={`${inputCls} ${errors.phone ? 'border-red-400' : ''}`} />
+              <input type="tel" inputMode="numeric" value={form.phone}
+                onChange={e => set('phone', e.target.value.replace(/[^\d+]/g, ''))}
+                placeholder="WhatsApp / phone" className={`${inputCls} ${errors.phone ? 'border-red-400' : ''}`} />
               {errors.phone && <p className="text-[11px] text-red-500 mt-1">{errors.phone}</p>}
             </div>
           </div>

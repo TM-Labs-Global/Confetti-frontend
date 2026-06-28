@@ -107,6 +107,11 @@ export default function AdminCategoriesPage() {
       setAddingCat(false)
       await reload()
       showToast(`"${name}" added`)
+    } else if (res.status === 401 || res.status === 403) {
+      showToast('Not authorised — sign out and back in as an admin, then try again.')
+    } else {
+      const data = await res.json().catch(() => null)
+      showToast(data?.error ? `Could not add: ${data.error}` : `Could not add category (server error ${res.status})`)
     }
   }
 
@@ -124,19 +129,31 @@ export default function AdminCategoriesPage() {
     const name = newTypeName.trim()
     if (!name) return
     const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-    const res = await fetch('/api/categories', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'event_type', id, name }),
-    })
-    if (res.ok) {
-      setNewTypeName('')
-      setAddingType(false)
-      await reload()
-      setActiveType(id)
-      showToast(`"${name}" event type added`)
-    } else {
-      showToast('Could not add event type (it may already exist)')
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'event_type', id, name }),
+      })
+      if (res.ok) {
+        setNewTypeName('')
+        setAddingType(false)
+        await reload()
+        setActiveType(id)
+        showToast(`"${name}" event type added`)
+        return
+      }
+      // Surface the real reason instead of a blanket "may already exist".
+      if (res.status === 401 || res.status === 403) {
+        showToast('Not authorised — sign out and back in as an admin, then try again.')
+      } else if (res.status === 409) {
+        showToast(`"${name}" already exists.`)
+      } else {
+        const data = await res.json().catch(() => null)
+        showToast(data?.error ? `Could not add: ${data.error}` : `Could not add event type (server error ${res.status})`)
+      }
+    } catch {
+      showToast('Network error reaching the server. Please try again.')
     }
   }
 

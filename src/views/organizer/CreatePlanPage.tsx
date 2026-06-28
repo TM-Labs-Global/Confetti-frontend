@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { EventTile, MoneyInput, DateTimeRangePicker, SearchableSelect } from '@/features/shared-ui'
 import { X, ArrowRight, Sparkles } from 'lucide-react'
@@ -521,6 +521,10 @@ export default function CreatePlanPage() {
   const [eventTypes, setEventTypes] = useState<EventTypeInfo[]>([])
   const [step, setStep] = useState(1)
   const [saving, setSaving] = useState<'open' | 'draft' | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  // Synchronous guard against a same-tick double-click submitting twice (which
+  // would create the plan / fire vendor notifications twice).
+  const submittingRef = useRef(false)
   const [loadingPlan, setLoadingPlan] = useState(isEdit)
   const [hydrated, setHydrated] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
@@ -646,7 +650,10 @@ export default function CreatePlanPage() {
   }
 
   async function submit(status: 'open' | 'draft') {
+    if (submittingRef.current) return
+    submittingRef.current = true
     setSaving(status)
+    setError(null)
     const presetCats = getCatsForType(form.eventType)
     const allCats: Array<{ id: string; name: string; defaultPct?: number }> = [
       ...presetCats.filter(c => form.selectedCategories.includes(c.id)),
@@ -676,7 +683,13 @@ export default function CreatePlanPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      if (!res.ok) throw new Error('Failed to save plan')
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        setError(data?.error ?? 'Could not save the event. Please check the details and try again.')
+        submittingRef.current = false
+        setSaving(null)
+        return
+      }
       try { localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
       if (isEdit) {
         router.push(`/organiser/plans/${editId}${status === 'open' ? '?published=true' : ''}`)
@@ -684,6 +697,7 @@ export default function CreatePlanPage() {
         router.push(status === 'open' ? '/organiser/plans?published=true' : '/organiser/plans')
       }
     } catch {
+      submittingRef.current = false
       setSaving(null)
     }
   }
@@ -719,6 +733,10 @@ export default function CreatePlanPage() {
           saving={saving}
           isEdit={isEdit}
         />
+      )}
+
+      {error && (
+        <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-600">{error}</p>
       )}
 
       {step < 4 && (

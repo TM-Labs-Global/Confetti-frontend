@@ -90,11 +90,11 @@ If your reset link is missing or has expired, you'll be prompted to request a ne
 
 ### Switching between light and dark mode
 
-If you're an **Organiser** or a **Vendor**, you can switch your portal between light and dark mode whenever you like:
+If you're an **Organiser** or a **Vendor**, your portal supports both light and dark mode:
 
-- Look for the **Sun/Moon button** in the header.
-- When you're in light mode, you'll see a **Moon** icon — click it to switch to dark.
-- When you're in dark mode, you'll see a **Sun** icon — click it to switch back to light.
+- **On a computer, it defaults to dark mode.** On phones and tablets it starts in light mode.
+- Use the **Sun/Moon button** in the header to switch any time. In light mode you'll see a **Moon** icon (tap it to go dark); in dark mode you'll see a **Sun** icon (tap it to go light).
+- Your choice is remembered on that device, so it's there next time you visit.
 
 The toggle isn't available on the Admin portal, which always uses its dark look.
 
@@ -734,7 +734,7 @@ Note that all changes here apply to new events only.
 
 ## Notifications
 
-Confette keeps everyone posted through in-app notifications, delivered to the notification bell in the top-right of your portal. There are no email notifications beyond account emails (verification and password reset).
+Confette keeps everyone posted through in-app notifications, delivered to the notification bell in the top-right of your portal. Many of these are also sent as emails (for example a new bid, an accepted or declined bid, an invitation, an event update, and vendor account-status changes), alongside the account emails for verification and password reset.
 
 **Organisers are notified when:**
 
@@ -750,6 +750,7 @@ Confette keeps everyone posted through in-app notifications, delivered to the no
 - An organiser invites them to bid on an event ("Invitation").
 - Their account is suspended ("Account suspended") or reinstated.
 - An event they bid on is flagged for review or restored.
+- An event they worked on is closed out by the organiser ("Event wrapped up"), including the organiser's feedback.
 
 **Admins are notified when:**
 
@@ -772,7 +773,6 @@ What the public page does **not** show: any bids, vendor details, or the organis
 This version of Confette focuses on planning and bidding. The following are not part of it:
 
 - **Real payments or escrow funding.** There is no payment processing, and no money changes hands through Confette.
-- **Email notifications beyond account emails.** The only emails sent are for email verification and password reset; everything else is an in-app notification via the bell.
 - **Editing a submitted bid.** Vendors can withdraw a bid, but there's no way to edit one — withdraw and submit a new one instead.
 - **Reviews or ratings.** Organisers leave a simple "It went great" / "It had some issues" feedback note at close-out, but there is no public review or star-rating system.
 - **A mobile app.** Confette runs in the browser (the layout is mobile-friendly), with no separate native app.

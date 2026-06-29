@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Confette User Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --primary:#00C4CC; --success:#39E75F; --warning:#FFDE59;
+    --dark:#0B0F19; --ink:#101828; --ink2:#475467; --ink3:#667085;
+    --canvas:#FAFAFC; --border:#E4E7EC;
+    --display:'Sora',system-ui,sans-serif;
+    --sans:'DM Sans',system-ui,sans-serif;
+    --mono:'DM Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{
+    margin:0;background:var(--canvas);color:var(--ink);
+    font-family:var(--sans);line-height:1.65;font-size:16px;
+  }
+  .wrap{max-width:840px;margin:0 auto;padding:0 28px 80px}
+  /* Header */
+  .masthead{
+    background:var(--dark);color:#fff;border-radius:0 0 24px 24px;
+    padding:48px 28px 40px;margin-bottom:8px;
+    box-shadow:0 10px 40px rgba(11,15,25,.18);
+  }
+  .masthead .inner{max-width:840px;margin:0 auto}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--display);
+    font-weight:700;font-size:22px;letter-spacing:-.01em}
+  .dot{width:14px;height:14px;border-radius:50%;
+    background:conic-gradient(from 0deg,var(--primary),var(--warning),var(--success),var(--primary))}
+  .masthead h1{font-family:var(--display);font-weight:700;font-size:40px;
+    letter-spacing:-.02em;margin:22px 0 8px;line-height:1.05}
+  .masthead p{color:#aeb7c7;font-size:16px;margin:0;max-width:60ch}
+  .accentbar{height:6px;border-radius:6px;margin-top:26px;
+    background:linear-gradient(90deg,var(--primary),var(--warning) 50%,var(--success))}
+  /* Typography */
+  h2{font-family:var(--display);font-weight:700;font-size:27px;letter-spacing:-.01em;
+    margin:48px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--border)}
+  h2::before{content:"";display:inline-block;width:22px;height:10px;border-radius:5px;
+    background:linear-gradient(90deg,var(--primary),var(--success));margin-right:10px;vertical-align:middle}
+  h3{font-family:var(--display);font-weight:600;font-size:20px;margin:32px 0 8px;color:var(--ink)}
+  h4{font-family:var(--display);font-weight:600;font-size:16.5px;margin:24px 0 6px;color:var(--ink2)}
+  p{margin:12px 0;color:var(--ink2)}
+  strong{color:var(--ink);font-weight:600}
+  a{color:#0094a8;text-decoration:none;border-bottom:1px solid rgba(0,148,168,.3)}
+  a:hover{border-bottom-color:#0094a8}
+  ul,ol{margin:12px 0;padding-left:24px}
+  li{margin:6px 0;color:var(--ink2)}
+  li::marker{color:var(--primary)}
+  ol li::marker{color:var(--ink3);font-family:var(--mono);font-size:.9em}
+  code{font-family:var(--mono);font-size:.88em;background:#eef6f7;color:#0a7681;
+    padding:1px 6px;border-radius:6px;border:1px solid #d9ecef}
+  hr{border:0;border-top:1px solid var(--border);margin:40px 0}
+  /* Intro paragraph + TOC card live right after h1 (first section) */
+  .wrap > h2:first-of-type{margin-top:34px}
+  .footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--border);
+    color:var(--ink3);font-size:13.5px;text-align:center}
+  @media print{
+    body{background:#fff;font-size:11.5pt}
+    .wrap{max-width:none;padding:0 6px}
+    .masthead{border-radius:0;box-shadow:none;margin:0 0 6px;padding:24px 6px 20px}
+    .masthead h1{font-size:30px}
+    h2,h3,h4{break-after:avoid}
+    li,p{break-inside:avoid}
+    a{color:var(--ink);border:0}
+  }
+  @media (max-width:520px){
+    .masthead h1{font-size:30px}
+    h2{font-size:23px}
+    .wrap{padding:0 18px 60px}
+  }
+</style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="inner">
+      <div class="brand"><span class="dot"></span> Confette</div>
+      <h1>User Guide</h1>
+      <p>Nigeria's event-planning marketplace, for organisers, vendors, and admins.</p>
+      <div class="accentbar"></div>
+    </div>
+  </header>
+  <main class="wrap">
+<p>Welcome to Confette, Nigeria's event-planning marketplace. Confette connects the people throwing events with the people who help make them happen:</p>
+<ul>
+<li><strong>Organisers</strong> post their events, set a budget, and break it down across service categories. They can also browse verified vendors and invite them to bid.</li>
+<li><strong>Vendors</strong> browse open events and bid on the services they offer, and can be invited to bid by organisers.</li>
+<li><strong>Admins</strong> keep an eye on the platform, review vendor profiles, and step in when an event needs to be flagged or restored.</li>
+</ul>
+<p>This guide walks each role through everything Confette can do today, from creating an account to closing out an event.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#getting-started">Getting Started</a></li>
+<li><a href="#for-organisers">For Organisers</a></li>
+<li><a href="#for-vendors">For Vendors</a></li>
+<li><a href="#for-admins">For Admins</a></li>
+<li><a href="#notifications">Notifications</a></li>
+<li><a href="#sharing-events">Sharing Events</a></li>
+<li><a href="#what-this-version-does-not-include">What This Version Does NOT Include</a></li>
+</ol>
+<hr/>
+<h2 id="getting-started">Getting Started</h2>
+<h3 id="the-three-roles">The three roles</h3>
+<p>When you sign up, you'll choose one of two roles:</p>
+<ul>
+<li><strong>Event Organiser</strong> — "I'm planning an event." Pick this if you're hosting a wedding, birthday, corporate event, baby shower, graduation, or anniversary and want vendors to bid on it.</li>
+<li><strong>Vendor / Supplier</strong> — "I'm offering services." Pick this if you provide a service (catering, decoration, photography, and so on) and want to bid on events.</li>
+</ul>
+<p>The <strong>Admin</strong> role isn't something you sign up for. Admin accounts are set up separately, not through the public signup form.</p>
+<h3 id="creating-an-account">Creating an account</h3>
+<ol>
+<li>Go to the signup page.</li>
+<li>Choose your role: <strong>Event Organiser</strong> or <strong>Vendor / Supplier</strong>. Each one is shown as a card with a short description, so you can pick the one that fits you.</li>
+<li>Enter your <strong>full name</strong>.</li>
+<li>Enter your <strong>email address</strong>.</li>
+<li>Create a <strong>password</strong>. As you type, a strength meter and a live checklist show you how you're doing. Your password must have:</li>
+<ul>
+<li>at least 8 characters,</li>
+<li>one uppercase letter,</li>
+<li>one lowercase letter,</li>
+<li>and one number.</li>
+</ul>
+<li>Once your details are filled in and your password meets all four rules, the <strong>Create account</strong> button becomes active. Click it to finish.</li>
+</ol>
+<p>If something's missing, you'll see a message telling you what to fix (for example, "All fields are required" or a note that your password doesn't yet meet the rules).</p>
+<p>As soon as your account is created, you're signed in automatically and taken to the email-verification step.</p>
+<h3 id="verifying-your-email">Verifying your email</h3>
+<p>After signup, you'll land on a <strong>"Check your inbox"</strong> screen. We send a verification link to the email address you registered with.</p>
+<ol>
+<li>Open your inbox and find the email from Confette.</li>
+<li>Click the verification link. It's valid for <strong>24 hours</strong>.</li>
+<li>You'll be brought back to Confette, where you'll briefly see <strong>"Verifying your email…"</strong>, then a <strong>"Email verified"</strong> confirmation (with a little celebration).</li>
+<li>Click <strong>Go to dashboard</strong> to head into your portal.</li>
+</ol>
+<p>A few helpful notes:</p>
+<ul>
+<li><strong>Didn't get the email?</strong> On the "Check your inbox" screen, use the <strong>Resend link</strong> button to send a fresh one. (Resends are limited to a handful per hour, so give the first email a moment to arrive before retrying.)</li>
+<li><strong>Link expired or invalid?</strong> If your link has expired or doesn't work, you'll see a "Link expired or invalid" message. Request a new verification link and try again.</li>
+<li><strong>You need to verify before you can use your portal.</strong> If you sign in before verifying, you'll see a <strong>"Verify your email"</strong> screen instead of your dashboard. Click your link, then choose <strong>I've verified — continue</strong> to check again, or <strong>Resend verification email</strong> if you need another link.</li>
+</ul>
+<h3 id="logging-in">Logging in</h3>
+<p>Once your account exists, you can sign in any time:</p>
+<ol>
+<li>Go to the login page.</li>
+<li>Enter your <strong>email</strong> and <strong>password</strong>.</li>
+<li>Click <strong>Sign in</strong>.</li>
+</ol>
+<p>You'll be taken straight to your dashboard based on your role. If your email and password don't match an account, you'll see an error message so you can try again.</p>
+<p>From the login page you can also reach <strong>Forgot password?</strong> and, if you don't have an account yet, a <strong>Sign up</strong> link.</p>
+<h3 id="resetting-a-forgotten-password">Resetting a forgotten password</h3>
+<p>If you can't remember your password:</p>
+<ol>
+<li>On the login page, click <strong>Forgot password?</strong></li>
+<li>Enter your email address and click <strong>Send reset link</strong>.</li>
+<li>You'll see a <strong>"Check your inbox"</strong> confirmation. For your security, this message appears whether or not the email is registered, so it never reveals which addresses have accounts. If you do have an account, a reset link is on its way, and it's valid for <strong>1 hour</strong>.</li>
+<li>Open the email and click the reset link.</li>
+<li>On the reset screen, enter your <strong>new password</strong> and <strong>confirm it</strong>. The same strength meter and four password rules apply, and both entries have to match.</li>
+<li>Click <strong>Update password</strong>. Once it's done, you'll see a <strong>"Password updated"</strong> confirmation with a <strong>Sign in</strong> button to log in with your new password.</li>
+</ol>
+<p>If your reset link is missing or has expired, you'll be prompted to request a new one from the forgot-password page.</p>
+<h3 id="switching-between-light-and-dark-mode">Switching between light and dark mode</h3>
+<p>If you're an <strong>Organiser</strong> or a <strong>Vendor</strong>, your portal supports both light and dark mode:</p>
+<ul>
+<li><strong>On a computer, it defaults to dark mode.</strong> On phones and tablets it starts in light mode.</li>
+<li>Use the <strong>Sun/Moon button</strong> in the header to switch any time. In light mode you'll see a <strong>Moon</strong> icon (tap it to go dark); in dark mode you'll see a <strong>Sun</strong> icon (tap it to go light).</li>
+<li>Your choice is remembered on that device, so it's there next time you visit.</li>
+</ul>
+<p>The toggle isn't available on the Admin portal, which always uses its dark look.</p>
+<hr/>
+<h2 id="for-organisers">For Organisers</h2>
+<p>This section walks you through everything you can do as an Organiser: creating an event, allocating your budget, publishing and sharing, working with bids, tracking your spend, and closing out after the celebration.</p>
+<h3 id="getting-around">Getting around</h3>
+<p>Your portal has four main destinations, available from the navigation:</p>
+<ul>
+<li><strong>Dashboard</strong> — your home base</li>
+<li><strong>Create an Event</strong> — the event creation wizard</li>
+<li><strong>My Events</strong> — the full list of everything you've planned</li>
+<li><strong>Find Vendors</strong> — browse verified vendors and invite them to bid</li>
+</ul>
+<p>Your dashboard greets you by name with the current date and a quick read on where things stand. At the top you'll see four stat cards: <strong>Total events</strong>, <strong>Total bids in</strong>, <strong>Open for bids</strong>, and <strong>In progress</strong>. Below those are three action cards — <strong>Create an Event</strong>, <strong>My Events</strong>, and <strong>Find Vendors</strong> (browse and invite verified vendors) — plus a <strong>Recent Events</strong> list of your three most recent plans (each showing the event tile, name, location, guest count, budget, bid count, and status). If you haven't created anything yet, you'll see a "No events yet" empty state with a <strong>Create an Event</strong> button.</p>
+<p>You can also switch between light and dark mode using the sun/moon toggle in the header.</p>
+<h3 id="creating-an-event">Creating an event</h3>
+<p>Tap <strong>Create an Event</strong> (from the navigation, the dashboard, or <strong>+ New Event</strong> in My Events) to open the four-step wizard. A progress indicator at the top shows where you are ("X of 4"), and a <strong>Back</strong> button lets you step backwards (it's disabled on Step 1).</p>
+<p>Your progress is auto-saved as you go, so if you refresh, the wizard restores your draft right where you left off.</p>
+<h4 id="step-1-whats-the-occasion">Step 1 — "What's the occasion?"</h4>
+<ol>
+<li><strong>Pick an event type.</strong> Choose from the grid of event cards: Wedding, Birthday, Corporate, Baby Shower, Graduation, or Anniversary. Once you select one, the rest of the form appears.</li>
+<li><strong>Name the event.</strong> Under "Give this [Type] a name," enter something like "Tunde &amp; Amaka's Wedding."</li>
+<li><strong>Set the date and time.</strong> Use the date/time picker for the start and end. If you're not ready, tick <strong>Set date later</strong> — you'll see "You can set the exact date and time later, before publishing."</li>
+<li><strong>Choose the State</strong> from the searchable dropdown of Nigerian states, then type the <strong>City</strong> (e.g. Ikeja).</li>
+<li><strong>Enter your guest count</strong> (e.g. 150). Vendors price catering, drinks, and rentals by headcount, so a rough number is fine — you can refine it later.</li>
+<li><strong>Enter your total budget.</strong></li>
+</ol>
+<p>When your event type, name, a valid date (set or marked flexible), state, and total budget are all filled, tap <strong>Now, the fun part</strong> to continue.</p>
+<h4 id="step-2-what-do-you-need">Step 2 — "What do you need?"</h4>
+<p>This is where you choose the services you'll need bids for.</p>
+<ol>
+<li>Under "Suggested for [EventType]," you'll see preset category pills tailored to your event type. Toggle any off with the <strong>X</strong> if you don't need them (at least one category must remain).</li>
+<li>To add something not on the list, type it into "Add a custom service (e.g. Fireworks, Tent Hire)" and tap <strong>Add</strong> (or press Enter). Custom additions show under a "Custom" heading.</li>
+<li>A running count shows "X service(s) selected."</li>
+</ol>
+<p>Once you have at least one service selected, tap <strong>Let's talk money</strong>.</p>
+<h4 id="step-3-lets-talk-budget-smart-split-and-even-split">Step 3 — "Let's talk budget" (Smart Split and Even Split)</h4>
+<p>Here you decide how much of your total budget goes to each service. You have two allocation modes:</p>
+<ul>
+<li><strong>Smart Split</strong> — distributes your budget across categories using the recommended weighting for your event type.</li>
+<li><strong>Even Split</strong> — divides your budget equally across the selected categories.</li>
+</ul>
+<p>Tap either button to apply that split; the currently selected mode is highlighted.</p>
+<p>For each category (sorted by allocation, largest first) you'll see its name, its share as a percentage, and a money field you can adjust by hand. You can also tap <strong>+ Add a brief for vendors</strong> under any category to write specifics — menu, style, hours, deliverables — that vendors will see.</p>
+<p>At the top, an <strong>Allocated</strong> readout shows "₦X / ₦Y" with a progress bar and a status line:</p>
+<ul>
+<li>"You're ₦X over budget." (shown in red)</li>
+<li>"₦X remaining"</li>
+<li>"Budget fully allocated."</li>
+</ul>
+<p>As long as your total allocated amount doesn't exceed your total budget, you can tap <strong>See it all come together</strong>.</p>
+<h4 id="step-4-heres-your-event">Step 4 — "Here's your event"</h4>
+<p>This is your review screen. It shows a summary card (event tile, type, name, date range, location, guest count, total budget) and a <strong>Budget breakdown</strong> listing each category with its amount, a colored percentage bar, and any brief you wrote. If you haven't allocated everything, you'll see an "Unallocated ₦X" line.</p>
+<p>From here you can:</p>
+<ul>
+<li><strong>Back</strong> — return to Step 3</li>
+<li><strong>Save as draft</strong> — keep it private for now (status becomes <strong>Draft</strong>)</li>
+<li><strong>Let the Bids Roll In</strong> — publish it so vendors can bid</li>
+</ul>
+<h3 id="publishing-your-event">Publishing your event</h3>
+<p>Publishing is what makes your event visible to vendors. You can publish from the wizard's <strong>Let the Bids Roll In</strong> button, or later from a draft event's detail page using <strong>Let the Bids Roll In →</strong>.</p>
+<p>When you publish:</p>
+<ul>
+<li>Your event's status moves from <strong>Draft</strong> to <strong>Open</strong>.</li>
+<li>Vendors are notified that a new event of your type is open for bidding in your state.</li>
+</ul>
+<p>After publishing you'll see a celebration banner — "Your event is live! Vendors can now browse it and submit bids." On the My Events list, a similar "Your event is live!" banner appears (with a close button).</p>
+<p>(For sharing a public link to your event, see <a href="#sharing-events">Sharing Events</a>.)</p>
+<h3 id="finding-and-inviting-vendors">Finding and inviting vendors</h3>
+<p>Beyond waiting for vendors to find your event, you can go to them. Tap <strong>Find Vendors</strong> in the navigation to browse Confette's verified vendors.</p>
+<h4 id="browsing-the-directory">Browsing the directory</h4>
+<p>Each vendor card shows their business name, a verified badge, the contact person's name, their location, a short bio, and the services they offer. You can narrow the list with:</p>
+<ul>
+<li><strong>Search</strong> — by business name, bio, or contact name</li>
+<li><strong>All services</strong> — show only vendors who offer a particular service</li>
+<li><strong>All locations</strong> — filter by state</li>
+</ul>
+<p>Tap <strong>View profile</strong> to see a vendor's full profile (services, location, bio, and social links). Their phone number stays private until you accept a bid from them.</p>
+<h4 id="inviting-a-vendor-to-bid">Inviting a vendor to bid</h4>
+<p>Tap <strong>Invite to bid</strong> on any vendor card to open the invite dialog:</p>
+<ol>
+<li><strong>Pick one of your events.</strong> Only events that are open for bids and haven't started yet appear here. (If you have none, you'll be prompted to publish an event first.)</li>
+<li><strong>Pick a service category.</strong> The list shows only the categories on that event that this vendor actually offers. If none match, you'll be told the event doesn't need any of that vendor's services.</li>
+<li>Tap <strong>Send invite.</strong></li>
+</ol>
+<p>The vendor gets an <strong>Invitation</strong> notification pointing them to your event, where they can submit their own bid. An invitation is a nudge, not an automatic bid — the vendor still sets their own price and pitch, and you accept or decline it like any other bid.</p>
+<h4 id="one-invite-per-slot">One invite per slot</h4>
+<p>You can invite a vendor only once for the same event and service. After you invite them, that vendor's card shows an <strong>Invited</strong> badge and the already-invited service is disabled in the dialog, so you can't send duplicate invitations. If a vendor you invited is later suspended or rejected by an admin, the invitation is cleared automatically.</p>
+<h3 id="receiving-accepting-and-declining-bids">Receiving, accepting, and declining bids</h3>
+<p>Open any published event to find the <strong>Bids</strong> panel (right-hand column of the detail page).</p>
+<p>Before any bids arrive, you'll see "No bids yet. Vendors will start reaching out soon." (A draft event instead says "Publish your event to start receiving bids.") When the first bid lands, your event's status automatically moves from <strong>Open</strong> to <strong>Bidding</strong>. You'll also get a "Bid received" notification.</p>
+<h4 id="reading-a-bid">Reading a bid</h4>
+<p>Each bid card shows the vendor's name (tap it to open their profile), a verified badge if applicable, the service category, the bid amount, and a status badge of <strong>Pending</strong>, <strong>Accepted</strong>, or <strong>Rejected</strong>. If the vendor wrote a pitch, it appears below. If a bid is above the amount you set for that category, you'll see a warning noting how much over your allocation it is, along with the vendor's reason if they gave one.</p>
+<p>While you have pending bids and the event hasn't started, an info box reminds you: "You can accept or decline bids until the event starts. Once you book a vendor, you can't drop them in the last 48 hours."</p>
+<h4 id="accepting-a-bid">Accepting a bid</h4>
+<p>Tap <strong>Accept</strong> on a pending bid. A few things happen automatically:</p>
+<ul>
+<li>All other pending bids in that same category are declined (their status becomes <strong>Rejected</strong>), and those vendors are notified that another vendor was selected.</li>
+<li>The accepted vendor is notified that their bid was accepted, and their <strong>phone number is revealed to you</strong> on the accepted bid card (shown as a tappable call link, when available).</li>
+<li>Once every category has an accepted vendor, the event status becomes <strong>Vendors booked</strong> (in-progress), and you'll see a banner: "Your vendors are all set, [Name]! Every service has a confirmed vendor. Relax and enjoy your event."</li>
+</ul>
+<p>There's a budget guard: if accepting a bid would push your committed total over your event budget, the server blocks it and tells you exactly how much over you'd be and which category to increase first. Increase the budget for that category (by editing the plan) before accepting.</p>
+<h4 id="declining-a-bid">Declining a bid</h4>
+<p>Tap <strong>Decline</strong> on a pending bid. A box opens for an optional reason ("Reason for declining (the vendor will see this)…"). Tap <strong>Send decline</strong> to confirm, or <strong>Cancel</strong> to back out. The vendor is notified, and your reason is included if you wrote one.</p>
+<h3 id="understanding-your-budget-breakdown-and-remaining-budget">Understanding your budget breakdown and remaining budget</h3>
+<p>The <strong>Budget breakdown</strong> section (left column of the event detail page) is your spend tracker.</p>
+<ul>
+<li>A header shows your total <strong>"₦X allocated."</strong></li>
+<li>Each category (largest allocation first) shows its name, its allocated amount, a colored budget bar, and any brief. If a category has bids but no accepted one yet, you'll see a "X bid(s)" badge.</li>
+<li>Once you accept a bid on a category, that line shows <strong>"Awarded at ₦X · ₦Y under / over"</strong> — telling you whether the winning bid came in under or over what you'd budgeted for it.</li>
+</ul>
+<p>After you've accepted at least one bid, a bottom section summarizes:</p>
+<ul>
+<li><strong>Committed to vendors</strong> — the total of your accepted bids.</li>
+<li><strong>Remaining budget</strong> — what's left (shown in green when positive, red when negative).</li>
+</ul>
+<p>This is how you see, at a glance, how your real spend is tracking against your plan.</p>
+<h3 id="the-lifecycle-and-timing-rules-in-plain-terms">The lifecycle and timing rules, in plain terms</h3>
+<p>Your event moves through a clear set of statuses:</p>
+<ul>
+<li><strong>Draft</strong> — Created but not published. Only you can see it; you can edit or keep working on it.</li>
+<li><strong>Open</strong> — Published. Vendors can see it and bid. Editable until the event starts.</li>
+<li><strong>Bidding</strong> — Set automatically once the first bid arrives. Still editable until the event starts.</li>
+<li><strong>Vendors booked</strong> (in-progress) — Every category has an accepted vendor.</li>
+<li><strong>Completed</strong> — You've marked it done after the event with your feedback.</li>
+<li><strong>Disputed</strong> — An admin has flagged it for review (locked and hidden from vendors).</li>
+</ul>
+<p>A few timing rules to keep in mind:</p>
+<ul>
+<li><strong>Once the event start time arrives, bidding closes.</strong> You can no longer accept or decline bids, and pending bid cards show "This event has started, so bids are closed."</li>
+<li><strong>The 48-hour vendor lock.</strong> After you book a vendor, you can change your mind — but not within 48 hours of the event start. Inside that window the card reads "It's within 48 hours of the event, so this vendor is locked in." Once the event has passed, it reads "This event has passed, so this vendor is final."</li>
+<li>These time-based rules only apply to events with fixed dates. Your dashboard and My Events list refresh their time checks about once a minute, so close-out nudges and lock states appear on their own.</li>
+</ul>
+<h3 id="changing-a-decision">Changing a decision</h3>
+<p>You can revisit a booked vendor as long as you're outside the 48-hour lock and the event hasn't passed.</p>
+<p>On an accepted bid card, tap <strong>Change decision</strong>. A box opens for a reason ("Reason for declining (the vendor will see this)…"). Tap <strong>Withdraw &amp; notify vendor</strong> to release them (or <strong>Cancel</strong> to keep things as they are). The vendor is notified. If that was the only accepted bid in its category, the category reopens and your event status moves from <strong>Vendors booked</strong> back to <strong>Bidding</strong>.</p>
+<p>If you're inside the 48-hour window or the event has already happened, the <strong>Change decision</strong> button is replaced by the lock message, and you won't be able to drop the vendor.</p>
+<h4 id="editing-the-event-itself">Editing the event itself</h4>
+<p>While your event is in <strong>Draft</strong>, <strong>Open</strong>, or <strong>Bidding</strong> (and hasn't started yet), you can tap <strong>Edit plan</strong> to change its name, budget, dates, categories, or guest count. Any vendors who already bid are notified that the event was updated and asked to review their bid. When you edit, you'll see a notice: "You're editing an existing plan. Vendors who already bid will be notified of your changes," and you save with <strong>Save &amp; Publish</strong>.</p>
+<p>Editing is locked in certain situations, and the page tells you which applies, for example:</p>
+<ul>
+<li>"This event is closed, so its details are locked."</li>
+<li>"Locked while an admin reviews this event."</li>
+<li>"This event has already started, so it can no longer be edited."</li>
+<li>"Editing is locked once vendors are booked. Withdraw a vendor first to make changes."</li>
+</ul>
+<h3 id="contacting-the-booked-vendor">Contacting the booked vendor</h3>
+<p>You get a vendor's contact details <strong>only after you accept their bid</strong>. On the accepted bid card, the vendor's phone number appears as a tappable call link (when available). That's your direct line to coordinate the details for their service.</p>
+<h3 id="closing-out-the-event-with-feedback">Closing out the event with feedback</h3>
+<p>After your event, it's time to wrap things up.</p>
+<p>When an event's date has passed (or it's a flexible-dated event), you'll be nudged to close it out:</p>
+<ul>
+<li>On <strong>My Events</strong>, a banner appears: "X event(s) have/has wrapped up. Open them to let us know how they went and close them out," and the event row shows a <strong>Close out →</strong> nudge.</li>
+<li>On the event's detail page, you'll see "How did the event go, [Name]? The date has passed. Let us know how it went, then we'll close it out."</li>
+</ul>
+<p>To close out, use the <strong>Mark event done</strong> button (or the buttons in the close-out prompt) and choose your feedback:</p>
+<ul>
+<li><strong>🎉 It went great</strong></li>
+<li><strong>😕 It had some issues</strong></li>
+</ul>
+<p>(If the prompt wasn't triggered automatically by the date, you'll also have a <strong>Cancel</strong> option.)</p>
+<p>Once you confirm, the event becomes <strong>Completed</strong>. You'll see a completion banner — "This event is done and dusted." along with your feedback note ("It went great 🎉" or "It had some issues 😕") and "It's now closed, thanks for using Confette." A completed event is final: it can't be edited or reopened, and the page shows a lock message confirming it's closed.</p>
+<hr/>
+<h2 id="for-vendors">For Vendors</h2>
+<p>This section walks you through everything you can do as a vendor: setting up your business profile, getting verified, finding events, bidding, and managing your bids.</p>
+<h3 id="getting-started-your-business-profile">Getting started: your business profile</h3>
+<p>Before you can bid on anything, an admin needs to verify your business profile. Until then, bidding is locked.</p>
+<h4 id="setting-up-your-profile">Setting up your profile</h4>
+<p>Go to <strong>My Profile</strong> in the navigation. The screen is titled <strong>"Your business profile."</strong> If you're brand new, you'll land straight in edit mode.</p>
+<p>Fill in every required field (marked with a red asterisk):</p>
+<ol>
+<li><strong>Business name</strong></li>
+<li><strong>About your business</strong> — a line or two on what you do and what makes you great.</li>
+<li><strong>State</strong> — searchable select.</li>
+<li><strong>City</strong></li>
+<li><strong>Services you offer</strong> — pick the categories you can bid on from the checklist. Selected items show a checkmark and highlighted styling.</li>
+<li><strong>Portfolio &amp; socials</strong> — at least one is required:</li>
+<ul>
+<li>Instagram (@handle)</li>
+<li>Website (yourbiz.com format)</li>
+<li>Facebook</li>
+<li>TikTok (@handle)</li>
+<li>WhatsApp / phone</li>
+</ul>
+</ol>
+<p>A few formatting rules the form enforces:</p>
+<ul>
+<li>A website must contain a valid TLD (e.g., <code>.com</code>).</li>
+<li>A phone number must be at least 7 digits.</li>
+<li>URLs are auto-prefixed with <code>https://</code> if you leave it off, @handles get a leading <code>@</code> added if missing, and phone numbers are stripped of non-numeric characters.</li>
+<li>Your business name (up to 120 characters) and bio (up to 600 characters) have length limits.</li>
+</ul>
+<p>Note on your phone number: in the profile view it's labelled <strong>"(shared with an organiser only after they accept your bid)."</strong></p>
+<h4 id="saving-and-submitting">Saving and submitting</h4>
+<p>The save button reads <strong>"Save &amp; submit"</strong> for a new or returning-for-changes profile, or <strong>"Save changes"</strong> once you're verified. It stays disabled until all required fields are complete, and shows <strong>"Saving…"</strong> while it submits. A confetti celebration fires when your profile saves successfully.</p>
+<p>When you submit, admins are notified that a vendor profile is awaiting review.</p>
+<h3 id="getting-verified">Getting verified</h3>
+<p>Your profile moves through four statuses: <strong>pending</strong>, <strong>verified</strong>, <strong>rejected</strong>, or <strong>suspended</strong>. You'll see a banner reflecting your current status both on your <strong>Dashboard</strong> and in your profile view.</p>
+<h4 id="while-you-wait-pending">While you wait (pending)</h4>
+<p>On your profile, the banner reads <strong>"Under review"</strong> with the detail: <em>"An admin is reviewing your profile. You'll be notified once you're verified."</em></p>
+<p>On your Dashboard, you'll see <strong>"Your profile is under review"</strong> — <em>"An admin is reviewing it. You'll be able to bid once verified."</em></p>
+<p>You cannot bid while pending.</p>
+<h4 id="when-youre-verified">When you're verified</h4>
+<p>Your profile banner turns green: <strong>"You're verified"</strong> — <em>"You can bid on events. Edits stay live without re-verification."</em></p>
+<p>That last part matters: once verified, you can update your profile and your changes go live immediately, without needing to be re-verified. You'll also receive a <strong>"Profile verified"</strong> notification.</p>
+<p>Verified vendors may also be showcased on the Confette homepage, giving you extra visibility to people just discovering the platform.</p>
+<h4 id="if-changes-are-needed-rejected">If changes are needed (rejected)</h4>
+<p>Your profile shows <strong>"Changes needed"</strong> with the admin's reason, or <em>"Please review and resubmit your profile."</em> if no reason was given. Your Dashboard shows <strong>"Your profile needs changes"</strong> with a <strong>"Fix profile"</strong> button.</p>
+<p>You'll receive a <strong>"Profile update needed"</strong> notification. Edit your profile, then use <strong>"Save &amp; submit"</strong> to send it back for review.</p>
+<h3 id="browsing-open-events">Browsing open events</h3>
+<p>Once you're set up, head to <strong>Open Events</strong> in the navigation.</p>
+<h4 id="what-youll-see">What you'll see</h4>
+<p>Each event card shows:</p>
+<ul>
+<li>The event tile icon, type name, and event name</li>
+<li>Location (city, state)</li>
+<li>Date range</li>
+<li>Guest count (when available)</li>
+<li><strong>"{X} services needed"</strong> and a <strong>"{Y} bids"</strong> link</li>
+</ul>
+<h4 id="filtering">Filtering</h4>
+<p>You can narrow the list with:</p>
+<ol>
+<li><strong>Search</strong> — a text field with the placeholder "Search events…"</li>
+<li><strong>Event type</strong> — defaults to "All events"</li>
+<li><strong>Location</strong> — defaults to "All locations"</li>
+<li><strong>Date range</strong> — choose All dates, Flexible date, by month, or a custom from/to range</li>
+</ol>
+<h4 id="whats-hidden">What's hidden</h4>
+<p>Some events won't appear here. The list excludes events that aren't open for bidding, and <strong>events that have already started</strong> (unless the event has flexible dates).</p>
+<p>If nothing shows, you'll see either <strong>"No open plans"</strong> (<em>"Check back soon. New events are added regularly."</em>) or <strong>"No plans match your filters"</strong> (<em>"Try a different event type, location, or date."</em>).</p>
+<p>When a brand-new event opens, you'll get a <strong>"New event"</strong> notification.</p>
+<h3 id="getting-invited-to-bid">Getting invited to bid</h3>
+<p>Organisers can invite you directly to bid on their event. When one does, you'll get an <strong>Invitation</strong> notification — tap it to open the event, where you can submit a bid just like any other.</p>
+<p>An invitation is an expression of interest, not a booking. You still choose your price and write your pitch, and the organiser accepts or declines your bid in the usual way. You'll only ever be invited to services you've listed under <strong>Services you offer</strong>.</p>
+<h3 id="which-services-you-can-bid-on">Which services you can bid on</h3>
+<p>You can only bid on categories you registered under <strong>Services you offer</strong> in your profile.</p>
+<p>Open any event to see its <strong>Services needed</strong> section. For each category, the heading shows either:</p>
+<ul>
+<li>The category name and its budget (if it's one of your services), with a budget bar showing the allocation, or</li>
+<li><strong>"Not in your services"</strong> (shown in italic) if the organiser needs a service you don't offer.</li>
+</ul>
+<p>If the organiser left a brief, you'll see it as <strong>"What they want: {brief}."</strong></p>
+<p>If none of an event's services match what you offer, the bid sidebar shows <strong>"Not a match"</strong> — <em>"This organiser isn't looking for any of your registered services, so there's nothing to bid on here."</em> — with an <strong>"Update your services →"</strong> link.</p>
+<h3 id="submitting-a-bid">Submitting a bid</h3>
+<p>Open an event and use the bid form in the sticky right sidebar.</p>
+<h4 id="before-you-bid-you-must-be-verified">Before you bid: you must be verified</h4>
+<p>If you're not verified, the form is disabled (greyed out) and you'll see an alert explaining why:</p>
+<ul>
+<li><strong>Suspended:</strong> <em>"Your account is suspended, so you can't bid right now. Check your profile for the reason."</em></li>
+<li><strong>Pending:</strong> <em>"Your profile is under review. You'll be able to bid once an admin verifies you."</em></li>
+<li><strong>Rejected:</strong> <em>"Your profile needs changes before you can bid."</em></li>
+<li><strong>No profile:</strong> <em>"Complete your vendor profile to start bidding."</em></li>
+</ul>
+<p>Each comes with a link to your profile page.</p>
+<h4 id="filling-out-the-bid-form">Filling out the bid form</h4>
+<ol>
+<li><strong>Service category</strong> — a required dropdown with the placeholder "Select a service…". It only lists categories that are one of your services, aren't already awarded, and that you haven't already bid on. Each option reads <strong>"{category name} · ₦{amount}."</strong></li>
+<li><strong>What they want</strong> — if the selected category has a brief, it shows here as a read-only info box.</li>
+<li><strong>Your bid amount</strong> — a money field. A budget indicator shows <strong>"Budget: ₦{amount}"</strong> and adds <strong>". Your bid exceeds the budget."</strong> if you go over.</li>
+<li><strong>This is a counter bid (above budget)</strong> — a checkbox (see the counter-bid rule below).</li>
+<li><strong>Pitch</strong> — an optional field with the placeholder "Tell the organiser why you're the best choice…"</li>
+</ol>
+<p>The submit button reads <strong>"Submit Bid"</strong> (and <strong>"Submitting…"</strong> while it sends). It's disabled if you're not verified, are already submitting, haven't selected a category, or haven't entered an amount.</p>
+<p>When your bid lands, the organiser gets a <strong>"Bid received"</strong> notification.</p>
+<h4 id="the-counter-bid-rule-going-over-budget">The counter-bid rule (going over budget)</h4>
+<p>If your bid amount is higher than the category's budget, you must mark it as a counter bid. Tick the <strong>"This is a counter bid (above budget)"</strong> checkbox, which reveals a textarea with the placeholder "Explain why your bid exceeds the budget…"</p>
+<p>A counter bid above budget must have that box ticked <strong>and</strong> a non-empty reason. If you submit an over-budget bid without both, you'll be told: <em>"A bid above the category budget must be marked as a counter bid with a reason."</em></p>
+<p>On the event, your counter bid is flagged with a <strong>"Counter bid"</strong> badge, and your reason appears as <strong>"Why above budget: {reason}."</strong></p>
+<h4 id="other-rules-the-system-enforces">Other rules the system enforces</h4>
+<p>When you submit, the system also checks that:</p>
+<ul>
+<li>The event hasn't started yet.</li>
+<li>The category belongs to that plan and matches a service in your profile. If not: <em>"Your services aren't needed for "{category}". You can only bid on categories you offer."</em></li>
+<li>The category hasn't already been awarded to someone else.</li>
+<li>You don't already have a bid on that category.</li>
+</ul>
+<h4 id="other-states-you-might-see-on-an-event">Other states you might see on an event</h4>
+<ul>
+<li><strong>Already bid on everything:</strong> <em>"Your bids"</em> — <em>"You've bid on every open service for this event. Check My Bids for updates from the organiser."</em></li>
+<li><strong>Your bid was accepted:</strong> <strong>"🎉 You're in!"</strong> — <em>"The organiser accepted your bid of ₦{amount}. They'll reach out to lock in the details."</em> plus a <strong>"View in My Bids →"</strong> link.</li>
+<li><strong>Event already started:</strong> <strong>"Bidding closed"</strong> — <em>"This event has already started, so it's no longer open for new bids."</em></li>
+<li><strong>Event wrapped up:</strong> A banner reads either <strong>"✅ This event has wrapped up. Thanks for being part of it!"</strong> (if you were accepted) or <strong>"🏁 This event has wrapped up. It went ahead with other vendors this time."</strong></li>
+</ul>
+<h3 id="tracking-your-bids-in-my-bids">Tracking your bids in My Bids</h3>
+<p>Go to <strong>My Bids</strong> to see everything you've submitted.</p>
+<h4 id="status-tabs">Status tabs</h4>
+<p>Bids are grouped into tabs, each with a count: <strong>All</strong>, <strong>Pending</strong>, <strong>Accepted</strong>, <strong>On hold</strong>, and <strong>Rejected</strong>.</p>
+<p>You can filter the same way as Open Events: search by event name, event type, location, and date range.</p>
+<h4 id="what-each-bid-shows">What each bid shows</h4>
+<ul>
+<li>The event tile icon and event name</li>
+<li>The category name</li>
+<li>A <strong>"Counter bid"</strong> badge, where applicable</li>
+<li>Your pitch (<strong>"Pitch: {text}"</strong>) and, for counter bids, <strong>"Why above budget:"</strong> — each clipped to one line</li>
+<li>The amount, right-aligned</li>
+<li>A status badge: <strong>"Pending"</strong>, <strong>"Accepted"</strong>, <strong>"Rejected"</strong>, or <strong>"On hold"</strong>. If the event is finished, it shows <strong>"Event done"</strong> instead.</li>
+</ul>
+<p>If you have no bids yet, you'll see <strong>"No bids yet"</strong> — <em>"Browse open events and submit your first bid."</em> — with a <strong>"Browse Events"</strong> button.</p>
+<h3 id="withdrawing-a-bid">Withdrawing a bid</h3>
+<p>You withdraw a bid from the event's detail page (not from the My Bids list). Look for the <strong>"Withdraw"</strong> button (it shows <strong>"Withdrawing…"</strong> while it processes) in your bid status display on the event.</p>
+<p>Note: there's no way to edit a bid. You can withdraw it, but not change it.</p>
+<h4 id="when-you-can-withdraw">When you can withdraw</h4>
+<p><strong>A pending bid:</strong> You can withdraw it any time before the event starts. The confirmation asks: <em>"Withdraw this bid?"</em> If the event has started, you'll be blocked: <em>"This event has already started, so the bid can no longer be withdrawn."</em></p>
+<p><strong>An accepted bid:</strong> You can withdraw it up until 48 hours before the event starts. The confirmation reads: <em>"Withdraw this accepted bid? The organiser will be notified and the category reopened."</em> Within 48 hours of the event you'll be blocked: <em>"You can only withdraw an accepted bid up to 48 hours before the event."</em> And if it's already started: <em>"This event has already started, so the bid can no longer be withdrawn."</em></p>
+<p><strong>A rejected or on-hold bid:</strong> You can't withdraw these. <em>"This bid is no longer active."</em></p>
+<p>When you withdraw an accepted bid, the organiser is notified and the category reopens for new bids.</p>
+<h3 id="suspension-and-reinstatement">Suspension and reinstatement</h3>
+<p>An admin can suspend your account. Here's exactly what that means for you.</p>
+<h4 id="while-youre-suspended">While you're suspended</h4>
+<ul>
+<li>Your profile banner reads <strong>"Account suspended"</strong> with the admin's reason (<em>"Reason: {reason}"</em>) or <em>"Your account has been suspended by an admin."</em>, plus <em>"You can't bid on events until it's reinstated."</em></li>
+<li>Your Dashboard shows <strong>"Your account is suspended"</strong> — <em>"You can't bid until an admin reinstates your account. See your profile for the reason."</em></li>
+<li>You'll get an <strong>"Account suspended"</strong> notification: <em>"Your account has been suspended[: reason]. You can't bid until it's reinstated."</em></li>
+<li>All of your active bids (accepted and pending) are moved to an on-hold state and removed from your view. The categories you were bidding on are reopened for other vendors, and organisers are notified that you were removed from their event.</li>
+</ul>
+<p>You cannot bid while suspended.</p>
+<h4 id="when-youre-reinstated">When you're reinstated</h4>
+<p>If an admin reinstates you (back to verified), your held bids are restored:</p>
+<ul>
+<li>For any category that <strong>another vendor has since won</strong>, your bid is marked <strong>rejected</strong> and can't be changed.</li>
+<li>For any category that's <strong>still open</strong>, your bid returns to <strong>pending</strong> and stays live.</li>
+</ul>
+<p>You'll get a notification confirming you're active again. If some bids were restored, it reads: <em>"Your account is active again, and {count} of your bid(s) are back in the running. You can bid on events too."</em> If none could be restored: <em>"Your account is active again. You can bid on events."</em></p>
+<h3 id="your-dashboard-at-a-glance">Your dashboard at a glance</h3>
+<p>Your <strong>Dashboard</strong> pulls it all together with:</p>
+<ul>
+<li>A time-based greeting with your name</li>
+<li>Stat cards: <strong>Total bids</strong>, <strong>Active bids</strong>, <strong>Accepted</strong>, and <strong>Open events</strong></li>
+<li>Quick actions: <strong>Browse Events</strong> (<em>"Find events to bid on"</em>), <strong>My Bids</strong> (<em>"Track your submissions"</em>), and <strong>Win Rate</strong> (<em>"{X} of {Y} bids accepted"</em>)</li>
+<li>Your <strong>3 most recent bids</strong> (event, category, amount, status)</li>
+<li>The <strong>3 latest open events</strong> (event, location, guest count, total budget, bid count)</li>
+<li>A status banner whenever your profile isn't verified yet, with a <strong>"Set up profile"</strong> or <strong>"Fix profile"</strong> button as needed</li>
+</ul>
+<hr/>
+<h2 id="for-admins">For Admins</h2>
+<p>This section covers the four core admin responsibilities: managing vendors (review, verify, reject, suspend, reinstate), overseeing all events, flagging and unflagging events, and managing event types and categories. The admin portal uses a dark surface throughout.</p>
+<p>The admin navigation has four items: <strong>Dashboard</strong>, <strong>All Events</strong>, <strong>Vendors</strong>, and <strong>Event Types</strong>.</p>
+<h3 id="reviewing-and-managing-vendors">Reviewing and managing vendors</h3>
+<p>Open <strong>Vendors</strong> from the navigation. The screen is titled "Vendors" with the description "Review and verify vendors before they can bid on events."</p>
+<h4 id="finding-vendors-to-review">Finding vendors to review</h4>
+<p>The page has five tabs, each showing a live count: <strong>All</strong>, <strong>Pending</strong>, <strong>Verified</strong>, <strong>Suspended</strong>, and <strong>Rejected</strong>.</p>
+<p>To narrow the list further, you have three filters:</p>
+<ol>
+<li><strong>Search box</strong> with placeholder "Search by name, business or email…" — searches the vendor's name, email, and business name.</li>
+<li><strong>Services dropdown</strong> — defaults to "All services" and lists the specialties present across your vendors.</li>
+<li><strong>Joined since</strong> date picker — optional. When set, only vendors who joined on or after that date appear, and a line reads "Showing vendors who joined on or after {date}."</li>
+</ol>
+<p>The dashboard also surfaces vendors needing attention through the <strong>"Vendors awaiting review"</strong> queue card, which links here and counts vendors with a pending profile.</p>
+<h4 id="what-each-vendor-card-shows">What each vendor card shows</h4>
+<p>Each vendor card displays the business name (or account name) with a status badge. A green checkmark appears next to the name only when the vendor is <strong>Verified</strong>. A subtitle shows the account name, email, join date, and bid count. If the vendor has a profile, you also see their city/state, bio, specialty chips, and clickable social links (website, Instagram, Facebook, TikTok, phone).</p>
+<p>The five status badges are: <strong>Verified</strong>, <strong>Pending</strong>, <strong>Rejected</strong>, <strong>Suspended</strong>, and <strong>No profile</strong>.</p>
+<p>For a <strong>Rejected</strong> or <strong>Suspended</strong> vendor, the reason you sent appears in red text as "Reason sent: {reason}". If a vendor has not built a profile yet, the card reads "Hasn't completed onboarding yet." and no action buttons appear.</p>
+<p>If no vendors match the current filter, the page shows "No vendors here — Nothing in this filter yet."</p>
+<h4 id="verifying-a-vendor">Verifying a vendor</h4>
+<p>Action buttons appear only once a vendor has built a profile.</p>
+<ol>
+<li>Locate the vendor (the <strong>Verify</strong> button appears for <strong>Pending</strong> or <strong>Rejected</strong> vendors).</li>
+<li>Click <strong>Verify</strong>.</li>
+</ol>
+<p>This sets the vendor's status to verified. For a first-time verification, the vendor is notified: "Your vendor profile has been verified. You can now bid on events." Once verified, the vendor can bid on events.</p>
+<h4 id="rejecting-a-vendor">Rejecting a vendor</h4>
+<p>The <strong>Reject</strong> button appears for <strong>Pending</strong> vendors.</p>
+<ol>
+<li>Click <strong>Reject</strong>. A reason area expands beneath the card.</li>
+<li>In the textarea (placeholder "Tell the vendor what to fix (sent to them)…"), type your reason. The reason is required.</li>
+<li>Click <strong>Send &amp; reject</strong>, or click <strong>Cancel</strong> to abandon.</li>
+</ol>
+<p>The vendor's status becomes rejected and they are notified what to fix. The reason you sent is stored and shown on the card afterward. A rejected vendor can later be verified using the <strong>Verify</strong> button.</p>
+<h4 id="suspending-a-vendor-and-exactly-what-it-does">Suspending a vendor (and exactly what it does)</h4>
+<p>The <strong>Suspend</strong> button appears only for <strong>Verified</strong> vendors.</p>
+<ol>
+<li>Click <strong>Suspend</strong>. A reason area expands beneath the card.</li>
+<li>In the textarea (placeholder "Reason for suspension (sent to the vendor)…"), type your reason. The reason is required.</li>
+<li>Click <strong>Send &amp; suspend</strong>, or click <strong>Cancel</strong> to abandon.</li>
+</ol>
+<p>When you suspend a vendor:</p>
+<ul>
+<li>The vendor's status becomes <strong>Suspended</strong>, and they are notified: "Your account has been suspended: {reason}. You can't bid until it's reinstated." A suspended vendor cannot bid until reinstated.</li>
+<li><strong>All of their active bids</strong> (those with status accepted or pending) are placed on hold and can no longer be updated by the vendor.</li>
+<li>For any bid that had already been <strong>accepted</strong>, the affected event is downgraded from "Vendors booked" back to "Bidding", and that organiser is notified: "{VendorName} was suspended and removed from "{PlanName}". That category is open for new bids." That category is then open to receive new bids.</li>
+</ul>
+<h4 id="reinstating-a-suspended-vendor-and-exactly-what-it-does">Reinstating a suspended vendor (and exactly what it does)</h4>
+<p>The <strong>Reinstate</strong> button appears only for <strong>Suspended</strong> vendors.</p>
+<ol>
+<li>Locate the suspended vendor.</li>
+<li>Click <strong>Reinstate</strong>.</li>
+</ol>
+<p>When you reinstate a vendor, their status returns to <strong>Verified</strong> and they can bid again. Their previously held bids are handled as follows:</p>
+<ul>
+<li>A held bid is restored to <strong>Pending</strong> if that category slot is still open (no other vendor has been accepted for it yet).</li>
+<li>If a category was awarded to another vendor while the vendor was suspended, that held bid is set to <strong>Rejected</strong> instead.</li>
+</ul>
+<p>The vendor is notified of the outcome. If bids were restored, the message reads: "Your account is active again, and {count} of your bid(s) are back in the running. You can bid on events too." Otherwise it reads: "Your account is active again. You can bid on events."</p>
+<h3 id="overseeing-all-events">Overseeing all events</h3>
+<p>Open <strong>All Events</strong> from the navigation. The screen is titled "All Events."</p>
+<h4 id="searching-and-filtering">Searching and filtering</h4>
+<ul>
+<li><strong>Search box</strong> with placeholder "Search events, location…" — searches the event name, city, state, and event type name.</li>
+<li><strong>Categories dropdown</strong> — defaults to "All categories" and lists the event types present in the data.</li>
+<li><strong>Locations dropdown</strong> — defaults to "All locations" and lists the states present in the data.</li>
+</ul>
+<p>Tabs, each with a count, let you filter by status: <strong>All</strong>, <strong>Open</strong>, <strong>Bidding</strong>, <strong>Draft</strong>, <strong>Completed</strong>, and <strong>Disputed</strong>.</p>
+<p>Each event row shows the event tile, name with city/state, budget, bid count, and a status badge. The six event statuses are <strong>Draft</strong>, <strong>Open</strong>, <strong>Bidding</strong>, <strong>Vendors booked</strong>, <strong>Completed</strong>, and <strong>Disputed</strong>. Click any row to open the event detail page. If nothing matches, the page reads "No events found — Try a different tab or search term."</p>
+<h4 id="the-dashboard-overview">The dashboard overview</h4>
+<p>The <strong>Dashboard</strong> shows four stat cards: <strong>Total Events</strong>, <strong>Live Events</strong>, <strong>Total Bids</strong>, and <strong>Vendors</strong>. It also has two action queue cards — <strong>"Vendors awaiting review"</strong> (links to Vendors) and <strong>"Flagged events"</strong> (links to All Events, counting disputed events) — and a <strong>Recent Events</strong> table of the four most recently created events, where each row links to that event's detail page.</p>
+<h4 id="the-event-detail-page">The event detail page</h4>
+<p>The event detail page shows a breadcrumb ("All Events / {Event name}"), the event tile and type, name, date range, location, and guest count. For a <strong>Completed</strong> event, a feedback line appears: "Feedback: It went great 🎉", "Feedback: It had some issues 😕", or "Feedback: No feedback".</p>
+<p>A stats row shows <strong>Total Budget</strong>, <strong>Categories</strong>, and <strong>Bids Received</strong>. The <strong>Budget Breakdown</strong> section lists each category (sorted by allocation, highest first) with its allocation, a colored progress bar, a bid-count badge where bids exist, and any brief text. The <strong>All Bids</strong> section lists every bid with the vendor name, category, bid status (<strong>Pending</strong>, <strong>Accepted</strong>, or <strong>Rejected</strong>), pitch, and amount; counter-bids show a "Counter-bid: {reason}" line. When there are no bids, it reads "No bids yet."</p>
+<h3 id="flagging-and-unflagging-an-event">Flagging and unflagging an event</h3>
+<p>Flagging is done from the event detail page. The flag button appears only when the event is <strong>not</strong> Completed — a completed event is a terminal state and cannot be flagged, so the button is hidden.</p>
+<h4 id="to-flag-an-event">To flag an event</h4>
+<ol>
+<li>Open the event from <strong>All Events</strong>.</li>
+<li>In the header, next to the status badge, click <strong>Flag Event</strong> (shown with a muted border and text when the event is not flagged).</li>
+</ol>
+<p>Flagging changes the event's status to <strong>Disputed</strong>. The organiser and all bidders are notified that the event is under review and paused.</p>
+<h4 id="to-unflag-an-event">To unflag an event</h4>
+<ol>
+<li>Open the flagged event.</li>
+<li>Click <strong>Unflag Event</strong> (shown with a red border and red text, with a filled flag icon).</li>
+</ol>
+<p>Unflagging restores the event to its real working status, derived from its bids rather than blindly set to "Open":</p>
+<ul>
+<li>If every category has an accepted bid, the event returns to <strong>Vendors booked</strong>.</li>
+<li>If any bids exist, it returns to <strong>Bidding</strong>.</li>
+<li>Otherwise, it returns to <strong>Open</strong>.</li>
+</ul>
+<p>The organiser and bidders are notified that the event is live again.</p>
+<h3 id="managing-event-types-and-categories">Managing event types and categories</h3>
+<p>Open <strong>Event Types</strong> from the navigation. The screen is titled "Event Types &amp; Categories" with the description "Add event types and the service categories organisers pick from when creating events. Changes apply to new events only."</p>
+<p>The page has a left sidebar listing every event type and a right panel showing the selected type's categories.</p>
+<h4 id="adding-an-event-type">Adding an event type</h4>
+<ol>
+<li>In the left sidebar (labeled "Event Types"), each type shows its icon, name, and "{count} categories."</li>
+<li>At the bottom, click <strong>Add event type</strong>.</li>
+<li>An input appears (placeholder "e.g. Housewarming"). Type the name and press Enter to add, or Escape to cancel. You can also use the <strong>Add</strong> and <strong>Cancel</strong> buttons.</li>
+</ol>
+<p>On success, a toast reads "{name} event type added" and the new type becomes active. If it fails, the toast reads "Could not add event type (it may already exist)."</p>
+<h4 id="understanding-the-budget-percentage">Understanding the budget percentage</h4>
+<p>The right panel's header card shows the type's name and description, and a <strong>Budget %</strong> figure summing all category default percentages. The figure is shown in the brand color at exactly 100%, in yellow when below 100% (hint: "Add more to reach 100%"), and in red when above 100% (hint: "Over 100%, reduce some").</p>
+<h4 id="adding-a-category">Adding a category</h4>
+<ol>
+<li>With the event type selected, in the <strong>Categories ({count})</strong> card, click <strong>Add Category</strong>.</li>
+<li>A "New Category" form appears inline. Enter a <strong>Category name</strong> (an autocomplete list suggests existing service names from across all types) and a <strong>Default %</strong> (a number from 0 to 100).</li>
+<li>Click <strong>Add</strong>, or <strong>Cancel</strong> to discard.</li>
+</ol>
+<p>On success, a toast reads ""{name}" added".</p>
+<h4 id="editing-a-category">Editing a category</h4>
+<ol>
+<li>Hover over a category row to reveal the pencil (Edit) and trash (Delete) icons.</li>
+<li>Click the pencil. The row becomes an "Editing" form with <strong>Name</strong> (required), <strong>Default %</strong> (0–100), and <strong>Description (optional)</strong> fields.</li>
+<li>Click <strong>Save</strong>, or <strong>Cancel</strong> to discard.</li>
+</ol>
+<p>On save, a toast reads "Changes saved."</p>
+<h4 id="deleting-a-category">Deleting a category</h4>
+<ol>
+<li>Hover over a category row and click the trash icon.</li>
+</ol>
+<p>The category is removed and a toast reads "Category removed."</p>
+<h4 id="balancing-default-percentages-to-100">Balancing default percentages to 100%</h4>
+<p>The bottom card shows a budget allocation bar and "{total}% of 100%", colored the same way as the Budget % figure. The note explains these percentages are used as Smart Split defaults when organisers create plans.</p>
+<p>When the total is not exactly 100% (and above 0%), a <strong>Balance to 100%</strong> button appears. Clicking it proportionally scales all of that type's category percentages so they sum to 100%, then shows the toast "Balanced to 100%."</p>
+<p>Note that all changes here apply to new events only.</p>
+<hr/>
+<h2 id="notifications">Notifications</h2>
+<p>Confette keeps everyone posted through in-app notifications, delivered to the notification bell in the top-right of your portal. Many of these are also sent as emails (for example a new bid, an accepted or declined bid, an invitation, an event update, and vendor account-status changes), alongside the account emails for verification and password reset.</p>
+<p><strong>Organisers are notified when:</strong></p>
+<ul>
+<li>A bid is received on one of their events ("Bid received").</li>
+<li>A vendor they had booked is suspended and removed from their event, reopening that category.</li>
+<li>An event is flagged for review by an admin, or restored (unflagged) and made live again.</li>
+</ul>
+<p><strong>Vendors are notified when:</strong></p>
+<ul>
+<li>A brand-new event opens that they might bid on ("New event").</li>
+<li>Their profile is verified ("Profile verified") or needs changes ("Profile update needed").</li>
+<li>Their bid is accepted ("Bid accepted") or rejected — including when another vendor is selected for that category ("Bid Declined").</li>
+<li>An organiser invites them to bid on an event ("Invitation").</li>
+<li>Their account is suspended ("Account suspended") or reinstated.</li>
+<li>An event they bid on is flagged for review or restored.</li>
+<li>An event they worked on is closed out by the organiser ("Event wrapped up"), including the organiser's feedback.</li>
+</ul>
+<p><strong>Admins are notified when:</strong></p>
+<ul>
+<li>A vendor submits a profile that's awaiting review.</li>
+</ul>
+<hr/>
+<h2 id="sharing-events">Sharing Events</h2>
+<p>Once an event is published, organisers can share a public link to it.</p>
+<p>On a published event's detail page, tap <strong>Copy share link</strong> to copy a public link (the share code also appears in the event's <strong>Details</strong> section). Anyone with the link — even without an account — sees a public page showing the event tile, dates and location, the organiser's name, the total budget, and the service categories with their allocations, colored budget bars, and any briefs.</p>
+<p>What the public page does <strong>not</strong> show: any bids, vendor details, or the organiser's contact information. The page invites visitors to <strong>Bid as a vendor</strong> / <strong>Sign up to bid</strong>.</p>
+<hr/>
+<h2 id="what-this-version-does-not-include">What This Version Does NOT Include</h2>
+<p>This version of Confette focuses on planning and bidding. The following are not part of it:</p>
+<ul>
+<li><strong>Real payments or escrow funding.</strong> There is no payment processing, and no money changes hands through Confette.</li>
+<li><strong>Editing a submitted bid.</strong> Vendors can withdraw a bid, but there's no way to edit one — withdraw and submit a new one instead.</li>
+<li><strong>Reviews or ratings.</strong> Organisers leave a simple "It went great" / "It had some issues" feedback note at close-out, but there is no public review or star-rating system.</li>
+<li><strong>A mobile app.</strong> Confette runs in the browser (the layout is mobile-friendly), with no separate native app.</li>
+<li><strong>Light/dark mode on the Admin portal.</strong> The theme toggle is available to Organisers and Vendors only; the Admin portal is always dark.</li>
+</ul>
+    <div class="footer">Confette User Guide &middot; Generated from the live product. For the latest version, check with the Confette team.</div>
+  </main>
+</body>
+</html>

@@ -292,6 +292,7 @@ export default function LandingPage() {
               src={ABOUT_IMG}
               alt="Guests celebrating a wedding with confetti"
               fill
+              quality={60}
               sizes="(max-width: 1024px) 100vw, 560px"
               className="object-cover"
             />
@@ -323,6 +324,8 @@ export default function LandingPage() {
                   src={ev.img}
                   alt={`${ev.name} on Confette`}
                   fill
+                  quality={60}
+                  loading="lazy"
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 380px"
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />

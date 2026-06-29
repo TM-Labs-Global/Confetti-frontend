@@ -257,3 +257,17 @@
     animation: none !important;
   }
 }
+
+/* On phones, freeze the GPU-expensive continuous animations. The large blurred
+   "aurora" glows in particular re-composite a huge blurred layer every frame,
+   which causes jank and battery drain on mobile. The static gradients still
+   show; one-shot entrance/celebration animations are left running. */
+@media (max-width: 640px) {
+  .animate-aurora,
+  .animate-float,
+  .animate-marquee,
+  .text-shine,
+  .animate-bob {
+    animation: none !important;
+  }
+}

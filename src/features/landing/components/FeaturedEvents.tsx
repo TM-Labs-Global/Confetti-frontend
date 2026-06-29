@@ -45,10 +45,10 @@ export function FeaturedEvents() {
         <div className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-[12px] font-medium uppercase tracking-[0.18em] text-primary">Open for bids</p>
           <h2 className="mt-3 font-display text-[30px] font-bold tracking-[-0.01em] text-[var(--ld-text)] sm:text-[40px]">
-            Events happening now
+            Events looking for vendors
           </h2>
           <p className="mt-4 text-[16px] text-[var(--ld-text-2)]">
-            Real events on Confette looking for vendors right now. Sign up to bid, or plan your own.
+            Real events on Confette taking bids right now. Sign up to bid, or plan your own.
           </p>
         </div>
 

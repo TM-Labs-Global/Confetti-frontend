@@ -642,6 +642,13 @@ export default function CreatePlanPage() {
   }
 
   function goNext() {
+    // A fixed start time can lapse into the past while the form is being filled,
+    // so re-check against the current moment before advancing.
+    if (!form.dateFlexible && form.startDate && new Date(form.startDate).getTime() < Date.now()) {
+      setError("Your event's start time has already passed. Pick a future date and time.")
+      return
+    }
+    setError(null)
     if (step === 2 && !isEdit) {
       const newAllocs = applySmartSplit(form)
       setForm(f => ({ ...f, allocations: newAllocs, allocationMode: 'smart' }))
@@ -659,11 +666,14 @@ export default function CreatePlanPage() {
       ...presetCats.filter(c => form.selectedCategories.includes(c.id)),
       ...form.customCategories.filter(c => form.selectedCategories.includes(c.id)),
     ]
+    // Send absolute (UTC) timestamps so the server doesn't reinterpret a naive
+    // local time in its own timezone (which lets past times slip past validation).
+    const toIso = (v: string) => (v ? new Date(v).toISOString() : null)
     const payload = {
       name: form.name,
       eventTypeId: form.eventType,
-      startDate: form.dateFlexible ? null : form.startDate,
-      endDate: form.dateFlexible ? null : form.endDate,
+      startDate: form.dateFlexible ? null : toIso(form.startDate),
+      endDate: form.dateFlexible ? null : toIso(form.endDate),
       dateFlexible: form.dateFlexible,
       state: form.state,
       city: form.city,

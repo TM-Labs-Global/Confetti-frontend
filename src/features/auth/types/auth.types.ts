@@ -1,5 +1,9 @@
 export type VendorStatus = 'pending' | 'verified' | 'rejected' | 'suspended'
 
+/** Account-level moderation status. Suspended users can sign in and view, but
+ * can't make changes (used for organisers; admin/vendor default to active). */
+export type AccountStatus = 'active' | 'suspended'
+
 /** The authenticated user shape returned by the API */
 export interface AuthUser {
   id: string
@@ -7,6 +11,7 @@ export interface AuthUser {
   email: string
   role: 'organiser' | 'vendor' | 'admin'
   emailVerified: boolean
+  status: AccountStatus
   createdAt: string
   /** Present for vendors once they have started a profile; null otherwise. */
   vendorProfile?: { status: VendorStatus; businessName: string } | null

@@ -184,6 +184,15 @@
 [data-admin-theme='light'] .text-\[\#39E75F\] { color: #15803D; }  /* success */
 [data-admin-theme='light'] .text-\[\#FFDE59\] { color: #92660A; }  /* warning */
 [data-admin-theme='light'] .text-\[\#C9D0DE\] { color: #475467; }  /* sidebar nav */
+/* Token-based accents tuned for the dark UI also need darkening on white, so the
+   admin light surfaces read like the organiser/vendor light portals. */
+[data-admin-theme='light'] .text-warning { color: #92660A; }
+[data-admin-theme='light'] .text-success { color: #15803D; }
+[data-admin-theme='light'] .text-red-400,
+[data-admin-theme='light'] .text-red-300 { color: #DC2626; }
+/* The sidebar is white like the organiser/vendor portals — its bg-dark would
+   otherwise read as the canvas shade, leaving no separation from the content. */
+[data-admin-theme='light'] aside { background-color: #FFFFFF; }
 /* White hover/active tints are invisible on a light surface — use dark tints. */
 [data-admin-theme='light'] .bg-white\/\[0\.06\] { background-color: rgba(16, 24, 40, 0.05); }
 [data-admin-theme='light'] .hover\:bg-white\/\[0\.06\]:hover { background-color: rgba(16, 24, 40, 0.05); }

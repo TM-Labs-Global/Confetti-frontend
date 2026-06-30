@@ -68,7 +68,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard label="Total Events" value={plans.length}       />
         <StatCard label="Live Events"  value={openPlans}          accent="text-primary" />
-        <StatCard label="Total Bids"   value={totalBids}          accent="text-warning" />
+        <StatCard label="Total Bids"   value={totalBids}          accent="text-primary" />
         <StatCard label="Vendors"      value={vendors.length}     />
       </div>
 

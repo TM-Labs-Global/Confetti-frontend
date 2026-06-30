@@ -170,21 +170,6 @@ export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle
         })}
       </nav>
 
-      {/* Single-role users get a gentle nudge to pick up the other portal. Users
-          who already hold both switch via the segmented control in the topbar. */}
-      {otherPortal && !hasOther && (
-        <div className="px-4 pb-2">
-          <button
-            onClick={optInToOther}
-            disabled={optingIn}
-            className={`flex w-full items-center gap-2.5 rounded-[8px] px-2.5 py-2 text-[13px] transition-colors disabled:opacity-60 ${s.inactive}`}
-          >
-            {role === 'organiser' ? <Store size={15} /> : <PartyPopper size={15} />}
-            {optingIn ? 'Setting up…' : role === 'organiser' ? 'Also offer services' : 'Plan your own event'}
-          </button>
-        </div>
-      )}
-
       <div className={`px-4 pb-6 pt-4 border-t ${s.border}`}>
         <div className="flex items-center gap-3 px-2.5 mb-3">
           <div className={`w-7 h-7 rounded-full ${a.avatar} text-[11px] font-bold flex items-center justify-center shrink-0`}>
@@ -240,10 +225,10 @@ export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle
           </Link>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
-            {/* Portal switcher — only for users who hold both roles. Compact so it
-                fits the mobile topbar; sits by the account controls as a "which
-                portal am I in" context switch. */}
-            {otherPortal && hasOther && (
+            {/* "Other portal" control, in one fixed spot so the affordance never
+                moves: a single-role user sees an opt-in CTA to add the other role;
+                once they hold both it becomes the portal switcher. Compact for mobile. */}
+            {otherPortal && (hasOther ? (
               <div className={`flex items-center rounded-lg border p-0.5 ${s.border}`} role="group" aria-label="Switch portal">
                 <span className={`rounded-md px-2.5 py-1 text-[12px] font-medium ${a.active}`}>{roleLabel}</span>
                 <button
@@ -256,7 +241,18 @@ export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle
                   {otherPortal === 'vendor' ? 'Vendor' : 'Organiser'}
                 </button>
               </div>
-            )}
+            ) : (
+              <button
+                type="button"
+                onClick={optInToOther}
+                disabled={optingIn}
+                title={role === 'organiser' ? 'Also offer services' : 'Plan your own event'}
+                className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-medium transition-colors disabled:opacity-60 ${s.border} ${s.inactive}`}
+              >
+                {role === 'organiser' ? <Store size={13} /> : <PartyPopper size={13} />}
+                <span className="hidden sm:inline">{optingIn ? 'Setting up…' : role === 'organiser' ? 'Also offer services' : 'Plan your own event'}</span>
+              </button>
+            ))}
             {themeToggle && <AppThemeToggle theme={theme} toggle={toggle} />}
             {/* Admin light/dark toggle. Uses dark utilities so it flips with the
                 rest of the chrome under [data-admin-theme='light']. */}

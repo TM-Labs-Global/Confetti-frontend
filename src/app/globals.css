@@ -81,6 +81,13 @@
   [role="button"] {
     -webkit-tap-highlight-color: transparent;
   }
+
+  /* Enabled buttons show the hand cursor (Tailwind v4 no longer sets this on
+     <button> by default). Disabled controls keep the default arrow. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
 }
 
 /* ─────────────────────────────────────────────────

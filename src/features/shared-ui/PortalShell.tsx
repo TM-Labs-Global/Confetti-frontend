@@ -229,7 +229,7 @@ export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle
                 moves: a single-role user sees an opt-in CTA to add the other role;
                 once they hold both it becomes the portal switcher. Compact for mobile. */}
             {otherPortal && (hasOther ? (
-              <div className={`flex items-center rounded-lg border p-0.5 ${s.border}`} role="group" aria-label="Switch portal">
+              <div className={`flex items-center gap-1 rounded-lg border p-0.5 ${s.border}`} role="group" aria-label="Switch portal">
                 <span className={`rounded-md px-2.5 py-1 text-[12px] font-medium ${a.active}`}>{roleLabel}</span>
                 <button
                   type="button"

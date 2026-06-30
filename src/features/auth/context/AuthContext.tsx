@@ -61,6 +61,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data?.user ?? null)
   }
 
+  // Re-validate the session when the tab regains focus or becomes visible, so a
+  // status change made elsewhere (e.g. an admin suspending the account) shows up
+  // promptly instead of waiting for a manual reload.
+  useEffect(() => {
+    function revalidate() {
+      if (document.visibilityState === 'visible') void refresh()
+    }
+    window.addEventListener('focus', revalidate)
+    document.addEventListener('visibilitychange', revalidate)
+    return () => {
+      window.removeEventListener('focus', revalidate)
+      document.removeEventListener('visibilitychange', revalidate)
+    }
+  }, [])
+
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, register, refresh }}>
       {children}

@@ -3,15 +3,10 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/features/auth/context/AuthContext'
+import { resolveDashboard } from '@/features/auth/portal'
 import { AppLogo, ConfettiBurst } from '@/features/shared-ui'
 import { verifyEmail, resendVerification } from '@/features/auth/services/authService'
 import { MailCheck, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
-
-const DASHBOARDS: Record<string, string> = {
-  organiser: '/organiser/dashboard',
-  vendor: '/vendor/dashboard',
-  admin: '/admin/dashboard',
-}
 
 export default function VerifyEmailPage() {
   const params = useSearchParams()
@@ -45,7 +40,7 @@ export default function VerifyEmailPage() {
   // anything or come back to the gate. (A short beat to enjoy the confetti.)
   useEffect(() => {
     if (status !== 'success') return
-    const dest = user ? DASHBOARDS[user.role] ?? '/login' : '/login'
+    const dest = user ? resolveDashboard(user) : '/login'
     const t = setTimeout(() => router.replace(dest), 1500)
     return () => clearTimeout(t)
   }, [status, user, router])
@@ -62,7 +57,7 @@ export default function VerifyEmailPage() {
     }
   }
 
-  const dashboard = user ? DASHBOARDS[user.role] ?? '/login' : '/login'
+  const dashboard = user ? resolveDashboard(user) : '/login'
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas p-4">

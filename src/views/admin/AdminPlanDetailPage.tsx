@@ -20,6 +20,9 @@ interface AdminBid extends VendorBid {
 
 interface AdminPlanDetail extends Plan {
   bids?: AdminBid[]
+  // Event owner, branded server-side: platform events read "Confette Events"
+  // (isPlatform), organisers carry their real name/email + account status.
+  organiser?: { id: string; name: string; email: string; status: string; isPlatform: boolean }
 }
 
 const STATUS_META = {
@@ -186,6 +189,9 @@ export default function AdminPlanDetailPage() {
   // manage bids / edit / close the event; for everyone else's events the admin
   // stays in moderation-only mode (flag / restore).
   const isOwner   = !!user && plan.organiserId === user.id
+  // Whether the event is platform-run (organiser is an admin). isOwner implies
+  // this; it's also true for a platform event created by a different admin.
+  const isPlatform = !!plan.organiser?.isPlatform || isOwner
   const started   = !plan.dateFlexible && !!plan.startDate && nowTs !== null && nowTs >= new Date(plan.startDate).getTime()
   const editable  = ['draft', 'open', 'bidding'].includes(plan.status) && !started
   const canComplete = isOwner && (plan.dateFlexible || started) && !['completed', 'disputed'].includes(plan.status)
@@ -205,12 +211,32 @@ export default function AdminPlanDetailPage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
               <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-dark-muted">{plan.eventType?.name}</p>
-              {isOwner && (
+              {isPlatform && (
                 <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/15 text-[#7CE0FF]">Platform event</span>
               )}
             </div>
             <h1 className="font-display font-bold text-[24px] text-white leading-tight">{plan.name}</h1>
             <p className="text-dark-muted text-[13px] mt-1">{dateLabel} · {plan.city}, {plan.state}{fmtGuests(plan.guestCount) ? ` · ${fmtGuests(plan.guestCount)}` : ''}</p>
+            <p className="text-dark-muted text-[12px] mt-1.5">
+              Organised by{' '}
+              {plan.organiser?.isPlatform ? (
+                <span className="text-[#7CE0FF] font-medium">Confette Events</span>
+              ) : plan.organiser ? (
+                <Link href={`/admin/organisers/${plan.organiserId}`} className="text-[#7CE0FF] hover:text-white transition-colors font-medium">
+                  {plan.organiser.name}
+                </Link>
+              ) : (
+                <span className="text-dark-muted">an organiser</span>
+              )}
+              {plan.organiser && !plan.organiser.isPlatform && (
+                <>
+                  <span className="text-dark-muted"> · {plan.organiser.email}</span>
+                  {plan.organiser.status === 'suspended' && (
+                    <span className="text-red-400"> · Suspended</span>
+                  )}
+                </>
+              )}
+            </p>
             {plan.status === 'completed' && (
               <p className="mt-1.5 text-[12px] text-[#39E75F]">
                 Feedback: {outcome === 'great' ? 'It went great 🎉' : outcome === 'issues' ? 'It had some issues 😕' : 'No feedback'}
@@ -234,8 +260,9 @@ export default function AdminPlanDetailPage() {
                   </button>
                 )}
               </>
-            ) : (
-              /* Moderation: a completed event is terminal — it can no longer be flagged. */
+            ) : isPlatform ? null : (
+              /* Moderation (organisers' events only — you don't flag the platform's
+                 own events). A completed event is terminal and can't be flagged. */
               plan.status !== 'completed' && (
                 <button onClick={toggleFlag} disabled={flagging}
                   className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-[12px] font-medium transition-colors disabled:opacity-50 ${

@@ -27,6 +27,8 @@ export interface Plan {
   totalBudget: number
   shareCode: string
   organiserId: string
+  /** Event owner. Reads "Confette Events" for platform-run (admin-owned) events. */
+  organiser?: { id: string; name: string }
   categories: PlanCategory[]
   bidCount?: number
   createdAt: string

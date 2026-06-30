@@ -1,6 +1,6 @@
 'use client'
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import type { AuthUser, LoginPayload, RegisterPayload } from '../types/auth.types'
+import type { AuthUser, LoginPayload, RegisterPayload, Portal } from '../types/auth.types'
 
 interface AuthContextValue {
   user: AuthUser | null
@@ -8,6 +8,8 @@ interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<AuthUser>
   logout: () => Promise<void>
   register: (payload: RegisterPayload) => Promise<AuthUser>
+  /** Opt the signed-in user into the second portal (organiser or vendor). */
+  addRole: (role: Portal) => Promise<AuthUser>
   refresh: () => Promise<void>
 }
 
@@ -48,6 +50,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data.user as AuthUser
   }
 
+  async function addRole(role: Portal): Promise<AuthUser> {
+    const res = await fetch('/api/auth/add-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error ?? 'Could not add that role')
+    setUser(data.user)
+    return data.user as AuthUser
+  }
+
   async function logout(): Promise<void> {
     await fetch('/api/auth/logout', { method: 'POST' })
     setUser(null)
@@ -77,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register, refresh }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, addRole, refresh }}>
       {children}
     </AuthContext.Provider>
   )

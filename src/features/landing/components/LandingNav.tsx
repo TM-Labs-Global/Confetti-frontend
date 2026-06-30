@@ -2,15 +2,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/features/auth/context/AuthContext'
+import { resolveDashboard } from '@/features/auth/portal'
 import { AppLogo } from '@/features/shared-ui'
 import { Menu, X, Sun, Moon } from 'lucide-react'
 import { useLandingTheme, useFeaturedVendors } from './LandingShell'
-
-const DASHBOARDS: Record<string, string> = {
-  organiser: '/organiser/dashboard',
-  vendor: '/vendor/dashboard',
-  admin: '/admin/dashboard',
-}
 
 const LINKS = [
   { label: 'About', href: '#about' },
@@ -40,7 +35,7 @@ export function LandingNav() {
   const { user } = useAuth()
   const { vendors } = useFeaturedVendors()
   const [open, setOpen] = useState(false)
-  const dashboard = user ? DASHBOARDS[user.role] ?? '/login' : null
+  const dashboard = user ? resolveDashboard(user) : null
 
   // Drop the "Vendors" anchor when the showcase section is hidden (no verified vendors).
   const hasVendors = !!vendors && vendors.length > 0

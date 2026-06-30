@@ -155,6 +155,43 @@
   color: var(--ink-3);
 }
 
+/* ─────────────────────────────────────────────────
+   Admin portal light mode. The admin portal is built on the dark utilities
+   (bg-dark / bg-dark-surface / text-white / border-dark-border …), so light
+   mode re-points those tokens to light surfaces and flips the few hard-coded
+   literals that don't ride a token. Scoped to [data-admin-theme='light'],
+   which PortalShell sets when the admin flips the top-bar sun/moon. Dark is the
+   default and has no rules here, so nothing changes until the admin opts in.
+   ───────────────────────────────────────────────── */
+[data-admin-theme='light'] {
+  --dark:     #FAFAFC;          /* bg-dark         → page canvas */
+  --surface:  #FFFFFF;          /* bg-dark-surface → cards */
+  --border-d: #E4E7EC;          /* border-dark-border */
+  --color-dark-muted: #667085;  /* text-dark-muted */
+  color-scheme: light;
+}
+/* text-white is a literal, so flip it explicitly (mirrors the dark bg-white override). */
+[data-admin-theme='light'] .text-white { color: #101828; }
+/* Accent literals tuned for the dark UI lose contrast on white — darken them. */
+[data-admin-theme='light'] .text-\[\#7CE0FF\] { color: #0E7490; }  /* links/accent */
+[data-admin-theme='light'] .text-\[\#39E75F\] { color: #15803D; }  /* success */
+[data-admin-theme='light'] .text-\[\#FFDE59\] { color: #92660A; }  /* warning */
+[data-admin-theme='light'] .text-\[\#C9D0DE\] { color: #475467; }  /* sidebar nav */
+/* White hover/active tints are invisible on a light surface — use dark tints. */
+[data-admin-theme='light'] .bg-white\/\[0\.06\] { background-color: rgba(16, 24, 40, 0.05); }
+[data-admin-theme='light'] .hover\:bg-white\/\[0\.06\]:hover { background-color: rgba(16, 24, 40, 0.05); }
+[data-admin-theme='light'] .hover\:bg-white\/\[0\.03\]:hover { background-color: rgba(16, 24, 40, 0.04); }
+/* Admin inputs hard-code dark surfaces; flip them within the light scope. */
+[data-admin-theme='light'] input,
+[data-admin-theme='light'] select,
+[data-admin-theme='light'] textarea {
+  background-color: #FFFFFF;
+  border-color: #E4E7EC;
+  color: #101828;
+}
+[data-admin-theme='light'] input::placeholder,
+[data-admin-theme='light'] textarea::placeholder { color: #667085; }
+
 /* Dotted-grid depth layer used behind the hero */
 .ld-grid {
   background-image: radial-gradient(var(--ld-grid) 1px, transparent 1px);

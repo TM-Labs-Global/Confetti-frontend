@@ -3,13 +3,8 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/features/auth/context/AuthContext'
+import { resolveDashboard } from '@/features/auth/portal'
 import { AppLogo, PasswordInput } from '@/features/shared-ui'
-
-const DASHBOARDS: Record<string, string> = {
-  organiser: '/organiser/dashboard',
-  vendor: '/vendor/dashboard',
-  admin: '/admin/dashboard',
-}
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -33,7 +28,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const user = await login({ email: emailVal, password: passwordVal })
-      router.replace(DASHBOARDS[user.role] ?? '/organiser/dashboard')
+      router.replace(resolveDashboard(user))
     } catch (err) {
       setError((err as Error).message)
     } finally {

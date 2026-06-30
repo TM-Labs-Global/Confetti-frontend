@@ -3,13 +3,15 @@ import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, ArrowLeftRight, Store, PartyPopper, Sun, Moon } from 'lucide-react'
 import { useAuth } from '@/features/auth/context/AuthContext'
+import { resolveDashboard, rememberPortal } from '@/features/auth/portal'
 import { VerifyEmailGate } from '@/features/auth/components/VerifyEmailGate'
 import NotificationBell from '@/features/notifications/components/NotificationBell'
 import { AppLogo } from './AppLogo'
 import { AppThemeToggle } from './AppThemeToggle'
 import { useAppTheme } from './useAppTheme'
+import { useAdminTheme } from './useAdminTheme'
 
 export interface NavItem {
   label: string
@@ -62,28 +64,41 @@ const SURFACE = {
 }
 
 export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle, children }: PortalShellProps) {
-  const { user, loading, logout } = useAuth()
+  const { user, loading, logout, addRole } = useAuth()
   const router                    = useRouter()
   const pathname                  = usePathname()
   const { theme, toggle }         = useAppTheme()
+  // Admin gets its own light/dark toggle (default dark); organiser/vendor use
+  // useAppTheme above. Both hooks run unconditionally; only the matching one is used.
+  const admin                     = useAdminTheme()
   const [mounted, setMounted]     = useState(false)
   const [drawerOpen, setDrawer]   = useState(false)
+  const [optingIn, setOptingIn]   = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
 
+  // Send the user to a portal they actually belong to. A dual-role user is valid
+  // in either organiser or vendor; anyone lacking this portal's role is bounced
+  // to whichever dashboard fits them.
   useEffect(() => {
     if (!mounted || loading) return
     if (!user) router.replace('/login')
-    else if (user.role !== role) router.replace(`/${user.role}/dashboard`)
+    else if (!user.roles.includes(role)) router.replace(resolveDashboard(user))
   }, [mounted, loading, user, router, role])
+
+  // Remember the portal a dual-role user is actively in, so login/landing return
+  // them here next time.
+  useEffect(() => {
+    if (user && role !== 'admin' && user.roles.includes(role)) rememberPortal(role)
+  }, [user, role])
 
   // Close the drawer whenever the route changes.
   useEffect(() => { setDrawer(false) }, [pathname])
 
-  if (!mounted || loading || !user || user.role !== role) return null
+  if (!mounted || loading || !user || !user.roles.includes(role)) return null
 
   // Block the portal until the user verifies their email (admins are exempt).
-  if (user.role !== 'admin' && !user.emailVerified) {
+  if (!user.roles.includes('admin') && !user.emailVerified) {
     return <VerifyEmailGate email={user.email} />
   }
 
@@ -91,6 +106,34 @@ export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle
   const a        = ACCENT[accent]
   const initials = user.name?.split(' ').map(n => n[0]).join('') ?? 'U'
   const isDark   = surface === 'dark'
+
+  // The other portal this user could use. Organiser <-> vendor only (admin has
+  // no switcher). When they already hold it we show a switcher; otherwise we
+  // offer to add it (the opt-in CTA).
+  const otherPortal = role === 'organiser' ? 'vendor' : role === 'vendor' ? 'organiser' : null
+  const hasOther    = !!otherPortal && user.roles.includes(otherPortal)
+
+  function switchPortal(to: 'organiser' | 'vendor') {
+    rememberPortal(to)
+    setDrawer(false)
+    router.push(`/${to}/dashboard`)
+  }
+
+  // Grant the second role, then drop the user where they can act on it: a fresh
+  // vendor sets up their profile (bidding unlocks after admin verification); a
+  // fresh organiser starts planning.
+  async function optInToOther() {
+    if (!otherPortal || optingIn) return
+    setOptingIn(true)
+    try {
+      await addRole(otherPortal)
+      rememberPortal(otherPortal)
+      setDrawer(false)
+      router.push(otherPortal === 'vendor' ? '/vendor/profile' : '/organiser/create-plan')
+    } catch {
+      setOptingIn(false)
+    }
+  }
 
   const SidebarBody = (
     <>
@@ -127,6 +170,21 @@ export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle
         })}
       </nav>
 
+      {/* Single-role users get a gentle nudge to pick up the other portal. Users
+          who already hold both switch via the segmented control in the topbar. */}
+      {otherPortal && !hasOther && (
+        <div className="px-4 pb-2">
+          <button
+            onClick={optInToOther}
+            disabled={optingIn}
+            className={`flex w-full items-center gap-2.5 rounded-[8px] px-2.5 py-2 text-[13px] transition-colors disabled:opacity-60 ${s.inactive}`}
+          >
+            {role === 'organiser' ? <Store size={15} /> : <PartyPopper size={15} />}
+            {optingIn ? 'Setting up…' : role === 'organiser' ? 'Also offer services' : 'Plan your own event'}
+          </button>
+        </div>
+      )}
+
       <div className={`px-4 pb-6 pt-4 border-t ${s.border}`}>
         <div className="flex items-center gap-3 px-2.5 mb-3">
           <div className={`w-7 h-7 rounded-full ${a.avatar} text-[11px] font-bold flex items-center justify-center shrink-0`}>
@@ -148,7 +206,11 @@ export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle
   )
 
   return (
-    <div data-app-theme={themeToggle ? theme : undefined} className={`flex h-screen ${isDark ? 'bg-dark' : 'bg-canvas'}`}>
+    <div
+      data-app-theme={themeToggle ? theme : undefined}
+      data-admin-theme={role === 'admin' ? admin.theme : undefined}
+      className={`flex h-screen ${isDark ? 'bg-dark' : 'bg-canvas'}`}
+    >
       {/* Desktop sidebar */}
       <aside className={`hidden lg:flex w-[248px] flex-col shrink-0 border-r ${s.aside}`}>
         {SidebarBody}
@@ -178,7 +240,36 @@ export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle
           </Link>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            {/* Portal switcher — only for users who hold both roles. Compact so it
+                fits the mobile topbar; sits by the account controls as a "which
+                portal am I in" context switch. */}
+            {otherPortal && hasOther && (
+              <div className={`flex items-center rounded-lg border p-0.5 ${s.border}`} role="group" aria-label="Switch portal">
+                <span className={`rounded-md px-2.5 py-1 text-[12px] font-medium ${a.active}`}>{roleLabel}</span>
+                <button
+                  type="button"
+                  onClick={() => switchPortal(otherPortal)}
+                  title={`Switch to ${otherPortal} portal`}
+                  className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-[12px] transition-colors ${s.inactive}`}
+                >
+                  <ArrowLeftRight size={12} />
+                  {otherPortal === 'vendor' ? 'Vendor' : 'Organiser'}
+                </button>
+              </div>
+            )}
             {themeToggle && <AppThemeToggle theme={theme} toggle={toggle} />}
+            {/* Admin light/dark toggle. Uses dark utilities so it flips with the
+                rest of the chrome under [data-admin-theme='light']. */}
+            {role === 'admin' && (
+              <button
+                type="button"
+                onClick={admin.toggle}
+                aria-label={`Switch to ${admin.theme === 'dark' ? 'light' : 'dark'} mode`}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-dark-border text-dark-muted hover:bg-white/[0.06] hover:text-white transition-colors"
+              >
+                {admin.theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+              </button>
+            )}
             <NotificationBell dark={isDark} />
             <div className={`w-7 h-7 rounded-full ${a.avatar} text-[11px] font-bold flex items-center justify-center`}>
               {initials}

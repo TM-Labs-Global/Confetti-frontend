@@ -48,7 +48,7 @@ export default function AdminPlansPage() {
 
   const filtered = plans.filter(p => {
     const matchTab   = tab === 'all' || (p.status as string) === tab
-    const haystack   = `${p.name} ${p.city ?? ''} ${p.state ?? ''} ${p.eventType?.name ?? ''}`.toLowerCase()
+    const haystack   = `${p.name} ${p.city ?? ''} ${p.state ?? ''} ${p.eventType?.name ?? ''} ${p.organiser?.name ?? ''}`.toLowerCase()
     const matchQuery = !query || haystack.includes(query.toLowerCase())
     const matchType  = eventType === 'all' || p.eventTypeId === eventType
     const matchLoc   = location === 'all' || p.state === location
@@ -79,7 +79,7 @@ export default function AdminPlansPage() {
           <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
-          <input type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search events, location…"
+          <input type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search events, organiser, location…"
             className="w-full pl-10 pr-4 py-2.5 bg-dark-surface border border-dark-border rounded-xl text-[13px] text-white placeholder:text-dark-muted focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>
@@ -132,7 +132,9 @@ export default function AdminPlansPage() {
                   <EventTile type={plan.eventTypeId || ''} bg={meta.bg} color={meta.color} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-medium text-white truncate group-hover:text-primary transition-colors">{plan.name}</p>
-                    <p className="text-dark-muted text-[11px] mt-0.5">{plan.city}, {plan.state}</p>
+                    <p className="text-dark-muted text-[11px] mt-0.5 truncate">
+                      {[[plan.city, plan.state].filter(Boolean).join(', '), plan.organiser?.name].filter(Boolean).join('  ·  ')}
+                    </p>
                   </div>
                   <div className="flex items-center gap-6 shrink-0">
                     <div className="text-right">

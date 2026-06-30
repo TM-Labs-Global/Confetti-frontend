@@ -76,7 +76,9 @@ export default function AdminOrganiserDetailPage() {
     )
   }
 
-  const st = ORG_STATUS_META[organiser.status]
+  const st = organiser.isPlatform
+    ? { label: 'Platform', style: 'bg-primary/15 text-[#7CE0FF]' }
+    : ORG_STATUS_META[organiser.status]
 
   return (
     <div className="max-w-[900px] mx-auto">
@@ -101,19 +103,22 @@ export default function AdminOrganiserDetailPage() {
             )}
           </div>
 
-          <div className="shrink-0">
-            {organiser.status === 'suspended' ? (
-              <button onClick={() => setStatus('active')} disabled={busy}
-                className="px-4 py-2 bg-success/15 text-[#39E75F] text-[13px] font-medium rounded-lg hover:bg-success/25 transition-colors disabled:opacity-50">
-                Reinstate
-              </button>
-            ) : (
-              <button onClick={() => { setSuspendOpen(v => !v); setReason('') }} disabled={busy}
-                className="px-4 py-2 bg-red-500/10 text-red-400 text-[13px] font-medium rounded-lg hover:bg-red-500/20 transition-colors disabled:opacity-50">
-                Suspend
-              </button>
-            )}
-          </div>
+          {/* The platform itself can't be suspended, so it carries no action. */}
+          {!organiser.isPlatform && (
+            <div className="shrink-0">
+              {organiser.status === 'suspended' ? (
+                <button onClick={() => setStatus('active')} disabled={busy}
+                  className="px-4 py-2 bg-success/15 text-[#39E75F] text-[13px] font-medium rounded-lg hover:bg-success/25 transition-colors disabled:opacity-50">
+                  Reinstate
+                </button>
+              ) : (
+                <button onClick={() => { setSuspendOpen(v => !v); setReason('') }} disabled={busy}
+                  className="px-4 py-2 bg-red-500/10 text-red-400 text-[13px] font-medium rounded-lg hover:bg-red-500/20 transition-colors disabled:opacity-50">
+                  Suspend
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {suspendOpen && (

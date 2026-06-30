@@ -111,7 +111,9 @@ export default function AdminOrganisersPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map(o => {
-            const st = STATUS_META[o.status]
+            const st = o.isPlatform
+              ? { label: 'Platform', style: 'bg-primary/15 text-[#7CE0FF]' }
+              : STATUS_META[o.status]
             return (
               <div key={o.id} className="bg-dark-surface border border-dark-border rounded-xl p-5">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -131,19 +133,22 @@ export default function AdminOrganisersPage() {
                     </span>
                   </Link>
 
-                  <div className="flex flex-col gap-2 shrink-0">
-                    {o.status === 'suspended' ? (
-                      <button onClick={() => setStatus(o.id, 'active')} disabled={busy === o.id}
-                        className="px-4 py-1.5 bg-success/15 text-[#39E75F] text-[12px] font-medium rounded-lg hover:bg-success/25 transition-colors disabled:opacity-50">
-                        Reinstate
-                      </button>
-                    ) : (
-                      <button onClick={() => { setSuspendingId(suspendingId === o.id ? null : o.id); setReason('') }} disabled={busy === o.id}
-                        className="px-4 py-1.5 bg-red-500/10 text-red-400 text-[12px] font-medium rounded-lg hover:bg-red-500/20 transition-colors disabled:opacity-50">
-                        Suspend
-                      </button>
-                    )}
-                  </div>
+                  {/* The platform itself can't be suspended, so it carries no action. */}
+                  {!o.isPlatform && (
+                    <div className="flex flex-col gap-2 shrink-0">
+                      {o.status === 'suspended' ? (
+                        <button onClick={() => setStatus(o.id, 'active')} disabled={busy === o.id}
+                          className="px-4 py-1.5 bg-success/15 text-[#39E75F] text-[12px] font-medium rounded-lg hover:bg-success/25 transition-colors disabled:opacity-50">
+                          Reinstate
+                        </button>
+                      ) : (
+                        <button onClick={() => { setSuspendingId(suspendingId === o.id ? null : o.id); setReason('') }} disabled={busy === o.id}
+                          className="px-4 py-1.5 bg-red-500/10 text-red-400 text-[12px] font-medium rounded-lg hover:bg-red-500/20 transition-colors disabled:opacity-50">
+                          Suspend
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {suspendingId === o.id && (

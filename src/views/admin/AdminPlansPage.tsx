@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Plus } from 'lucide-react'
 import { EVENT_META } from '../../data/mockCategories'
 import { fmtNaira, fmtDate } from '@/shared/utils/format'
 import { EventTile } from '@/features/shared-ui'
@@ -64,8 +65,13 @@ export default function AdminPlansPage() {
 
   return (
     <div className="max-w-[900px] mx-auto">
-      <div className="mb-7">
+      <div className="mb-7 flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display font-bold text-[22px] sm:text-[28px] text-white">All Events</h1>
+        <Link href="/admin/create-event"
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-primary text-dark text-[13px] font-semibold rounded-xl hover:bg-primary/90 transition-colors">
+          <Plus size={16} strokeWidth={2.5} />
+          Create Event
+        </Link>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-5">

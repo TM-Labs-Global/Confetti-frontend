@@ -2,10 +2,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import { Pencil } from 'lucide-react'
 import { EVENT_META } from '../../data/mockCategories'
-import { fmtNaira, fmtDateRange, fmtGuests, timeAgo } from '@/shared/utils/format'
+import { fmtNaira, fmtDateRange, fmtGuests } from '@/shared/utils/format'
 import { budgetColor } from '@/shared/utils/palette'
 import { EventTile } from '@/features/shared-ui'
+import { useAuth } from '@/features/auth/context/AuthContext'
 import { Plan } from '@/features/organiser/types/plan.types'
 import { VendorBid } from '@/features/vendor/types/vendor.types'
 
@@ -37,24 +39,41 @@ const BID_STATUS_META = {
 
 export default function AdminPlanDetailPage() {
   const { id } = useParams()
+  const { user } = useAuth()
   const [plan, setPlan]       = useState<AdminPlanDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [flagged, setFlagged] = useState(false)
   const [flagging, setFlagging] = useState(false)
+  // Management state (only used for events this admin owns — platform-run events).
+  const [accepting, setAccepting]       = useState<string | null>(null)
+  const [acceptError, setAcceptError]   = useState<string | null>(null)
+  const [decliningId, setDecliningId]   = useState<string | null>(null)
+  const [declineReason, setDeclineReason] = useState('')
+  const [completeOpen, setCompleteOpen] = useState(false)
+  const [completing, setCompleting]     = useState(false)
   // Synchronous guard so a rapid double-click can't fire two requests (which
   // would create duplicate flag/restore notifications).
   const busyRef = useRef(false)
-
+  // "Now" is resolved on the client only (the server has no stable clock), so
+  // the time-gated controls never cause a hydration mismatch and flip live.
+  const [nowTs, setNowTs] = useState<number | null>(null)
   useEffect(() => {
-    fetch(`/api/plans/${id}`)
+    setNowTs(Date.now())
+    const t = setInterval(() => setNowTs(Date.now()), 60_000)
+    return () => clearInterval(t)
+  }, [])
+
+  function load() {
+    return fetch(`/api/plans/${id}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         const p = data?.plan ?? null
         setPlan(p)
         if (p) setFlagged(p.status === 'disputed')
       })
-      .finally(() => setLoading(false))
-  }, [id])
+  }
+
+  useEffect(() => { load().finally(() => setLoading(false)) }, [id])
 
   // Restoring from "disputed" should put the event back to its real working
   // status, derived from its bids, never blindly to "open".
@@ -80,11 +99,60 @@ export default function AdminPlanDetailPage() {
       })
       if (res.ok) {
         setFlagged(!flagged)
-        setPlan(p => p ? { ...p, status: newStatus as any } : null)
+        setPlan(p => p ? { ...p, status: newStatus as Plan['status'] } : null)
       }
     } finally {
       busyRef.current = false
       setFlagging(false)
+    }
+  }
+
+  // ── Management actions (platform-run events only) ──────────────────────────
+  async function acceptBid(bidId: string) {
+    if (accepting) return
+    setAccepting(bidId)
+    setAcceptError(null)
+    try {
+      const res = await fetch(`/api/bids/${bidId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'accepted' }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        // Budget guard (or any other) rejection — surface the server's message.
+        setAcceptError(data?.error || data?.message || 'Could not accept this bid. Please try again.')
+      } else {
+        await load()
+      }
+    } finally {
+      setAccepting(null)
+    }
+  }
+
+  async function rejectBid(bidId: string, reason: string) {
+    await fetch(`/api/bids/${bidId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'rejected', reason: reason.trim() || undefined }),
+    })
+    setDecliningId(null)
+    setDeclineReason('')
+    await load()
+  }
+
+  async function completeEvent(outcome: 'great' | 'issues') {
+    setCompleting(true)
+    try {
+      await fetch(`/api/plans/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed', outcome }),
+      })
+      setCompleteOpen(false)
+      await load()
+    } finally {
+      setCompleting(false)
     }
   }
 
@@ -114,6 +182,15 @@ export default function AdminPlanDetailPage() {
   const dateLabel  = fmtDateRange(plan.startDate, plan.endDate, plan.dateFlexible)
   const sortedCats = [...(plan.categories ?? [])].sort((a, b) => b.allocation - a.allocation)
 
+  // This admin runs platform events they created themselves. Only the owner can
+  // manage bids / edit / close the event; for everyone else's events the admin
+  // stays in moderation-only mode (flag / restore).
+  const isOwner   = !!user && plan.organiserId === user.id
+  const started   = !plan.dateFlexible && !!plan.startDate && nowTs !== null && nowTs >= new Date(plan.startDate).getTime()
+  const editable  = ['draft', 'open', 'bidding'].includes(plan.status) && !started
+  const canComplete = isOwner && (plan.dateFlexible || started) && !['completed', 'disputed'].includes(plan.status)
+  const acceptedTotal = bids.filter(b => b.status === 'accepted').reduce((s, b) => s + b.amount, 0)
+
   return (
     <div className="max-w-[900px] mx-auto">
       <div className="flex items-center gap-2 text-[13px] text-dark-muted mb-6">
@@ -126,7 +203,12 @@ export default function AdminPlanDetailPage() {
         <div className="flex flex-wrap items-start gap-4">
           <EventTile type={plan.eventTypeId || ''} bg={meta.bg} color={meta.color} size="lg" />
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-dark-muted mb-0.5">{plan.eventType?.name}</p>
+            <div className="flex items-center gap-2 mb-0.5">
+              <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-dark-muted">{plan.eventType?.name}</p>
+              {isOwner && (
+                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/15 text-[#7CE0FF]">Platform event</span>
+              )}
+            </div>
             <h1 className="font-display font-bold text-[24px] text-white leading-tight">{plan.name}</h1>
             <p className="text-dark-muted text-[13px] mt-1">{dateLabel} · {plan.city}, {plan.state}{fmtGuests(plan.guestCount) ? ` · ${fmtGuests(plan.guestCount)}` : ''}</p>
             {plan.status === 'completed' && (
@@ -135,25 +217,60 @@ export default function AdminPlanDetailPage() {
               </p>
             )}
           </div>
-          <div className="flex items-start gap-3 shrink-0">
+          <div className="flex flex-wrap items-start gap-3 shrink-0">
             <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${st.style}`}>{st.label}</span>
-            {/* A completed event is terminal — it can no longer be flagged. */}
-            {plan.status !== 'completed' && (
-              <button onClick={toggleFlag} disabled={flagging}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-[12px] font-medium transition-colors disabled:opacity-50 ${
-                  flagged
-                    ? 'border-red-500/40 bg-red-500/10 text-red-400'
-                    : 'border-dark-border text-dark-muted hover:border-red-500/30 hover:text-red-400'
-                }`}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill={flagged ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>
-                </svg>
-                {flagged ? 'Unflag Event' : 'Flag Event'}
-              </button>
+            {isOwner ? (
+              <>
+                {editable && (
+                  <Link href={`/admin/create-event?edit=${plan.id}`}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-dark-border text-dark-muted text-[12px] font-medium hover:border-primary/40 hover:text-white transition-colors">
+                    <Pencil size={13} /> Edit
+                  </Link>
+                )}
+                {canComplete && (
+                  <button onClick={() => setCompleteOpen(v => !v)} disabled={completing}
+                    className="px-3.5 py-2 rounded-lg bg-success/15 text-[#39E75F] text-[12px] font-medium hover:bg-success/25 transition-colors disabled:opacity-50">
+                    Mark complete
+                  </button>
+                )}
+              </>
+            ) : (
+              /* Moderation: a completed event is terminal — it can no longer be flagged. */
+              plan.status !== 'completed' && (
+                <button onClick={toggleFlag} disabled={flagging}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-[12px] font-medium transition-colors disabled:opacity-50 ${
+                    flagged
+                      ? 'border-red-500/40 bg-red-500/10 text-red-400'
+                      : 'border-dark-border text-dark-muted hover:border-red-500/30 hover:text-red-400'
+                  }`}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill={flagged ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>
+                  </svg>
+                  {flagged ? 'Unflag Event' : 'Flag Event'}
+                </button>
+              )
             )}
           </div>
         </div>
+
+        {/* Close-out confirmation for the platform event owner. */}
+        {isOwner && completeOpen && (
+          <div className="mt-4 border-t border-dark-border pt-4">
+            <p className="text-[13px] text-white mb-3">How did it go? Booked vendors will be told the event is wrapped up.</p>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => completeEvent('great')} disabled={completing}
+                className="px-4 py-2 rounded-lg bg-success/15 text-[#39E75F] text-[13px] font-medium hover:bg-success/25 disabled:opacity-50">
+                It went great 🎉
+              </button>
+              <button onClick={() => completeEvent('issues')} disabled={completing}
+                className="px-4 py-2 rounded-lg border border-dark-border text-dark-muted text-[13px] font-medium hover:text-white disabled:opacity-50">
+                It had some issues
+              </button>
+              <button onClick={() => setCompleteOpen(false)} className="px-3 py-2 text-[12px] text-dark-muted hover:text-white">Cancel</button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-5 pt-5 border-t border-dark-border">
           <div>
@@ -161,8 +278,10 @@ export default function AdminPlanDetailPage() {
             <p className="font-display font-bold text-[22px] text-white">{fmtNaira(plan.totalBudget)}</p>
           </div>
           <div>
-            <p className="text-[11px] text-dark-muted mb-0.5">Categories</p>
-            <p className="font-display font-bold text-[22px] text-white">{(plan.categories ?? []).length}</p>
+            <p className="text-[11px] text-dark-muted mb-0.5">{isOwner ? 'Awarded' : 'Categories'}</p>
+            <p className="font-display font-bold text-[22px] text-white">
+              {isOwner ? fmtNaira(acceptedTotal) : (plan.categories ?? []).length}
+            </p>
           </div>
           <div>
             <p className="text-[11px] text-dark-muted mb-0.5">Bids Received</p>
@@ -205,12 +324,25 @@ export default function AdminPlanDetailPage() {
           <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-dark-muted mb-4">
             All Bids ({bids.length})
           </p>
+
+          {isOwner && bids.some(b => b.status === 'pending') && (
+            <p className="text-[12px] text-dark-muted mb-3 leading-snug">
+              Accept or decline bids until the event starts. Booking every category moves the event to underway.
+            </p>
+          )}
+          {acceptError && (
+            <p className="mb-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[12px] text-red-400 leading-snug">
+              {acceptError}
+            </p>
+          )}
+
           {bids.length === 0 ? (
             <p className="text-dark-muted text-[13px] text-center py-6">No bids yet.</p>
           ) : (
             <div className="space-y-3">
               {bids.map(bid => {
                 const bs = BID_STATUS_META[bid.status] ?? BID_STATUS_META.pending
+                const canAct = isOwner && !started && plan.status !== 'completed'
                 return (
                   <div key={bid.id} className="border border-dark-border rounded-lg p-3">
                     <div className="flex items-start justify-between gap-2 mb-1.5">
@@ -227,6 +359,41 @@ export default function AdminPlanDetailPage() {
                     {bid.isCounterBid && (
                       <p className="text-[10px] text-warning mt-1.5 italic">Counter-bid: {bid.counterReason}</p>
                     )}
+
+                    {/* Owner actions: accept/decline a pending bid, or drop a booked vendor. */}
+                    {canAct && decliningId === bid.id ? (
+                      <div className="mt-2.5 border-t border-dark-border pt-2.5">
+                        <textarea value={declineReason} onChange={e => setDeclineReason(e.target.value)} rows={2}
+                          placeholder="Reason (optional, sent to the vendor)…"
+                          className="w-full rounded-lg border border-dark-border bg-dark px-2.5 py-2 text-[12px] text-white placeholder:text-dark-muted focus:outline-none focus:border-primary" />
+                        <div className="flex justify-end gap-2 mt-2">
+                          <button onClick={() => { setDecliningId(null); setDeclineReason('') }}
+                            className="px-2.5 py-1.5 text-[11px] text-dark-muted hover:text-white">Cancel</button>
+                          <button onClick={() => rejectBid(bid.id, declineReason)}
+                            className="px-3 py-1.5 bg-red-500/20 text-red-400 text-[11px] font-medium rounded-lg hover:bg-red-500/30">
+                            {bid.status === 'accepted' ? 'Drop & notify' : 'Send decline'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : canAct && bid.status === 'pending' ? (
+                      <div className="mt-2.5 flex gap-2">
+                        <button onClick={() => acceptBid(bid.id)} disabled={accepting === bid.id}
+                          className="flex-1 px-3 py-1.5 bg-primary text-dark text-[11px] font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50">
+                          {accepting === bid.id ? 'Accepting…' : 'Accept'}
+                        </button>
+                        <button onClick={() => { setDecliningId(bid.id); setDeclineReason('') }}
+                          className="px-3 py-1.5 border border-dark-border text-dark-muted text-[11px] font-medium rounded-lg hover:border-red-500/30 hover:text-red-400 transition-colors">
+                          Decline
+                        </button>
+                      </div>
+                    ) : canAct && bid.status === 'accepted' ? (
+                      <div className="mt-2.5">
+                        <button onClick={() => { setDecliningId(bid.id); setDeclineReason('') }}
+                          className="text-[11px] text-dark-muted hover:text-red-400 transition-colors">
+                          Drop this vendor
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 )
               })}

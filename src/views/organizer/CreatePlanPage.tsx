@@ -80,8 +80,13 @@ interface Step4Props {
   isEdit: boolean
 }
 
-// localStorage key for an in-progress (unsaved) plan draft.
-const DRAFT_KEY = 'confetti_plan_draft'
+// localStorage keys for an in-progress (unsaved) event draft, kept separate per
+// surface so an admin's platform event never collides with an organiser's plan.
+const DRAFT_KEYS = { organiser: 'confetti_plan_draft', admin: 'confetti_admin_event_draft' } as const
+
+// Where the wizard lives and where it returns to. The organiser flow is the
+// default; the admin portal reuses the same wizard for platform-run events.
+type WizardSurface = 'organiser' | 'admin'
 
 // Step-aware CTA copy in Confette's voice: a friend helping you throw a party,
 // not a form asking for the next field.
@@ -512,11 +517,16 @@ function Step4({ form, getCatsForType, onPublish, onSave, onBack, saving, isEdit
   )
 }
 
-export default function CreatePlanPage() {
+export default function CreatePlanPage({ surface = 'organiser' }: { surface?: WizardSurface } = {}) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const editId = searchParams.get('edit')
   const isEdit = !!editId
+
+  // Per-surface draft key + return paths. The API is identical (/api/plans);
+  // only where we send the user afterwards differs.
+  const DRAFT_KEY = DRAFT_KEYS[surface]
+  const listPath = surface === 'admin' ? '/admin/plans' : '/organiser/plans'
 
   const [eventTypes, setEventTypes] = useState<EventTypeInfo[]>([])
   const [step, setStep] = useState(1)
@@ -702,7 +712,14 @@ export default function CreatePlanPage() {
       }
       try { localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
       if (isEdit) {
-        router.push(`/organiser/plans/${editId}${status === 'open' ? '?published=true' : ''}`)
+        // Admin returns to the event detail; organiser keeps its publish-confetti cue.
+        router.push(
+          surface === 'admin'
+            ? `${listPath}/${editId}`
+            : `/organiser/plans/${editId}${status === 'open' ? '?published=true' : ''}`,
+        )
+      } else if (surface === 'admin') {
+        router.push(listPath)
       } else {
         router.push(status === 'open' ? '/organiser/plans?published=true' : '/organiser/plans')
       }

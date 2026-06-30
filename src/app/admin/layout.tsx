@@ -5,6 +5,7 @@ import { PortalShell, type NavItem } from '@/features/shared-ui'
 const NAV: NavItem[] = [
   { label: 'Dashboard',   path: '/admin/dashboard' },
   { label: 'All Events',  path: '/admin/plans' },
+  { label: 'Organisers',  path: '/admin/organisers' },
   { label: 'Vendors',     path: '/admin/vendors' },
   { label: 'Event Types', path: '/admin/categories' },
 ]

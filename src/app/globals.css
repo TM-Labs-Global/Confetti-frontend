@@ -171,10 +171,17 @@
    default and has no rules here, so nothing changes until the admin opts in.
    ───────────────────────────────────────────────── */
 [data-admin-theme='light'] {
-  --dark:     #FAFAFC;          /* bg-dark         → page canvas */
-  --surface:  #FFFFFF;          /* bg-dark-surface → cards */
-  --border-d: #E4E7EC;          /* border-dark-border */
-  --color-dark-muted: #667085;  /* text-dark-muted */
+  --dark:     #FAFAFC;          /* bg-dark (hand-written util) → page canvas */
+  --surface:  #FFFFFF;          /* bg-dark-surface (hand-written util) → cards */
+  --border-d: #E4E7EC;
+  /* Tailwind @theme aliases. The generated utilities (border-dark-border,
+     text-dark-muted, divide-dark-border …) read these, and they're computed
+     from the base tokens at :root, so overriding a base token alone never
+     reaches them — the borders would stay dark navy on white. */
+  --color-dark:         #FAFAFC;
+  --color-dark-surface: #FFFFFF;
+  --color-dark-border:  #E4E7EC;
+  --color-dark-muted:   #667085;
   color-scheme: light;
 }
 /* text-white is a literal, so flip it explicitly (mirrors the dark bg-white override). */

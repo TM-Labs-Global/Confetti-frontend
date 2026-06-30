@@ -32,8 +32,8 @@ interface PortalShellProps {
 }
 
 const ACCENT = {
-  primary: { active: 'bg-primary/10 text-primary', avatar: 'bg-primary/20 text-primary' },
-  warning: { active: 'bg-warning/10 text-warning', avatar: 'bg-warning/20 text-warning' },
+  primary: { active: 'bg-primary/10 text-primary', avatar: 'bg-primary/20 text-primary', cta: 'bg-primary text-dark hover:bg-primary/90' },
+  warning: { active: 'bg-warning/10 text-warning', avatar: 'bg-warning/20 text-warning', cta: 'bg-warning text-dark hover:bg-warning/90' },
 }
 
 const SURFACE = {
@@ -247,7 +247,7 @@ export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle
                 onClick={optInToOther}
                 disabled={optingIn}
                 title={role === 'organiser' ? 'Also offer services' : 'Plan your own event'}
-                className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-medium transition-colors disabled:opacity-60 ${s.border} ${s.inactive}`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold transition-colors disabled:opacity-60 ${a.cta}`}
               >
                 {role === 'organiser' ? <Store size={13} /> : <PartyPopper size={13} />}
                 <span className="hidden sm:inline">{optingIn ? 'Setting up…' : role === 'organiser' ? 'Also offer services' : 'Plan your own event'}</span>

@@ -68,6 +68,18 @@ export function fmtGuests(count: number | null | undefined): string {
   return `${Number(count).toLocaleString('en-NG')} ${count === 1 ? 'guest' : 'guests'}`
 }
 
+/**
+ * Turn a system key (snake_case or kebab-case) into human sentence case, so
+ * enum values never leak into the UI looking machine-generated.
+ * e.g. 'account_reinstated' -> 'Account reinstated', 'baby-shower' -> 'Baby shower'.
+ * Prefer an explicit label map where one exists; use this as the safe fallback.
+ */
+export function humanizeKey(key: string | null | undefined): string {
+  if (!key) return ''
+  const words = String(key).replace(/[_-]+/g, ' ').trim().toLowerCase()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
 export function timeAgo(isoString: string | Date): string {
   const diff = Date.now() - new Date(isoString).getTime()
   const mins = Math.floor(diff / 60000)

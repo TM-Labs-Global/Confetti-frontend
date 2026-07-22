@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Bell } from 'lucide-react'
 import { useNotifications } from '../hooks/useNotifications'
 import { markOneRead } from '../services/notificationService'
-import { timeAgo } from '@/shared/utils/format'
+import { timeAgo, humanizeKey } from '@/shared/utils/format'
 
 const TYPE_LABELS: Record<string, string> = {
   bid_received:           'Bid received',
@@ -23,6 +23,9 @@ const TYPE_LABELS: Record<string, string> = {
   booked_vendor_suspended:'Booked vendor suspended',
   vendor_invited:         'Invitation',
   event_completed:        'Event wrapped up',
+  // Account status (backend sends these as the notification type)
+  account_suspended:      'Account suspended',
+  account_reinstated:     'Account reinstated',
 }
 
 // Default route per notification type when the backend hasn't attached an explicit link.
@@ -148,7 +151,7 @@ export default function NotificationBell({ dark = false, notifications: propNoti
                   <div className={`w-1.5 h-1.5 rounded-full mt-[7px] shrink-0 ${!n.isRead ? 'bg-primary' : 'bg-transparent'}`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] font-medium tracking-[0.01em] text-ink-3 mb-0.5">
-                      {TYPE_LABELS[n.type] ?? n.type}
+                      {TYPE_LABELS[n.type] ?? humanizeKey(n.type)}
                     </p>
                     <p className="text-[13px] text-ink leading-snug">{n.message}</p>
                     <p className="text-[11px] text-ink-3 mt-1">{timeAgo(n.createdAt)}</p>

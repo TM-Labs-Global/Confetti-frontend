@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Sparkles, ClipboardList, Store, PartyPopper } from 'lucide-react'
+import { Sparkles, ClipboardList, Store, PartyPopper, CalendarDays, Gavel, Megaphone, Rocket, type LucideIcon } from 'lucide-react'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { EventTile } from '@/features/shared-ui'
 import { EVENT_META } from '../../data/mockCategories'
@@ -21,7 +21,11 @@ interface StatCardProps {
   label: string
   value: number | string
   sub?: string
-  accent?: string
+  Icon?: LucideIcon
+  /** Icon-chip classes (gradient tint + ring). */
+  tint?: string
+  /** Accent colour for the big value. */
+  valueClass?: string
 }
 
 // Animate a number from 0 to its target with an ease-out curve on mount.
@@ -45,14 +49,23 @@ function CountUp({ value }: { value: number }) {
   return <>{n}</>
 }
 
-function StatCard({ label, value, sub, accent }: StatCardProps) {
+function StatCard({ label, value, sub, Icon, tint, valueClass }: StatCardProps) {
   return (
-    <div className="bg-white border border-border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm hover:border-primary/30">
-      <p className="text-[12px] text-ink-3 font-medium mb-1">{label}</p>
-      <p className={`font-display font-bold text-[28px] leading-none ${accent ?? 'text-ink'}`}>
-        {typeof value === 'number' ? <CountUp value={value} /> : value}
-      </p>
-      {sub && <p className="text-[12px] text-ink-3 mt-1.5">{sub}</p>}
+    <div className="group bg-white border border-border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm hover:border-primary/30">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[12px] text-ink-3 font-medium mb-1">{label}</p>
+          <p className={`font-display font-bold text-[28px] leading-none ${valueClass ?? 'text-ink'}`}>
+            {typeof value === 'number' ? <CountUp value={value} /> : value}
+          </p>
+          {sub && <p className="text-[12px] text-ink-3 mt-1.5">{sub}</p>}
+        </div>
+        {Icon && (
+          <span className={`flex h-9 w-9 items-center justify-center rounded-lg shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 ${tint ?? ''}`}>
+            <Icon size={17} />
+          </span>
+        )}
+      </div>
     </div>
   )
 }
@@ -105,10 +118,14 @@ export default function OrganizerDashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-rise" style={{ animationDelay: '80ms' }}>
-        <StatCard label="Total events"   value={plans.length}     sub={`${activePlans.length} active`} />
-        <StatCard label="Total bids in"  value={totalBids}        accent="text-primary" />
-        <StatCard label="Open for bids"  value={plans.filter(p => (p.status as string) === 'open').length} />
-        <StatCard label="In progress"    value={plans.filter(p => (p.status as string) === 'in-progress').length} />
+        <StatCard label="Total events"   value={plans.length}     sub={`${activePlans.length} active`}
+          Icon={CalendarDays} tint="bg-gradient-to-br from-violet/25 to-violet/5 text-[#7C3AED] ring-1 ring-inset ring-violet/20" valueClass="text-[#7C3AED]" />
+        <StatCard label="Total bids in"  value={totalBids}
+          Icon={Gavel} tint="bg-gradient-to-br from-primary/25 to-primary/5 text-primary ring-1 ring-inset ring-primary/20" valueClass="text-primary" />
+        <StatCard label="Open for bids"  value={plans.filter(p => (p.status as string) === 'open').length}
+          Icon={Megaphone} tint="bg-gradient-to-br from-warning/35 to-warning/5 text-[#92660A] ring-1 ring-inset ring-warning/25" valueClass="text-[#B45309]" />
+        <StatCard label="In progress"    value={plans.filter(p => (p.status as string) === 'in-progress').length}
+          Icon={Rocket} tint="bg-gradient-to-br from-success/30 to-success/5 text-[#166534] ring-1 ring-inset ring-success/20" valueClass="text-[#15803D]" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 animate-rise" style={{ animationDelay: '160ms' }}>

@@ -1,21 +1,21 @@
 /**
- * Budget-category bar colours. Leads with the three exact Confette brand
- * accents, then continues with shades blended/derived from them so every
- * category in a breakdown reads as a distinct colour instead of one flat cyan.
+ * Budget-category bar colours. Leads with the brand cyan, then draws on the
+ * full confetti accent spectrum so every category in a breakdown reads as a
+ * distinct, celebratory colour instead of one flat cyan.
  */
 export const BUDGET_BAR_COLORS = [
   '#00C4CC', // primary - brand cyan
+  '#8B5CF6', // violet
   '#39E75F', // success - brand green
-  '#FFDE59', // warning - brand yellow
-  '#19D8B4', // cyan × green blend (teal)
-  '#9BE84F', // green × yellow blend (lime)
-  '#5AD0E0', // lighter cyan
-  '#FFB84D', // warm amber (yellow shade)
-  '#2BA6C9', // deep cyan
-  '#74E08A', // soft green
-  '#E8C84A', // muted gold
-  '#3FB8C4', // cyan × teal
-  '#C7E84F', // chartreuse
+  '#FFB020', // gold
+  '#FF6B6B', // coral
+  '#22D3EE', // sky
+  '#FF5CA8', // pink
+  '#19D8B4', // teal (cyan × green blend)
+  '#9BE84F', // lime
+  '#F5923E', // amber
+  '#6C7CC7', // periwinkle
+  '#2AB56E', // deep green
 ]
 
 /** Deterministic colour for a category by its position in the list. */

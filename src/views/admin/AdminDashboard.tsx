@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { CalendarDays, Megaphone, Gavel, Users, type LucideIcon } from 'lucide-react'
 import { EVENT_META } from '../../data/mockCategories'
 import { fmtNaira, fmtDate } from '@/shared/utils/format'
 import { EventTile } from '@/features/shared-ui'
@@ -18,14 +19,25 @@ const STATUS_META = {
 interface StatCardProps {
   label: string
   value: number | string
-  accent?: string
+  Icon?: LucideIcon
+  tint?: string
+  valueClass?: string
 }
 
-function StatCard({ label, value, accent }: StatCardProps) {
+function StatCard({ label, value, Icon, tint, valueClass }: StatCardProps) {
   return (
-    <div className="bg-dark-surface border border-dark-border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-black/20">
-      <p className="text-[12px] font-medium uppercase tracking-[0.07em] text-dark-muted mb-2">{label}</p>
-      <p className={`font-display font-bold text-[28px] leading-none ${accent ?? 'text-white'}`}>{value}</p>
+    <div className="group bg-dark-surface border border-dark-border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-black/20">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[12px] font-medium uppercase tracking-[0.07em] text-dark-muted mb-2">{label}</p>
+          <p className={`font-display font-bold text-[28px] leading-none ${valueClass ?? 'text-white'}`}>{value}</p>
+        </div>
+        {Icon && (
+          <span className={`flex h-9 w-9 items-center justify-center rounded-lg shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 ${tint ?? ''}`}>
+            <Icon size={17} />
+          </span>
+        )}
+      </div>
     </div>
   )
 }
@@ -66,10 +78,14 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total Events" value={plans.length}       />
-        <StatCard label="Live Events"  value={openPlans}          accent="text-primary" />
-        <StatCard label="Total Bids"   value={totalBids}          accent="text-primary" />
-        <StatCard label="Vendors"      value={vendors.length}     />
+        <StatCard label="Total Events" value={plans.length}
+          Icon={CalendarDays} tint="bg-gradient-to-br from-primary/25 to-primary/5 text-primary ring-1 ring-inset ring-primary/20" valueClass="text-primary" />
+        <StatCard label="Live Events"  value={openPlans}
+          Icon={Megaphone} tint="bg-gradient-to-br from-success/30 to-success/5 text-[#166534] ring-1 ring-inset ring-success/20" valueClass="text-[#15803D]" />
+        <StatCard label="Total Bids"   value={totalBids}
+          Icon={Gavel} tint="bg-gradient-to-br from-violet/25 to-violet/5 text-[#7C3AED] ring-1 ring-inset ring-violet/20" valueClass="text-[#7C3AED]" />
+        <StatCard label="Vendors"      value={vendors.length}
+          Icon={Users} tint="bg-gradient-to-br from-warning/35 to-warning/5 text-[#92660A] ring-1 ring-inset ring-warning/25" valueClass="text-[#B45309]" />
       </div>
 
       {/* Needs attention - the two queues an admin actually acts on. */}

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, ClipboardList, Trophy } from 'lucide-react'
+import { Search, ClipboardList, Trophy, Gavel, Hourglass, Store, type LucideIcon } from 'lucide-react'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { EVENT_META } from '../../data/mockCategories'
 import { fmtNaira, fmtGuests } from '@/shared/utils/format'
@@ -34,14 +34,29 @@ function CountUp({ value }: { value: number }) {
   return <>{n}</>
 }
 
-interface StatCardProps { label: string; value: number | string; accent?: string }
-function StatCard({ label, value, accent }: StatCardProps) {
+interface StatCardProps {
+  label: string
+  value: number | string
+  Icon?: LucideIcon
+  tint?: string
+  valueClass?: string
+}
+function StatCard({ label, value, Icon, tint, valueClass }: StatCardProps) {
   return (
-    <div className="bg-white border border-border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm hover:border-warning/30">
-      <p className="text-[12px] text-ink-3 font-medium mb-1">{label}</p>
-      <p className={`font-display font-bold text-[28px] leading-none ${accent ?? 'text-ink'}`}>
-        {typeof value === 'number' ? <CountUp value={value} /> : value}
-      </p>
+    <div className="group bg-white border border-border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm hover:border-warning/30">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[12px] text-ink-3 font-medium mb-1">{label}</p>
+          <p className={`font-display font-bold text-[28px] leading-none ${valueClass ?? 'text-ink'}`}>
+            {typeof value === 'number' ? <CountUp value={value} /> : value}
+          </p>
+        </div>
+        {Icon && (
+          <span className={`flex h-9 w-9 items-center justify-center rounded-lg shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 ${tint ?? ''}`}>
+            <Icon size={17} />
+          </span>
+        )}
+      </div>
     </div>
   )
 }
@@ -133,10 +148,14 @@ export default function VendorDashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-rise" style={{ animationDelay: '80ms' }}>
-        <StatCard label="Total bids"  value={bids.length} />
-        <StatCard label="Active bids" value={activeBids}   accent="text-warning" />
-        <StatCard label="Accepted"    value={acceptedBids} accent="text-success" />
-        <StatCard label="Open events" value={plans.length} />
+        <StatCard label="Total bids"  value={bids.length}
+          Icon={Gavel} tint="bg-gradient-to-br from-primary/25 to-primary/5 text-primary ring-1 ring-inset ring-primary/20" valueClass="text-primary" />
+        <StatCard label="Active bids" value={activeBids}
+          Icon={Hourglass} tint="bg-gradient-to-br from-warning/35 to-warning/5 text-[#92660A] ring-1 ring-inset ring-warning/25" valueClass="text-[#B45309]" />
+        <StatCard label="Accepted"    value={acceptedBids}
+          Icon={Trophy} tint="bg-gradient-to-br from-success/30 to-success/5 text-[#166534] ring-1 ring-inset ring-success/20" valueClass="text-[#15803D]" />
+        <StatCard label="Open events" value={plans.length}
+          Icon={Store} tint="bg-gradient-to-br from-violet/25 to-violet/5 text-[#7C3AED] ring-1 ring-inset ring-violet/20" valueClass="text-[#7C3AED]" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 animate-rise" style={{ animationDelay: '160ms' }}>

@@ -3,15 +3,12 @@ import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, X, ArrowLeftRight, Store, PartyPopper, Sun, Moon } from 'lucide-react'
+import { Menu, X, ArrowLeftRight, Store, PartyPopper } from 'lucide-react'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { resolveDashboard, rememberPortal } from '@/features/auth/portal'
 import { VerifyEmailGate } from '@/features/auth/components/VerifyEmailGate'
 import NotificationBell from '@/features/notifications/components/NotificationBell'
 import { AppLogo } from './AppLogo'
-import { AppThemeToggle } from './AppThemeToggle'
-import { useAppTheme } from './useAppTheme'
-import { useAdminTheme } from './useAdminTheme'
 
 export interface NavItem {
   label: string
@@ -24,10 +21,9 @@ interface PortalShellProps {
   nav: NavItem[]
   /** Accent used for active nav + avatar. */
   accent: 'primary' | 'warning'
-  /** Chrome surface. Admin = dark, organiser/vendor = light. */
+  /** Chrome surface. Admin is built on the dark utilities but renders light
+      (see the permanent [data-admin-theme='light'] scope); organiser/vendor = light. */
   surface: 'light' | 'dark'
-  /** Show the light/dark content-area toggle (organiser & vendor only). */
-  themeToggle?: boolean
   children: ReactNode
 }
 
@@ -63,14 +59,10 @@ const SURFACE = {
   },
 }
 
-export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle, children }: PortalShellProps) {
+export function PortalShell({ role, roleLabel, nav, accent, surface, children }: PortalShellProps) {
   const { user, loading, logout, addRole } = useAuth()
   const router                    = useRouter()
   const pathname                  = usePathname()
-  const { theme, toggle }         = useAppTheme()
-  // Admin gets its own light/dark toggle (default dark); organiser/vendor use
-  // useAppTheme above. Both hooks run unconditionally; only the matching one is used.
-  const admin                     = useAdminTheme()
   const [mounted, setMounted]     = useState(false)
   const [drawerOpen, setDrawer]   = useState(false)
   const [optingIn, setOptingIn]   = useState(false)
@@ -192,8 +184,10 @@ export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle
 
   return (
     <div
-      data-app-theme={themeToggle ? theme : undefined}
-      data-admin-theme={role === 'admin' ? admin.theme : undefined}
+      // Admin is built on the dark utilities but ships as a single light theme
+      // (the app no longer has a dark mode). This scope re-points those tokens
+      // to the light surfaces; organiser/vendor already use light utilities.
+      data-admin-theme={role === 'admin' ? 'light' : undefined}
       className={`flex h-screen ${isDark ? 'bg-dark' : 'bg-canvas'}`}
     >
       {/* Desktop sidebar */}
@@ -253,19 +247,6 @@ export function PortalShell({ role, roleLabel, nav, accent, surface, themeToggle
                 <span className="hidden sm:inline">{optingIn ? 'Setting up…' : role === 'organiser' ? 'Also offer services' : 'Plan your own event'}</span>
               </button>
             ))}
-            {themeToggle && <AppThemeToggle theme={theme} toggle={toggle} />}
-            {/* Admin light/dark toggle. Uses dark utilities so it flips with the
-                rest of the chrome under [data-admin-theme='light']. */}
-            {role === 'admin' && (
-              <button
-                type="button"
-                onClick={admin.toggle}
-                aria-label={`Switch to ${admin.theme === 'dark' ? 'light' : 'dark'} mode`}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-dark-border text-dark-muted hover:bg-white/[0.06] hover:text-white transition-colors"
-              >
-                {admin.theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-              </button>
-            )}
             <NotificationBell dark={isDark} />
             <div className={`w-7 h-7 rounded-full ${a.avatar} text-[11px] font-bold flex items-center justify-center`}>
               {initials}

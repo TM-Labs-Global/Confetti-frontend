@@ -11,7 +11,7 @@ const NAV: NavItem[] = [
 
 export default function VendorLayout({ children }: { children: ReactNode }) {
   return (
-    <PortalShell role="vendor" roleLabel="Vendor" nav={NAV} accent="warning" surface="light" themeToggle>
+    <PortalShell role="vendor" roleLabel="Vendor" nav={NAV} accent="warning" surface="light">
       {children}
     </PortalShell>
   )

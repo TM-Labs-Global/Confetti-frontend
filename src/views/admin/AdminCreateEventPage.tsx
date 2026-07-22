@@ -6,14 +6,13 @@ import CreatePlanPage from '@/views/organizer/CreatePlanPage'
 // Admins run the platform's own events as an event-management company. This
 // reuses the organiser create wizard verbatim — the surface="admin" prop only
 // changes the draft key and where it returns to. The wizard is built on the
-// light design tokens (bg-white / text-ink / border-border), so we render it
-// inside the [data-app-theme='dark'] scope, which flips those tokens to the
-// dark surfaces the admin portal uses everywhere else. No wizard markup changes.
+// light design tokens (bg-white / text-ink / border-border), which is exactly
+// what the (now single-theme, light) admin portal uses. No wizard markup changes.
 export default function AdminCreateEventPage() {
   const isEdit = !!useSearchParams().get('edit')
 
   return (
-    <div data-app-theme="dark" className="max-w-[680px] mx-auto">
+    <div className="max-w-[680px] mx-auto">
       <div className="flex items-center gap-2 text-[13px] text-dark-muted mb-6">
         <Link href="/admin/plans" className="hover:text-white transition-colors">All Events</Link>
         <span>/</span>

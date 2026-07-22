@@ -15,9 +15,28 @@
   --ink:      #101828;
   --ink-2:    #475467;
   --ink-3:    #667085;
-  --font-d:   'Sora', sans-serif;
-  --font-b:   'DM Sans', sans-serif;
-  --font-m:   'DM Mono', monospace;
+
+  /* Confetti accent spectrum - a joyful, on-brand palette for data viz, tags,
+     category tints and celebratory moments. Cyan (--primary) stays the anchor;
+     these give us range without reinventing the brand. Text on any solid accent
+     is --dark (never white), matching the primary/warning/success rule. */
+  --coral:  #FF6B6B;   /* warm alert / energy */
+  --violet: #8B5CF6;   /* premium / accent */
+  --gold:   #FFB020;   /* highlight / reward */
+  --lime:   #7CE06A;   /* fresh / go */
+  --pink:   #FF5CA8;   /* playful pop */
+  --sky:    #22D3EE;   /* bright cyan sibling for gradients */
+
+  /* Signature brand gradient - opt in with .bg-brand-gradient / .text-brand-gradient.
+     Cyan → sky → violet reads celebratory without going muddy. */
+  --grad-brand: linear-gradient(103deg, var(--primary) 0%, var(--sky) 42%, var(--violet) 100%);
+  --grad-warm:  linear-gradient(103deg, var(--gold) 0%, var(--coral) 55%, var(--pink) 100%);
+
+  /* Fonts - resolved from the next/font CSS variables set on <html> in
+     layout.tsx (with literal fallbacks). Everything reads var(--font-d/-b/-m). */
+  --font-d:   var(--font-display-family), 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-b:   var(--font-body-family), 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-m:   var(--font-mono-family), 'DM Mono', ui-monospace, monospace;
 
   /* Spacing - 8pt grid */
   --space-xs:   4px;

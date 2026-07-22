@@ -15,6 +15,14 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
 
+  /* Confetti accent spectrum (bg-coral, text-violet, border-gold, …) */
+  --color-coral:  var(--coral);
+  --color-violet: var(--violet);
+  --color-gold:   var(--gold);
+  --color-lime:   var(--lime);
+  --color-pink:   var(--pink);
+  --color-sky:    var(--sky);
+
   /* Dark surfaces */
   --color-dark: var(--dark);
   --color-dark-surface: var(--surface);
@@ -91,6 +99,20 @@
 }
 
 /* ─────────────────────────────────────────────────
+   Signature gradient helpers (opt-in). Use on heroes, feature CTAs and
+   celebratory surfaces - not on data-dense chrome. Text on .bg-brand-gradient
+   should be white or --dark depending on placement.
+   ───────────────────────────────────────────────── */
+.bg-brand-gradient { background-image: var(--grad-brand); }
+.bg-warm-gradient  { background-image: var(--grad-warm); }
+.text-brand-gradient {
+  background-image: var(--grad-brand);
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+}
+
+/* ─────────────────────────────────────────────────
    Landing theme tokens (light + dark)
    Scoped to .landing so the rest of the app is untouched.
    Components read these via Tailwind arbitrary values, e.g.
@@ -126,49 +148,13 @@
   color-scheme: light;
 }
 
-/* Opt-in dark mode for the organiser/vendor content area. Scoped to elements
-   marked [data-app-theme='dark'] (the sidebar sits outside this scope, so it
-   stays dark by design). Overriding these CSS variables flips every existing
-   bg-canvas / bg-white / text-ink / border-border utility inside the scope. */
-[data-app-theme='dark'] {
-  /* Base tokens (used by the hand-written utilities in shared/styles) */
-  --light:    #0B0F19;
-  --border-l: #283248;
-  --ink:      #F3F5F9;
-  --ink-2:    #C2CAD9;
-  --ink-3:    #8B96AC;
-  /* Tailwind @theme aliases (used by generated utilities) */
-  --color-canvas: #0B0F19;
-  --color-border: #283248;
-  --color-ink:    #F3F5F9;
-  --color-ink-2:  #C2CAD9;
-  --color-ink-3:  #8B96AC;
-  color-scheme: dark;
-}
-/* .bg-white is hardcoded #FFFFFF in colors.css, so override it explicitly. */
-[data-app-theme='dark'] .bg-white { background-color: #161F30; }
-
-/* Inputs hardcode a white background in input.css, which leaves light text on a
-   white field (invisible) in dark mode. Flip them within the dark scope. */
-[data-app-theme='dark'] input,
-[data-app-theme='dark'] select,
-[data-app-theme='dark'] textarea {
-  background-color: #161F30;
-  border-color: var(--border-l);
-  color: var(--ink);
-}
-[data-app-theme='dark'] input::placeholder,
-[data-app-theme='dark'] textarea::placeholder {
-  color: var(--ink-3);
-}
-
 /* ─────────────────────────────────────────────────
-   Admin portal light mode. The admin portal is built on the dark utilities
-   (bg-dark / bg-dark-surface / text-white / border-dark-border …), so light
-   mode re-points those tokens to light surfaces and flips the few hard-coded
-   literals that don't ride a token. Scoped to [data-admin-theme='light'],
-   which PortalShell sets when the admin flips the top-bar sun/moon. Dark is the
-   default and has no rules here, so nothing changes until the admin opts in.
+   Admin portal, single light theme. The admin portal is built on the dark
+   utilities (bg-dark / bg-dark-surface / text-white / border-dark-border …), so
+   this scope re-points those tokens to light surfaces and flips the few
+   hard-coded literals that don't ride a token. Scoped to
+   [data-admin-theme='light'], which PortalShell now sets permanently for the
+   admin portal (the app no longer ships a dark mode).
    ───────────────────────────────────────────────── */
 [data-admin-theme='light'] {
   --dark:     #FAFAFC;          /* bg-dark (hand-written util) → page canvas */

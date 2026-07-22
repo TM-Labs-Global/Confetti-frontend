@@ -107,11 +107,11 @@ export default function DesignSystemPage() {
         <Section title="Typography">
           <div className="space-y-5 bg-white border border-border rounded-2xl p-8">
             <div>
-              <p className="text-[11px] font-mono text-ink-3 mb-1">font-display · Sora</p>
+              <p className="text-[11px] font-mono text-ink-3 mb-1">font-display · Bricolage Grotesque</p>
               <p className="font-display font-bold text-[36px] text-ink leading-none">Plan the perfect event</p>
             </div>
             <div>
-              <p className="text-[11px] font-mono text-ink-3 mb-1">font-sans · DM Sans</p>
+              <p className="text-[11px] font-mono text-ink-3 mb-1">font-sans · Plus Jakarta Sans</p>
               <p className="text-[16px] text-ink-2 leading-relaxed">Connect with trusted vendors across Nigeria. From Jollof catering to Afrobeats DJs, find everything in one place.</p>
             </div>
             <div>

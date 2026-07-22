@@ -57,8 +57,7 @@ select:not(.select-bare) {
   padding-right: 36px;
 }
 
-/* Lighter chevron on dark surfaces (admin) and the dark-mode content scope. */
-select.bg-dark-surface:not(.select-bare),
-[data-app-theme='dark'] select:not(.select-bare) {
+/* Lighter chevron on the dark-utility surfaces the admin portal is built on. */
+select.bg-dark-surface:not(.select-bare) {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238B96AC' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }

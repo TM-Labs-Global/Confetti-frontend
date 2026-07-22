@@ -14,7 +14,7 @@ export default function OrganizerLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const suspended = user?.status === 'suspended'
   return (
-    <PortalShell role="organiser" roleLabel="Organiser" nav={NAV} accent="primary" surface="light" themeToggle>
+    <PortalShell role="organiser" roleLabel="Organiser" nav={NAV} accent="primary" surface="light">
       {suspended && (
         <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">
           <span className="font-semibold">Your account is suspended.</span> You can view your events, but you can&apos;t create events, accept bids, or invite vendors until it&apos;s reinstated. Please contact support if you think this is a mistake.

@@ -18,7 +18,7 @@ export function HeroCards() {
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between">
-          <span className="font-mono text-[16px] font-medium text-[var(--ld-text)] tabular-nums">₦1,350,000</span>
+          <span className="text-[16px] font-semibold text-[var(--ld-text)] tabular-nums">₦1,350,000</span>
           <span className="rounded-full bg-warning/20 px-2 py-0.5 text-[10px] font-semibold text-warning">New</span>
         </div>
       </div>
@@ -32,7 +32,7 @@ export function HeroCards() {
           <ShieldCheck size={17} />
           <span className="text-[13px] font-semibold">Escrow funded</span>
         </div>
-        <p className="mt-2 font-mono text-[20px] font-medium text-[var(--ld-text)] tabular-nums">₦5,000,000</p>
+        <p className="mt-2 text-[20px] font-semibold text-[var(--ld-text)] tabular-nums">₦5,000,000</p>
         <div className="mt-3 flex items-center gap-1.5">
           {[true, true, true, false].map((done, i) => (
             <span key={i} className={`h-1.5 flex-1 rounded-full ${done ? 'bg-success' : 'bg-[var(--ld-border)]'}`} />

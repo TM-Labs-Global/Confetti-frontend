@@ -20,15 +20,6 @@ interface EventTypeInfo {
   categories: EventCategory[]
 }
 
-// One editable budget line inside a category. Quantity/unitCost are kept as
-// strings so the inputs stay controlled while empty; totals parse on the fly.
-interface LineItemDraft {
-  id: string
-  name: string
-  quantity: string
-  unitCost: string
-}
-
 interface FormState {
   eventType: string | null
   eventTypeName: string
@@ -42,9 +33,7 @@ interface FormState {
   totalBudget: string
   selectedCategories: string[]
   customCategories: Array<{ id: string; name: string; defaultPct?: number }>
-  // Costed line items per category id. A category's allocation is the sum of its
-  // line item totals, so this is the single source of truth for the budget split.
-  lineItems: Record<string, LineItemDraft[]>
+  allocations: Record<string, string | number>
   // Optional per-category brief (keyed by category id) telling vendors what's wanted.
   briefs: Record<string, string>
   allocationMode: string
@@ -54,14 +43,8 @@ const EMPTY_FORM: FormState = {
   eventType: null, eventTypeName: '', name: '', startDate: '', endDate: '', dateFlexible: false,
   state: '', city: '', guestCount: '', totalBudget: '',
   selectedCategories: [], customCategories: [],
-  lineItems: {}, briefs: {}, allocationMode: 'recommended',
+  allocations: {}, briefs: {}, allocationMode: 'smart',
 }
-
-// Monotonic local ids for line item React keys (client-only, resets per load).
-let _lid = 0
-const newLid = () => `li_${++_lid}`
-const itemTotal = (it: LineItemDraft) => (Number(it.quantity) || 0) * (Number(it.unitCost) || 0)
-const catTotal = (items?: LineItemDraft[]) => (items ?? []).reduce((s, it) => s + itemTotal(it), 0)
 
 interface WizardProgressProps {
   step: number
@@ -345,23 +328,8 @@ function Step2({ form, onChange, getCatsForType }: Step2Props) {
   )
 }
 
-// Build one recommended line item per selected category, sized by its defaultPct
-// share of the total budget (custom categories split whatever's left evenly).
-function recommendedLineItems(
-  cats: Array<{ id: string; name: string; defaultPct?: number }>,
-  totalBudget: number,
-): Record<string, LineItemDraft[]> {
-  const li: Record<string, LineItemDraft[]> = {}
-  cats.forEach(c => {
-    const amt = Math.floor(totalBudget * ((c.defaultPct ?? (100 / (cats.length || 1))) / 100))
-    li[c.id] = [{ id: newLid(), name: c.name, quantity: '1', unitCost: String(amt) }]
-  })
-  return li
-}
-
 function Step3({ form, onChange, getCatsForType }: Step3Props) {
   const [openBrief, setOpenBrief] = useState<Record<string, boolean>>({})
-  const [customInput, setCustomInput] = useState('')
   const presetCats = getCatsForType(form.eventType)
   const allCats    = useMemo(() => [
     ...presetCats.filter(c => form.selectedCategories.includes(c.id)),
@@ -370,81 +338,39 @@ function Step3({ form, onChange, getCatsForType }: Step3Props) {
 
   const totalBudget    = Number(form.totalBudget) || 0
   const totalAllocated = useMemo(
-    () => form.selectedCategories.reduce((s, id) => s + catTotal(form.lineItems[id]), 0),
-    [form.lineItems, form.selectedCategories]
+    () => form.selectedCategories.reduce((s, id) => s + (Number(form.allocations[id]) || 0), 0),
+    [form.allocations, form.selectedCategories]
   )
   const remaining = totalBudget - totalAllocated
   const isOver    = remaining < 0
   const pctFilled = totalBudget > 0 ? Math.min(100, (totalAllocated / totalBudget) * 100) : 0
 
   function applyMode(mode: string) {
-    if (mode === 'recommended') {
-      // Recommended Split resets each category to a single suggested line.
-      onChange('lineItems', recommendedLineItems(allCats, totalBudget))
-    } else {
-      // My Own Split keeps whatever's there, just guarantees an editable row.
-      const li: Record<string, LineItemDraft[]> = { ...form.lineItems }
-      allCats.forEach(c => { if (!li[c.id]?.length) li[c.id] = [{ id: newLid(), name: c.name, quantity: '1', unitCost: '' }] })
-      onChange('lineItems', li)
-    }
     onChange('allocationMode', mode)
-  }
-
-  function distributeEvenly() {
-    const per = allCats.length ? Math.floor(totalBudget / allCats.length) : 0
-    const li: Record<string, LineItemDraft[]> = {}
-    allCats.forEach(c => { li[c.id] = [{ id: newLid(), name: c.name, quantity: '1', unitCost: String(per) }] })
-    onChange('lineItems', li)
-    onChange('allocationMode', 'own')
-  }
-
-  // Any hand edit means we're no longer on the untouched Recommended Split.
-  function setItems(catId: string, items: LineItemDraft[]) {
-    onChange('lineItems', { ...form.lineItems, [catId]: items })
-    if (form.allocationMode === 'recommended') onChange('allocationMode', 'own')
-  }
-  function updateItem(catId: string, itemId: string, patch: Partial<LineItemDraft>) {
-    setItems(catId, (form.lineItems[catId] ?? []).map(it => (it.id === itemId ? { ...it, ...patch } : it)))
-  }
-  function addItem(catId: string) {
-    setItems(catId, [...(form.lineItems[catId] ?? []), { id: newLid(), name: '', quantity: '1', unitCost: '' }])
-  }
-  function removeItem(catId: string, itemId: string) {
-    setItems(catId, (form.lineItems[catId] ?? []).filter(it => it.id !== itemId))
-  }
-  function setBrief(id: string, val: string) { onChange('briefs', { ...form.briefs, [id]: val }) }
-
-  function addCustomService() {
-    const name = customInput.trim()
-    if (!name) return
-    const id = `custom_${Date.now()}`
-    onChange('customCategories', [...form.customCategories, { id, name, defaultPct: 0 }])
-    onChange('selectedCategories', [...form.selectedCategories, id])
-    onChange('lineItems', { ...form.lineItems, [id]: [{ id: newLid(), name: '', quantity: '1', unitCost: '' }] })
-    setCustomInput('')
-  }
-  function removeService(catId: string) {
-    onChange('selectedCategories', form.selectedCategories.filter(i => i !== catId))
-    if (form.customCategories.some(c => c.id === catId)) {
-      onChange('customCategories', form.customCategories.filter(c => c.id !== catId))
+    if (mode === 'even') {
+      const per = Math.floor(totalBudget / allCats.length)
+      const a: Record<string, number> = {}; allCats.forEach(c => { a[c.id] = per }); onChange('allocations', a)
+    } else if (mode === 'smart') {
+      const a: Record<string, number> = {}
+      allCats.forEach(c => { a[c.id] = Math.floor(totalBudget * ((c.defaultPct ?? (100 / allCats.length)) / 100)) })
+      onChange('allocations', a)
     }
-    const next = { ...form.lineItems }; delete next[catId]; onChange('lineItems', next)
   }
+
+  function setAmt(id: string, val: string) { onChange('allocations', { ...form.allocations, [id]: val }) }
+  function setBrief(id: string, val: string) { onChange('briefs', { ...form.briefs, [id]: val }) }
 
   return (
     <div>
       <h2 className="font-display font-bold text-[22px] sm:text-[30px] text-ink leading-tight mb-1">Let's talk budget</h2>
-      <p className="text-ink-3 text-[15px] mb-8">Break your {fmtNaira(totalBudget)} into line items so vendors know exactly what to price. Start from our Recommended Split, or build your own. Set a quantity and a unit cost for each item, and add a brief where it helps.</p>
+      <p className="text-ink-3 text-[15px] mb-8">Spread your {fmtNaira(totalBudget)} across your selected services. Smart Split is a starting point. Tweak any figure you like, and add a quick brief so vendors know exactly what you want.</p>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-6">
-        <div className="flex gap-1 p-1 bg-canvas border border-border rounded-lg w-fit">
-          {[{ id: 'recommended', label: 'Recommended Split' }, { id: 'own', label: 'My Own Split' }].map(m => (
-            <button key={m.id} onClick={() => applyMode(m.id)}
-              className={`px-4 py-2 rounded-md text-[13px] font-medium transition-all ${form.allocationMode === m.id ? 'bg-white border border-border text-ink shadow-sm' : 'text-ink-3 hover:text-ink'}`}
-            >{m.label}</button>
-          ))}
-        </div>
-        <button onClick={distributeEvenly} className="text-[12px] text-ink-3 hover:text-primary transition-colors">Distribute evenly</button>
+      <div className="flex gap-1 p-1 bg-canvas border border-border rounded-lg mb-6 w-fit">
+        {[{ id: 'smart', label: 'Smart Split' }, { id: 'even', label: 'Even Split' }].map(m => (
+          <button key={m.id} onClick={() => applyMode(m.id)}
+            className={`px-4 py-2 rounded-md text-[13px] font-medium transition-all ${form.allocationMode === m.id ? 'bg-white border border-border text-ink shadow-sm' : 'text-ink-3 hover:text-ink'}`}
+          >{m.label}</button>
+        ))}
       </div>
 
       <div className="bg-white border border-border rounded-xl p-5 mb-4">
@@ -464,94 +390,43 @@ function Step3({ form, onChange, getCatsForType }: Step3Props) {
         )}
       </div>
 
-      <div className="space-y-3">
-        {allCats.map(cat => {
-          const items    = form.lineItems[cat.id] ?? []
-          const amt      = catTotal(items)
-          const pct      = totalBudget > 0 ? ((amt / totalBudget) * 100).toFixed(1) : '0.0'
+      <div className="bg-white border border-border rounded-xl overflow-hidden">
+        {allCats.map((cat, i) => {
+          const amt = Number(form.allocations[cat.id]) || 0
+          const pct = totalBudget > 0 ? ((amt / totalBudget) * 100).toFixed(1) : '0.0'
           const briefOpen = openBrief[cat.id] || !!form.briefs[cat.id]
           return (
-            <div key={cat.id} className="bg-white border border-border rounded-xl p-4 sm:p-5">
-              <div className="flex items-center gap-3 mb-3">
+            <div key={cat.id} className={`px-5 py-4 ${i > 0 ? 'border-t border-border' : ''}`}>
+              <div className="flex items-center gap-4">
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-medium text-ink truncate">{cat.name}</p>
-                  <p className="text-[11px] text-ink-3 mt-0.5 tabular-nums">{pct}% of budget</p>
+                  <p className="text-[13px] font-medium text-ink">{cat.name}</p>
+                  <p className="text-[11px] text-ink-3 mt-0.5">{pct}%</p>
                 </div>
-                <p className="font-mono text-[14px] font-semibold tabular-nums text-ink">{fmtNaira(amt)}</p>
-                {allCats.length > 1 && (
-                  <button onClick={() => removeService(cat.id)} aria-label={`Remove ${cat.name}`}
-                    className="text-ink-3 hover:text-red-500 transition-colors shrink-0"><X size={15} /></button>
-                )}
+                <div className="w-44">
+                  <MoneyInput value={form.allocations[cat.id] ?? ''} onChange={v => setAmt(cat.id, v)} />
+                </div>
               </div>
-
-              <div className="hidden sm:flex items-center gap-3 px-1 pb-1.5 text-[10px] font-medium uppercase tracking-wide text-ink-3">
-                <span className="flex-1">Item</span>
-                <span className="w-[64px] text-center">Qty</span>
-                <span className="w-[10px]" />
-                <span className="w-[128px]">Unit cost</span>
-                <span className="w-[96px] text-right">Total</span>
-                <span className="w-[22px]" />
-              </div>
-
-              <div className="space-y-2">
-                {items.map(it => (
-                  <div key={it.id} className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <input value={it.name} onChange={e => updateItem(cat.id, it.id, { name: e.target.value })}
-                      placeholder={`e.g. ${cat.name}`} aria-label="Item name"
-                      className="order-1 w-full sm:flex-1 sm:w-auto min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-[13px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors" />
-                    <input value={it.quantity} inputMode="numeric" aria-label="Quantity" placeholder="Qty"
-                      onChange={e => updateItem(cat.id, it.id, { quantity: e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '') })}
-                      className="order-2 w-[64px] rounded-lg border border-border bg-white px-2 py-2 text-[13px] text-center text-ink placeholder:text-ink-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors" />
-                    <span className="order-3 w-[10px] text-center text-ink-3 text-[12px]">×</span>
-                    <div className="order-4 w-[128px]">
-                      <MoneyInput value={it.unitCost} onChange={v => updateItem(cat.id, it.id, { unitCost: v })} />
-                    </div>
-                    <span className="order-5 ml-auto sm:ml-0 sm:w-[96px] text-right font-mono text-[13px] tabular-nums text-ink">{fmtNaira(itemTotal(it))}</span>
-                    <button onClick={() => removeItem(cat.id, it.id)} aria-label="Remove line item" disabled={items.length === 1}
-                      className="order-6 w-[22px] flex justify-center text-ink-3 hover:text-red-500 disabled:opacity-30 disabled:pointer-events-none transition-colors"><X size={14} /></button>
-                  </div>
-                ))}
-              </div>
-
-              <button onClick={() => addItem(cat.id)}
-                className="mt-2.5 inline-flex items-center gap-1 text-[12px] font-medium text-primary hover:text-primary/80 transition-colors">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                Add line item
-              </button>
-
-              <div className="mt-3 border-t border-border pt-3">
-                {briefOpen ? (
-                  <textarea
-                    value={form.briefs[cat.id] ?? ''}
-                    onChange={e => setBrief(cat.id, e.target.value)}
-                    autoFocus={!!openBrief[cat.id] && !form.briefs[cat.id]}
-                    placeholder={`Any notes for vendors on ${cat.name.toLowerCase()}? Style, hours, must-haves…`}
-                    rows={2}
-                    className="w-full px-3 py-2 border border-border rounded-lg text-[13px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors resize-none"
-                  />
-                ) : (
-                  <button
-                    onClick={() => setOpenBrief(s => ({ ...s, [cat.id]: true }))}
-                    className="inline-flex items-center gap-1 text-[12px] text-ink-3 hover:text-primary transition-colors"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                    Add a brief for vendors
-                  </button>
-                )}
-              </div>
+              {briefOpen ? (
+                <textarea
+                  value={form.briefs[cat.id] ?? ''}
+                  onChange={e => setBrief(cat.id, e.target.value)}
+                  autoFocus={!!openBrief[cat.id] && !form.briefs[cat.id]}
+                  placeholder={`What do you want for ${cat.name.toLowerCase()}? Menu, style, hours, deliverables…`}
+                  rows={2}
+                  className="mt-3 w-full px-3 py-2 border border-border rounded-lg text-[13px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors resize-none"
+                />
+              ) : (
+                <button
+                  onClick={() => setOpenBrief(s => ({ ...s, [cat.id]: true }))}
+                  className="mt-2 inline-flex items-center gap-1 text-[12px] text-ink-3 hover:text-primary transition-colors"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                  Add a brief for vendors
+                </button>
+              )}
             </div>
           )
         })}
-      </div>
-
-      <div className="mt-4 flex gap-2">
-        <input type="text" value={customInput} onChange={e => setCustomInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && addCustomService()}
-          placeholder="Add another service (e.g. Fireworks, Tent Hire)"
-          className="flex-1 px-4 py-2.5 border border-border rounded-lg text-[13px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
-        />
-        <button onClick={addCustomService}
-          className="px-4 py-2.5 bg-white border border-border text-ink-2 text-[13px] font-medium rounded-lg hover:border-primary/40 hover:text-ink transition-colors">Add</button>
       </div>
     </div>
   )
@@ -567,11 +442,11 @@ function Step4({ form, getCatsForType, onPublish, onSave, onBack, saving, isEdit
     ? EVENT_META[form.eventType as keyof typeof EVENT_META]
     : { emoji: '🎉', bg: '#F5F5F5', color: '#A3A3A3' }
   const totalBudget = Number(form.totalBudget) || 0
-  const totalAlloc  = allCats.reduce((s, c) => s + catTotal(form.lineItems[c.id]), 0)
+  const totalAlloc  = allCats.reduce((s, c) => s + (Number(form.allocations[c.id]) || 0), 0)
   const location    = [form.city, form.state].filter(Boolean).join(', ')
   const guestLabel  = fmtGuests(Number(form.guestCount))
   const dateLabel   = fmtDateRange(form.startDate || null, form.endDate || null, form.dateFlexible)
-  const sorted      = [...allCats].sort((a, b) => catTotal(form.lineItems[b.id]) - catTotal(form.lineItems[a.id]))
+  const sorted      = [...allCats].sort((a, b) => (Number(form.allocations[b.id]) || 0) - (Number(form.allocations[a.id]) || 0))
 
   return (
     <div>
@@ -597,11 +472,8 @@ function Step4({ form, getCatsForType, onPublish, onSave, onBack, saving, isEdit
         <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-ink-3 mb-4">Budget breakdown</p>
         <div className="space-y-3.5">
           {sorted.map((cat, i) => {
-            const items = (form.lineItems[cat.id] ?? []).filter(it => it.name.trim() || itemTotal(it) > 0)
-            const amt = catTotal(items)
+            const amt = Number(form.allocations[cat.id]) || 0
             const pct = totalBudget > 0 ? (amt / totalBudget) * 100 : 0
-            // Only worth listing lines when the category is broken into more than one.
-            const showLines = items.length > 1
             return (
               <div key={cat.id}>
                 <div className="flex items-center justify-between text-[13px] mb-1">
@@ -611,16 +483,6 @@ function Step4({ form, getCatsForType, onPublish, onSave, onBack, saving, isEdit
                 <div className="h-1.5 bg-canvas rounded-full border border-border overflow-hidden">
                   <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: budgetColor(i) }} />
                 </div>
-                {showLines && (
-                  <div className="mt-1.5 space-y-0.5">
-                    {items.map(it => (
-                      <div key={it.id} className="flex items-center justify-between text-[12px] text-ink-3">
-                        <span className="truncate pr-2">{it.name.trim() || cat.name}{Number(it.quantity) > 1 ? ` ×${Number(it.quantity)}` : ''}</span>
-                        <span className="font-mono tabular-nums shrink-0">{fmtNaira(itemTotal(it))}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
                 {form.briefs[cat.id]?.trim() && (
                   <p className="text-[12px] text-ink-3 mt-1.5 leading-relaxed">{form.briefs[cat.id]}</p>
                 )}
@@ -684,13 +546,9 @@ export default function CreatePlanPage({ surface = 'organiser' }: { surface?: Wi
       const saved = localStorage.getItem(DRAFT_KEY)
       if (saved) {
         const d = JSON.parse(saved)
-        // Merge over EMPTY_FORM so drafts saved before guestCount/briefs/line
-        // items existed still hydrate cleanly. Drop the legacy `allocations` key
-        // and start line items fresh when an old draft predates them.
-        if (d.form) {
-          const rest = { ...d.form }; delete rest.allocations
-          setForm({ ...EMPTY_FORM, ...rest, briefs: d.form.briefs ?? {}, lineItems: d.form.lineItems ?? {} })
-        }
+        // Merge over EMPTY_FORM so drafts saved before guestCount/briefs existed
+        // still hydrate cleanly.
+        if (d.form) setForm({ ...EMPTY_FORM, ...d.form, briefs: d.form.briefs ?? {} })
         if (d.step) setStep(d.step)
       }
     } catch { /* ignore corrupt draft */ }
@@ -722,14 +580,10 @@ export default function CreatePlanPage({ surface = 'organiser' }: { surface?: Wi
         const custom = (plan.categories ?? [])
           .filter((c: any) => !presetIds.has(c.categoryId))
           .map((c: any) => ({ id: c.categoryId, name: c.name, defaultPct: 0 }))
-        const lineItems: Record<string, LineItemDraft[]> = {}
+        const allocations: Record<string, number> = {}
         const briefs: Record<string, string> = {}
         ;(plan.categories ?? []).forEach((c: any) => {
-          // Prefer stored line items; fall back to a single lump-sum row for
-          // legacy categories saved before line items existed.
-          lineItems[c.categoryId] = Array.isArray(c.lineItems) && c.lineItems.length
-            ? c.lineItems.map((li: any) => ({ id: newLid(), name: li.name ?? '', quantity: String(li.quantity ?? 1), unitCost: String(li.unitCost ?? 0) }))
-            : [{ id: newLid(), name: c.name, quantity: '1', unitCost: String(c.allocation ?? 0) }]
+          allocations[c.categoryId] = c.allocation
           if (c.brief) briefs[c.categoryId] = c.brief
         })
         setForm({
@@ -745,9 +599,9 @@ export default function CreatePlanPage({ surface = 'organiser' }: { surface?: Wi
           totalBudget: String(plan.totalBudget ?? ''),
           selectedCategories: (plan.categories ?? []).map((c: any) => c.categoryId),
           customCategories: custom,
-          lineItems,
+          allocations,
           briefs,
-          allocationMode: 'own',
+          allocationMode: 'manual',
         })
         setLoadingPlan(false)
       })
@@ -765,21 +619,23 @@ export default function CreatePlanPage({ surface = 'organiser' }: { surface?: Wi
       setForm(f => ({
         ...f, eventType: value, eventTypeName: et?.name ?? '',
         selectedCategories: cats.map(c => c.id),
-        customCategories: [], lineItems: {}, briefs: {}, allocationMode: 'recommended',
+        customCategories: [], allocations: {}, briefs: {}, allocationMode: 'smart',
       }))
       return
     }
     setForm(f => ({ ...f, [key]: value }))
   }
 
-  // Seed the budget step with one recommended line item per selected category.
-  function buildRecommended(f: FormState) {
+  function applySmartSplit(f: FormState) {
     const presetCats = getCatsForType(f.eventType)
     const allCats: Array<{ id: string; name: string; defaultPct?: number }> = [
       ...presetCats.filter(c => f.selectedCategories.includes(c.id)),
       ...f.customCategories.filter(c => f.selectedCategories.includes(c.id)),
     ]
-    return recommendedLineItems(allCats, Number(f.totalBudget) || 0)
+    const total = Number(f.totalBudget) || 0
+    const a: Record<string, number> = {}
+    allCats.forEach(c => { a[c.id] = Math.floor(total * ((c.defaultPct ?? (100 / allCats.length)) / 100)) })
+    return a
   }
 
   function canProceed() {
@@ -789,7 +645,7 @@ export default function CreatePlanPage({ surface = 'organiser' }: { surface?: Wi
     }
     if (step === 2) return form.selectedCategories.length > 0
     if (step === 3) {
-      const alloc = form.selectedCategories.reduce((s, id) => s + catTotal(form.lineItems[id]), 0)
+      const alloc = form.selectedCategories.reduce((s, id) => s + (Number(form.allocations[id]) || 0), 0)
       return alloc <= Number(form.totalBudget)
     }
     return true
@@ -804,8 +660,8 @@ export default function CreatePlanPage({ surface = 'organiser' }: { surface?: Wi
     }
     setError(null)
     if (step === 2 && !isEdit) {
-      const newItems = buildRecommended(form)
-      setForm(f => ({ ...f, lineItems: newItems, allocationMode: 'recommended' }))
+      const newAllocs = applySmartSplit(form)
+      setForm(f => ({ ...f, allocations: newAllocs, allocationMode: 'smart' }))
     }
     setStep(s => s + 1)
   }
@@ -834,21 +690,12 @@ export default function CreatePlanPage({ surface = 'organiser' }: { surface?: Wi
       guestCount: form.guestCount ? Number(form.guestCount) : null,
       totalBudget: form.totalBudget,
       status,
-      categories: allCats.map(c => {
-        // Drop blank rows; keep anything with a name or a cost so the sum is honest.
-        const items = (form.lineItems[c.id] ?? []).filter(it => it.name.trim() || itemTotal(it) > 0)
-        return {
-          id: c.id,
-          name: c.name,
-          allocation: catTotal(items),
-          brief: form.briefs[c.id]?.trim() || undefined,
-          lineItems: items.map(it => ({
-            name: it.name.trim() || c.name,
-            quantity: Number(it.quantity) || 1,
-            unitCost: Number(it.unitCost) || 0,
-          })),
-        }
-      }),
+      categories: allCats.map(c => ({
+        id: c.id,
+        name: c.name,
+        allocation: Number(form.allocations[c.id]) || 0,
+        brief: form.briefs[c.id]?.trim() || undefined,
+      })),
     }
     try {
       const res = await fetch(isEdit ? `/api/plans/${editId}` : '/api/plans', {

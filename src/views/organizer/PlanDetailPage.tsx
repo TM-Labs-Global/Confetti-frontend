@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Pencil, BadgeCheck, Phone, Lock, CheckCircle2, Clock, Landmark, MapPin } from 'lucide-react'
+import { Pencil, BadgeCheck, Phone, Lock, CheckCircle2, Clock } from 'lucide-react'
 import { EventTile, ConfettiBurst } from '@/features/shared-ui'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { VendorProfileModal } from '@/features/vendor/components/VendorProfileModal'
@@ -16,15 +16,7 @@ interface OrganizerBid extends VendorBid {
   vendor?: {
     id: string
     name: string
-    vendorProfile?: {
-      status: string
-      businessName: string
-      phone?: string | null
-      address?: string | null
-      bankName?: string | null
-      bankAccountNumber?: string | null
-      bankAccountName?: string | null
-    } | null
+    vendorProfile?: { status: string; businessName: string; phone?: string | null } | null
   }
 }
 
@@ -490,21 +482,6 @@ export default function PlanDetailPage() {
                               className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-success/10 px-2.5 py-1.5 text-[12px] font-medium text-[#166534] hover:bg-success/20 transition-colors">
                               <Phone size={12} /> {bid.vendor.vendorProfile.phone}
                             </a>
-                          )}
-                          {bid.vendor?.vendorProfile?.address && (
-                            <p className="mt-1.5 flex items-start gap-1.5 text-[12px] text-ink-2">
-                              <MapPin size={12} className="mt-0.5 shrink-0 text-ink-3" /> {bid.vendor.vendorProfile.address}
-                            </p>
-                          )}
-                          {bid.vendor?.vendorProfile?.bankAccountName && bid.vendor?.vendorProfile?.bankAccountNumber && (
-                            <div className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-canvas border border-border px-2.5 py-1.5 text-[12px] text-ink-2">
-                              <Landmark size={12} className="mt-0.5 shrink-0 text-ink-3" />
-                              <span>
-                                <span className="font-medium text-ink">{bid.vendor.vendorProfile.bankAccountName}</span>
-                                {' · '}{bid.vendor.vendorProfile.bankName}
-                                {' · '}<span className="font-mono">{bid.vendor.vendorProfile.bankAccountNumber}</span>
-                              </span>
-                            </div>
                           )}
                           {vendorsLocked ? (
                             <p className="mt-2 text-[11px] text-ink-3">

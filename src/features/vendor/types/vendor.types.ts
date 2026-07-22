@@ -2,13 +2,6 @@ export type BidStatus = 'pending' | 'accepted' | 'rejected'
 
 export type VendorStatus = 'pending' | 'verified' | 'rejected' | 'suspended'
 
-/** A single portfolio media item (photo or video of the vendor's work). */
-export interface PortfolioItem {
-  url: string
-  type: 'image' | 'video'
-  publicId?: string
-}
-
 export interface VendorProfile {
   id: string
   userId: string
@@ -18,23 +11,11 @@ export interface VendorProfile {
   city: string
   /** JSON-encoded array of category names; use parseSpecialties() to read. */
   specialties: string
-  /** JSON-encoded array of PortfolioItem; use parsePortfolio() to read. */
-  portfolio?: string
   website?: string | null
   instagram?: string | null
   facebook?: string | null
   tiktok?: string | null
   phone?: string | null
-  /** Street address. Only present on the vendor's own profile, or to an
-   * organiser once they've accepted this vendor's bid; null otherwise. */
-  address?: string | null
-  // Payout bank details. Only present on the vendor's own profile, or to an
-  // organiser after they accept this vendor's bid; null/absent otherwise.
-  bankName?: string | null
-  bankCode?: string | null
-  bankAccountNumber?: string | null
-  bankAccountName?: string | null
-  bankVerified?: boolean
   status: VendorStatus
   rejectionReason?: string | null
   createdAt: string
@@ -48,18 +29,6 @@ export function parseSpecialties(raw: string | null | undefined): string[] {
   try {
     const v = JSON.parse(raw)
     return Array.isArray(v) ? v : []
-  } catch {
-    return []
-  }
-}
-
-/** Safely parse the JSON-encoded portfolio string into a list of media items. */
-export function parsePortfolio(raw: string | null | undefined): PortfolioItem[] {
-  if (!raw) return []
-  try {
-    const v = JSON.parse(raw)
-    if (!Array.isArray(v)) return []
-    return v.filter((it): it is PortfolioItem => !!it && typeof it.url === 'string')
   } catch {
     return []
   }

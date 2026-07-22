@@ -1,22 +1,17 @@
 'use client'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  BadgeCheck, Clock, AlertCircle, Check, Pencil, Globe, AtSign, Link2, Music2, Phone, MapPin,
-  Upload, Trash2, Loader2, Landmark, ShieldCheck,
-} from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { BadgeCheck, Clock, AlertCircle, Check, Pencil, Globe, AtSign, Link2, Music2, Phone, MapPin } from 'lucide-react'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { SearchableSelect, ConfettiBurst } from '@/features/shared-ui'
 import { NIGERIAN_STATES } from '@/shared/constants/nigeria'
-import { VendorProfile, PortfolioItem, parseSpecialties, parsePortfolio } from '@/features/vendor/types/vendor.types'
+import { VendorProfile, parseSpecialties } from '@/features/vendor/types/vendor.types'
 
 interface FormState {
   businessName: string
   bio: string
   state: string
   city: string
-  address: string
   specialties: string[]
-  portfolio: PortfolioItem[]
   website: string
   instagram: string
   facebook: string
@@ -24,18 +19,10 @@ interface FormState {
   phone: string
 }
 
-interface BankState {
-  bankName: string
-  bankAccountNumber: string
-  bankAccountName: string
-  bankVerified: boolean
-}
-
 const EMPTY: FormState = {
-  businessName: '', bio: '', state: '', city: '', address: '', specialties: [], portfolio: [],
+  businessName: '', bio: '', state: '', city: '', specialties: [],
   website: '', instagram: '', facebook: '', tiktok: '', phone: '',
 }
-const EMPTY_BANK: BankState = { bankName: '', bankAccountNumber: '', bankAccountName: '', bankVerified: false }
 
 // Normalisers so stored values are well-formed regardless of how they were typed.
 const normalizeUrl = (u: string) => (!u.trim() ? '' : /^https?:\/\//i.test(u.trim()) ? u.trim() : `https://${u.trim()}`)
@@ -52,7 +39,6 @@ function validate(f: FormState): Partial<Record<keyof FormState, string>> {
 export default function VendorProfilePage() {
   const { user, refresh } = useAuth()
   const [form, setForm] = useState<FormState>(EMPTY)
-  const [bank, setBank] = useState<BankState>(EMPTY_BANK)
   const [status, setStatus] = useState<VendorProfile['status'] | null>(null)
   const [rejectionReason, setRejectionReason] = useState<string | null>(null)
   const [categoryNames, setCategoryNames] = useState<string[]>([])
@@ -74,20 +60,12 @@ export default function VendorProfilePage() {
           bio: p.bio ?? '',
           state: p.state ?? '',
           city: p.city ?? '',
-          address: p.address ?? '',
           specialties: parseSpecialties(p.specialties),
-          portfolio: parsePortfolio(p.portfolio),
           website: p.website ?? '',
           instagram: p.instagram ?? '',
           facebook: p.facebook ?? '',
           tiktok: p.tiktok ?? '',
           phone: p.phone ?? '',
-        })
-        setBank({
-          bankName: p.bankName ?? '',
-          bankAccountNumber: p.bankAccountNumber ?? '',
-          bankAccountName: p.bankAccountName ?? '',
-          bankVerified: !!p.bankVerified,
         })
         setStatus(p.status)
         setRejectionReason(p.rejectionReason ?? null)
@@ -129,7 +107,6 @@ export default function VendorProfilePage() {
     // Normalise + validate before sending.
     const cleaned: FormState = {
       ...form,
-      address: form.address.trim(),
       website: normalizeUrl(form.website),
       instagram: normalizeHandle(form.instagram),
       facebook: form.facebook.trim(),
@@ -170,10 +147,6 @@ export default function VendorProfilePage() {
     )
   }
 
-  // Bank verification needs a saved profile to attach to (the backend refuses
-  // otherwise), so it's only offered once onboarding has been saved at least once.
-  const profileExists = status !== null
-
   return (
     <div className="max-w-[680px] mx-auto">
       {celebrate > 0 && <ConfettiBurst variant="center" fireKey={celebrate} />}
@@ -197,10 +170,9 @@ export default function VendorProfilePage() {
         <EditForm
           form={form} set={set} toggleSpecialty={toggleSpecialty} categoryNames={categoryNames}
           errors={errors} complete={complete} saving={saving} status={status} onSave={save}
-          bank={bank} onBankSaved={setBank} profileExists={profileExists}
         />
       ) : (
-        <ProfileView form={form} bank={bank} />
+        <ProfileView form={form} />
       )}
     </div>
   )
@@ -253,7 +225,7 @@ function StatusBanner({ status, rejectionReason }: { status: VendorProfile['stat
 }
 
 /* ------------------------------------------------------------- view mode */
-function ProfileView({ form, bank }: { form: FormState; bank: BankState }) {
+function ProfileView({ form }: { form: FormState }) {
   const socials = [
     form.website && { Icon: Globe, label: form.website, href: form.website },
     form.instagram && { Icon: AtSign, label: form.instagram.replace(/^@/, ''), href: `https://instagram.com/${form.instagram.replace(/^@/, '')}` },
@@ -268,13 +240,6 @@ function ProfileView({ form, bank }: { form: FormState; bank: BankState }) {
         <p className="mt-1 flex items-center gap-1.5 text-[13px] text-ink-2"><MapPin size={14} className="text-ink-3" /> {[form.city, form.state].filter(Boolean).join(', ')}</p>
       )}
       {form.bio && <p className="mt-3 text-[14px] leading-relaxed text-ink-2">{form.bio}</p>}
-
-      {form.portfolio.length > 0 && (
-        <div className="mt-5">
-          <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-ink-3 mb-2">Your work</p>
-          <MediaGrid items={form.portfolio} />
-        </div>
-      )}
 
       {form.specialties.length > 0 && (
         <div className="mt-5">
@@ -300,198 +265,6 @@ function ProfileView({ form, bank }: { form: FormState; bank: BankState }) {
           )}
         </div>
       </div>
-
-      {(form.address || bank.bankVerified) && (
-        <div className="mt-5 border-t border-border pt-4">
-          <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-ink-3 mb-2">Private details</p>
-          <p className="text-[11px] text-ink-3 mb-2">Only shared with an organiser after they accept your bid.</p>
-          {form.address && (
-            <p className="flex items-start gap-2 text-[13px] text-ink-2"><MapPin size={14} className="text-ink-3 mt-0.5 shrink-0" /> {form.address}</p>
-          )}
-          {bank.bankVerified && (
-            <p className="mt-1.5 flex items-center gap-2 text-[13px] text-ink-2">
-              <Landmark size={14} className="text-ink-3 shrink-0" />
-              {bank.bankAccountName} · {bank.bankName} · ****{bank.bankAccountNumber.slice(-4)}
-              <ShieldCheck size={14} className="text-success" />
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------- media grid */
-function MediaGrid({ items, onRemove }: { items: PortfolioItem[]; onRemove?: (i: number) => void }) {
-  return (
-    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-      {items.map((m, i) => (
-        <div key={`${m.url}-${i}`} className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-canvas">
-          {m.type === 'video'
-            ? <video src={m.url} className="h-full w-full object-cover" muted playsInline controls={!onRemove} />
-            : <img src={m.url} alt="Portfolio work" className="h-full w-full object-cover" loading="lazy" />}
-          {onRemove && (
-            <button type="button" onClick={() => onRemove(i)}
-              className="absolute right-1 top-1 rounded-md bg-ink/70 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
-              aria-label="Remove">
-              <Trash2 size={13} />
-            </button>
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-/* ---------------------------------------------------------- portfolio uploader */
-function PortfolioUploader({ items, onChange }: { items: PortfolioItem[]; onChange: (items: PortfolioItem[]) => void }) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState('')
-  const MAX = 12
-
-  async function handleFiles(files: FileList | null) {
-    if (!files || files.length === 0) return
-    setError('')
-    setUploading(true)
-    try {
-      // One signature covers this whole batch (same folder + timestamp window).
-      const sigRes = await fetch('/api/vendors/me/media-signature', { method: 'POST' })
-      const sig = await sigRes.json()
-      if (!sigRes.ok) { setError(sig.error ?? 'Uploads are not available right now.'); return }
-
-      const room = MAX - items.length
-      const chosen = Array.from(files).slice(0, Math.max(0, room))
-      const uploaded: PortfolioItem[] = []
-      for (const file of chosen) {
-        const fd = new FormData()
-        fd.append('file', file)
-        fd.append('api_key', sig.apiKey)
-        fd.append('timestamp', String(sig.timestamp))
-        fd.append('folder', sig.folder)
-        fd.append('signature', sig.signature)
-        const up = await fetch(`https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`, { method: 'POST', body: fd })
-        const data = await up.json()
-        if (!up.ok) { setError(data?.error?.message ?? 'One of the files failed to upload.'); continue }
-        uploaded.push({
-          url: data.secure_url,
-          type: data.resource_type === 'video' ? 'video' : 'image',
-          publicId: data.public_id,
-        })
-      }
-      if (uploaded.length) onChange([...items, ...uploaded].slice(0, MAX))
-    } catch {
-      setError('Something went wrong uploading. Please try again.')
-    } finally {
-      setUploading(false)
-      if (inputRef.current) inputRef.current.value = ''
-    }
-  }
-
-  return (
-    <div>
-      {items.length > 0 && <div className="mb-3"><MediaGrid items={items} onRemove={i => onChange(items.filter((_, idx) => idx !== i))} /></div>}
-      <input ref={inputRef} type="file" accept="image/*,video/*" multiple className="hidden"
-        onChange={e => handleFiles(e.target.files)} />
-      <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading || items.length >= MAX}
-        className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-canvas py-4 text-[13px] font-medium text-ink-2 transition-colors hover:border-warning/50 hover:text-ink disabled:opacity-50">
-        {uploading ? <><Loader2 size={15} className="animate-spin" /> Uploading…</> : <><Upload size={15} /> {items.length ? 'Add more photos or videos' : 'Add photos or videos of your work'}</>}
-      </button>
-      <p className="mt-1.5 text-[11px] text-ink-3">{items.length}/{MAX} added. Images and short videos, shown to organisers.</p>
-      {error && <p className="mt-1.5 text-[11px] text-red-500">{error}</p>}
-    </div>
-  )
-}
-
-/* ---------------------------------------------------------------- bank section */
-function BankSection({ bank, onSaved, profileExists }: {
-  bank: BankState
-  onSaved: (b: BankState) => void
-  profileExists: boolean
-}) {
-  const [editingBank, setEditingBank] = useState(!bank.bankVerified)
-  const [banks, setBanks] = useState<Array<{ name: string; code: string }>>([])
-  const [banksError, setBanksError] = useState('')
-  const [bankName, setBankName] = useState(bank.bankName)
-  const [accountNumber, setAccountNumber] = useState(bank.bankAccountNumber)
-  const [verifying, setVerifying] = useState(false)
-  const [error, setError] = useState('')
-
-  // Load the bank list on demand (only when the account form is showing).
-  useEffect(() => {
-    if (!editingBank || banks.length > 0) return
-    fetch('/api/vendors/banks')
-      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error); return d })
-      .then(d => setBanks(d.banks ?? []))
-      .catch(err => setBanksError(err.message || 'Could not load banks.'))
-  }, [editingBank, banks.length])
-
-  const bankNames = useMemo(() => banks.map(b => b.name), [banks])
-  const codeFor = (name: string) => banks.find(b => b.name === name)?.code ?? ''
-
-  async function verify() {
-    setError('')
-    const code = codeFor(bankName)
-    if (!code) { setError('Select your bank from the list.'); return }
-    if (!/^\d{10}$/.test(accountNumber)) { setError('Enter your 10-digit account number.'); return }
-    setVerifying(true)
-    try {
-      const res = await fetch('/api/vendors/me/bank', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accountNumber, bankCode: code, bankName }),
-      })
-      const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Could not verify that account.'); return }
-      onSaved({
-        bankName: data.bank.bankName ?? bankName,
-        bankAccountNumber: data.bank.bankAccountNumber,
-        bankAccountName: data.bank.bankAccountName,
-        bankVerified: true,
-      })
-      setEditingBank(false)
-    } catch {
-      setError('Something went wrong. Please try again.')
-    } finally {
-      setVerifying(false)
-    }
-  }
-
-  return (
-    <div className="border-t border-border pt-5">
-      <p className="text-[13px] font-medium text-ink-2 mb-1 flex items-center gap-1.5"><Landmark size={14} /> Payout bank account</p>
-      <p className="text-[12px] text-ink-3 mb-3">Where you&apos;ll get paid. Shared with an organiser only after they accept your bid.</p>
-
-      {!profileExists ? (
-        <p className="rounded-lg border border-border bg-canvas px-3.5 py-3 text-[12px] text-ink-3">Save your profile first, then come back to add your payout account.</p>
-      ) : !editingBank && bank.bankVerified ? (
-        <div className="flex items-center justify-between rounded-lg border border-success/30 bg-success/10 px-3.5 py-3">
-          <div className="flex items-center gap-2 text-[13px] text-ink">
-            <ShieldCheck size={16} className="text-success shrink-0" />
-            <span><span className="font-medium">{bank.bankAccountName}</span> · {bank.bankName} · ****{bank.bankAccountNumber.slice(-4)}</span>
-          </div>
-          <button type="button" onClick={() => setEditingBank(true)} className="text-[12px] font-medium text-primary hover:underline shrink-0">Change</button>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {banksError && <p className="text-[12px] text-red-500">{banksError}</p>}
-          <SearchableSelect value={bankName} onChange={setBankName} options={bankNames}
-            placeholder="Select your bank" searchPlaceholder="Search banks…" />
-          <input type="text" inputMode="numeric" value={accountNumber} maxLength={10}
-            onChange={e => { setAccountNumber(e.target.value.replace(/\D/g, '')); setError('') }}
-            placeholder="10-digit account number" className={inputCls} />
-          {error && <p className="text-[12px] text-red-500">{error}</p>}
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={verify} disabled={verifying}
-              className="inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-ink/90 disabled:opacity-50">
-              {verifying ? <><Loader2 size={14} className="animate-spin" /> Verifying…</> : 'Verify account'}
-            </button>
-            {bank.bankVerified && (
-              <button type="button" onClick={() => setEditingBank(false)} className="text-[12px] font-medium text-ink-2 hover:underline">Cancel</button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
@@ -507,12 +280,9 @@ interface EditProps {
   saving: boolean
   status: VendorProfile['status'] | null
   onSave: () => void
-  bank: BankState
-  onBankSaved: (b: BankState) => void
-  profileExists: boolean
 }
 
-function EditForm({ form, set, toggleSpecialty, categoryNames, errors, complete, saving, status, onSave, bank, onBankSaved, profileExists }: EditProps) {
+function EditForm({ form, set, toggleSpecialty, categoryNames, errors, complete, saving, status, onSave }: EditProps) {
   return (
     <>
       <div className="bg-white border border-border rounded-xl p-6 space-y-5">
@@ -536,11 +306,6 @@ function EditForm({ form, set, toggleSpecialty, categoryNames, errors, complete,
           </Field>
         </div>
 
-        <Field label="Full address" hint="Your business or pickup address. Only shared with an organiser after they accept your bid.">
-          <input type="text" value={form.address} onChange={e => set('address', e.target.value)}
-            placeholder="e.g. 12 Admiralty Way, Lekki Phase 1" className={inputCls} />
-        </Field>
-
         <Field label="Services you offer" required hint="Pick the categories you can bid on.">
           <div className="flex flex-wrap gap-2">
             {categoryNames.map(name => {
@@ -557,14 +322,8 @@ function EditForm({ form, set, toggleSpecialty, categoryNames, errors, complete,
         </Field>
 
         <div className="border-t border-border pt-5">
-          <p className="text-[13px] font-medium text-ink-2 mb-1">Your work</p>
-          <p className="text-[12px] text-ink-3 mb-3">Show off photos and videos of past events. This is your portfolio.</p>
-          <PortfolioUploader items={form.portfolio} onChange={items => set('portfolio', items)} />
-        </div>
-
-        <div className="border-t border-border pt-5">
           <p className="text-[13px] font-medium text-ink-2 mb-1">Portfolio & socials <span className="text-red-500">*</span></p>
-          <p className="text-[12px] text-ink-3 mb-3">At least one so organisers can reach you and see more of your work.</p>
+          <p className="text-[12px] text-ink-3 mb-3">At least one so organisers can see your work. These are your portfolio.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <input type="text" value={form.instagram} onChange={e => set('instagram', e.target.value)} placeholder="Instagram (@handle)" className={inputCls} />
@@ -587,8 +346,6 @@ function EditForm({ form, set, toggleSpecialty, categoryNames, errors, complete,
             </div>
           </div>
         </div>
-
-        <BankSection bank={bank} onSaved={onBankSaved} profileExists={profileExists} />
       </div>
 
       <div className="mt-5 flex items-center justify-between">

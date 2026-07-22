@@ -43,8 +43,7 @@ async function post(path: string, body?: unknown): Promise<void> {
   if (!res.ok) throw new Error((data as { error?: string }).error ?? 'Request failed')
 }
 
-export const verifyEmail = (email: string, code: string) =>
-  post('/api/auth/verify-email', { email, code })
+export const verifyEmail = (token: string) => post('/api/auth/verify-email', { token })
 export const resendVerification = () => post('/api/auth/resend-verification')
 export const forgotPassword = (email: string) => post('/api/auth/forgot-password', { email })
 export const resetPassword = (token: string, password: string) =>

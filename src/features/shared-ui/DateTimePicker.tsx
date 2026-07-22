@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Calendar, ChevronLeft, ChevronRight, Clock } from 'lucide-react'
+import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Clock } from 'lucide-react'
 
 /* ------------------------------------------------------------------ helpers */
 // Values are stored as "YYYY-MM-DDTHH:mm" (local, matching <input type=datetime-local>).
@@ -155,8 +155,9 @@ export function DateTimePicker({
           {/* Month header — click the label to jump by month + year */}
           <div className="mb-3 flex items-center justify-between">
             <button type="button" onClick={() => setMode(m => (m === 'days' ? 'months' : 'days'))}
-              className="rounded-lg px-1.5 py-0.5 font-display text-[14px] font-semibold text-ink transition-colors hover:text-primary">
+              className="inline-flex items-center gap-1 rounded-lg px-1.5 py-0.5 font-display text-[14px] font-semibold text-ink transition-colors hover:text-primary">
               {mode === 'days' ? `${MONTHS[cursor.month]} ${cursor.year}` : cursor.year}
+              <ChevronDown size={14} className={`text-ink-3 transition-transform ${mode === 'months' ? 'rotate-180' : ''}`} />
             </button>
             <div className="flex gap-1">
               <button type="button"

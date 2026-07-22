@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { CalendarDays, ChevronLeft, ChevronRight, Check } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Check } from 'lucide-react'
 
 export type DateFilter =
   | { kind: 'all' }
@@ -101,8 +101,9 @@ export function DateRangeFilter({ value, onChange, months, monthLabel }: Props) 
           {/* Calendar — click the label to jump by month + year */}
           <div className="mb-2 flex items-center justify-between">
             <button type="button" onClick={() => setMode(m => (m === 'days' ? 'months' : 'days'))}
-              className="rounded-lg px-1.5 py-0.5 font-display text-[13px] font-semibold text-ink transition-colors hover:text-primary">
+              className="inline-flex items-center gap-1 rounded-lg px-1.5 py-0.5 font-display text-[13px] font-semibold text-ink transition-colors hover:text-primary">
               {mode === 'days' ? `${MONTHS[cursor.month]} ${cursor.year}` : cursor.year}
+              <ChevronDown size={13} className={`text-ink-3 transition-transform ${mode === 'months' ? 'rotate-180' : ''}`} />
             </button>
             <div className="flex gap-1">
               <button type="button" onClick={() => setCursor(c => mode === 'days'

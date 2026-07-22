@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -77,8 +77,9 @@ export function SingleDatePicker({ value, onChange, placeholder = 'Pick a date',
         <div className={`absolute right-0 z-50 mt-2 w-[280px] rounded-2xl border p-3 shadow-xl ${dark ? 'border-dark-border bg-dark-surface shadow-black/30' : 'border-border bg-white shadow-ink/10'}`}>
           <div className="mb-2 flex items-center justify-between">
             <button type="button" onClick={() => setMode(m => (m === 'days' ? 'months' : 'days'))}
-              className={`rounded-lg px-1.5 py-0.5 font-display text-[13px] font-semibold transition-colors hover:text-primary ${dark ? 'text-white' : 'text-ink'}`}>
+              className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-0.5 font-display text-[13px] font-semibold transition-colors hover:text-primary ${dark ? 'text-white' : 'text-ink'}`}>
               {mode === 'days' ? `${MONTHS[cursor.month]} ${cursor.year}` : cursor.year}
+              <ChevronDown size={13} className={`${dark ? 'text-dark-muted' : 'text-ink-3'} transition-transform ${mode === 'months' ? 'rotate-180' : ''}`} />
             </button>
             <div className="flex gap-1">
               <button type="button" onClick={() => setCursor(c => c && (mode === 'days'

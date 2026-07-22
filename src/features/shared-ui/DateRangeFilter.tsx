@@ -10,6 +10,7 @@ export type DateFilter =
 
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const pad = (n: number) => String(n).padStart(2, '0')
 const ymd = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad(d)}`
 
@@ -35,6 +36,8 @@ interface Props {
 
 export function DateRangeFilter({ value, onChange, months, monthLabel }: Props) {
   const [open, setOpen] = useState(false)
+  // 'days' = day grid; 'months' = month + year grid for jumping far ahead.
+  const [mode, setMode] = useState<'days' | 'months'>('days')
   const ref = useRef<HTMLDivElement>(null)
   const today = new Date()
   const [cursor, setCursor] = useState({ year: today.getFullYear(), month: today.getMonth() })
@@ -43,7 +46,7 @@ export function DateRangeFilter({ value, onChange, months, monthLabel }: Props) 
   const [to, setTo] = useState<string | null>(value.kind === 'range' ? value.to : null)
 
   useEffect(() => {
-    if (!open) return
+    if (!open) { setMode('days'); return }
     const onDown = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
     document.addEventListener('mousedown', onDown)
     return () => document.removeEventListener('mousedown', onDown)
@@ -95,31 +98,49 @@ export function DateRangeFilter({ value, onChange, months, monthLabel }: Props) 
           <div className="my-3 border-t border-border" />
           <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.08em] text-ink-3">Or pick a range</p>
 
-          {/* Calendar */}
+          {/* Calendar — click the label to jump by month + year */}
           <div className="mb-2 flex items-center justify-between">
-            <p className="font-display text-[13px] font-semibold text-ink">{MONTHS[cursor.month]} {cursor.year}</p>
+            <button type="button" onClick={() => setMode(m => (m === 'days' ? 'months' : 'days'))}
+              className="rounded-lg px-1.5 py-0.5 font-display text-[13px] font-semibold text-ink transition-colors hover:text-primary">
+              {mode === 'days' ? `${MONTHS[cursor.month]} ${cursor.year}` : cursor.year}
+            </button>
             <div className="flex gap-1">
-              <button type="button" onClick={() => setCursor(c => ({ year: c.month === 0 ? c.year - 1 : c.year, month: (c.month + 11) % 12 }))}
+              <button type="button" onClick={() => setCursor(c => mode === 'days'
+                ? { year: c.month === 0 ? c.year - 1 : c.year, month: (c.month + 11) % 12 }
+                : { ...c, year: c.year - 1 })}
                 className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-3 hover:bg-canvas hover:text-ink"><ChevronLeft size={15} /></button>
-              <button type="button" onClick={() => setCursor(c => ({ year: c.month === 11 ? c.year + 1 : c.year, month: (c.month + 1) % 12 }))}
+              <button type="button" onClick={() => setCursor(c => mode === 'days'
+                ? { year: c.month === 11 ? c.year + 1 : c.year, month: (c.month + 1) % 12 }
+                : { ...c, year: c.year + 1 })}
                 className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-3 hover:bg-canvas hover:text-ink"><ChevronRight size={15} /></button>
             </div>
           </div>
-          <div className="grid grid-cols-7 gap-0.5">
-            {WEEKDAYS.map(w => <span key={w} className="py-1 text-center text-[10px] font-medium text-ink-3">{w}</span>)}
-            {grid.map((day, i) => {
-              if (day === null) return <span key={`b${i}`} />
-              const key = ymd(cursor.year, cursor.month, day)
-              const isFrom = key === from, isTo = key === to
-              const inRange = from && to && key > from && key < to
-              return (
-                <button key={day} type="button" onClick={() => pickDay(day)}
-                  className={`flex h-8 items-center justify-center rounded-lg text-[12px] transition-colors ${
-                    isFrom || isTo ? 'bg-primary font-semibold text-dark' : inRange ? 'bg-primary/15 text-ink' : 'text-ink hover:bg-primary/10'
-                  }`}>{day}</button>
-              )
-            })}
-          </div>
+          {mode === 'months' ? (
+            <div className="grid grid-cols-3 gap-1.5">
+              {MONTHS_SHORT.map((mon, mi) => (
+                <button key={mon} type="button" onClick={() => { setCursor(c => ({ ...c, month: mi })); setMode('days') }}
+                  className={`flex h-9 items-center justify-center rounded-lg text-[12px] transition-colors ${
+                    cursor.month === mi ? 'bg-primary/15 font-medium text-ink' : 'text-ink hover:bg-primary/10'
+                  }`}>{mon}</button>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-7 gap-0.5">
+              {WEEKDAYS.map(w => <span key={w} className="py-1 text-center text-[10px] font-medium text-ink-3">{w}</span>)}
+              {grid.map((day, i) => {
+                if (day === null) return <span key={`b${i}`} />
+                const key = ymd(cursor.year, cursor.month, day)
+                const isFrom = key === from, isTo = key === to
+                const inRange = from && to && key > from && key < to
+                return (
+                  <button key={day} type="button" onClick={() => pickDay(day)}
+                    className={`flex h-8 items-center justify-center rounded-lg text-[12px] transition-colors ${
+                      isFrom || isTo ? 'bg-primary font-semibold text-dark' : inRange ? 'bg-primary/15 text-ink' : 'text-ink hover:bg-primary/10'
+                    }`}>{day}</button>
+                )
+              })}
+            </div>
+          )}
 
           <div className="mt-3 flex items-center justify-between">
             <button type="button" onClick={() => { setFrom(null); setTo(null); choose({ kind: 'all' }) }}

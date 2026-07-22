@@ -7,6 +7,7 @@ import { Calendar, ChevronLeft, ChevronRight, Clock } from 'lucide-react'
 
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -65,6 +66,8 @@ export function DateTimePicker({
 }: DateTimePickerProps) {
   const [open, setOpen] = useState(false)
   const [above, setAbove] = useState(false)
+  // 'days' = day grid; 'months' = month + year grid for jumping far ahead.
+  const [mode, setMode] = useState<'days' | 'months'>('days')
   const ref = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -86,6 +89,9 @@ export function DateTimePicker({
     document.addEventListener('keydown', onKey)
     return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
   }, [open])
+
+  // Always reopen on the day grid.
+  useEffect(() => { if (!open) setMode('days') }, [open])
 
   // Flip the panel above the trigger if it would overflow the viewport.
   useLayoutEffect(() => {
@@ -146,53 +152,93 @@ export function DateTimePicker({
             above ? 'bottom-full mb-2' : 'top-full mt-2'
           }`}
         >
-          {/* Month header */}
+          {/* Month header — click the label to jump by month + year */}
           <div className="mb-3 flex items-center justify-between">
-            <p className="font-display text-[14px] font-semibold text-ink">{MONTHS[cursor.month]} {cursor.year}</p>
+            <button type="button" onClick={() => setMode(m => (m === 'days' ? 'months' : 'days'))}
+              className="rounded-lg px-1.5 py-0.5 font-display text-[14px] font-semibold text-ink transition-colors hover:text-primary">
+              {mode === 'days' ? `${MONTHS[cursor.month]} ${cursor.year}` : cursor.year}
+            </button>
             <div className="flex gap-1">
-              <button type="button" onClick={() => setCursor(c => ({ year: c.month === 0 ? c.year - 1 : c.year, month: (c.month + 11) % 12 }))}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-3 transition-colors hover:bg-canvas hover:text-ink">
+              <button type="button"
+                disabled={mode === 'months' && minParts !== null && cursor.year <= minParts.y}
+                onClick={() => setCursor(c => mode === 'days'
+                  ? { year: c.month === 0 ? c.year - 1 : c.year, month: (c.month + 11) % 12 }
+                  : { ...c, year: c.year - 1 })}
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-3 transition-colors hover:bg-canvas hover:text-ink disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent">
                 <ChevronLeft size={16} />
               </button>
-              <button type="button" onClick={() => setCursor(c => ({ year: c.month === 11 ? c.year + 1 : c.year, month: (c.month + 1) % 12 }))}
+              <button type="button"
+                onClick={() => setCursor(c => mode === 'days'
+                  ? { year: c.month === 11 ? c.year + 1 : c.year, month: (c.month + 1) % 12 }
+                  : { ...c, year: c.year + 1 })}
                 className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-3 transition-colors hover:bg-canvas hover:text-ink">
                 <ChevronRight size={16} />
               </button>
             </div>
           </div>
 
-          {/* Weekday labels */}
-          <div className="mb-1 grid grid-cols-7 gap-0.5">
-            {WEEKDAYS.map(w => <span key={w} className="py-1 text-center text-[11px] font-medium text-ink-3">{w}</span>)}
-          </div>
+          {mode === 'months' ? (
+            /* Month grid */
+            <div className="grid grid-cols-3 gap-1.5">
+              {MONTHS_SHORT.map((mon, mi) => {
+                const isDisabled = minParts !== null && (cursor.year < minParts.y || (cursor.year === minParts.y && mi < minParts.m))
+                const isSelected = parts && parts.y === cursor.year && parts.m === mi
+                const isCurrent = today.getFullYear() === cursor.year && today.getMonth() === mi
+                return (
+                  <button
+                    key={mon}
+                    type="button"
+                    disabled={isDisabled}
+                    onClick={() => { setCursor(c => ({ ...c, month: mi })); setMode('days') }}
+                    className={`flex h-10 items-center justify-center rounded-lg text-[13px] transition-colors ${
+                      isSelected
+                        ? 'bg-primary font-semibold text-dark'
+                        : isDisabled
+                          ? 'cursor-not-allowed text-ink-3/40'
+                          : `text-ink hover:bg-primary/10 ${isCurrent ? 'font-semibold text-primary ring-1 ring-inset ring-primary/30' : ''}`
+                    }`}
+                  >
+                    {mon}
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <>
+              {/* Weekday labels */}
+              <div className="mb-1 grid grid-cols-7 gap-0.5">
+                {WEEKDAYS.map(w => <span key={w} className="py-1 text-center text-[11px] font-medium text-ink-3">{w}</span>)}
+              </div>
 
-          {/* Days */}
-          <div className="grid grid-cols-7 gap-0.5">
-            {grid.map((day, i) => {
-              if (day === null) return <span key={`b${i}`} />
-              const cellStamp = new Date(cursor.year, cursor.month, day).getTime()
-              const isDisabled = minStamp !== null && cellStamp < minStamp
-              const isSelected = parts && parts.y === cursor.year && parts.m === cursor.month && parts.d === day
-              const isToday = today.getFullYear() === cursor.year && today.getMonth() === cursor.month && today.getDate() === day
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  disabled={isDisabled}
-                  onClick={() => pickDay(day)}
-                  className={`flex h-9 items-center justify-center rounded-lg text-[13px] transition-colors ${
-                    isSelected
-                      ? 'bg-primary font-semibold text-dark'
-                      : isDisabled
-                        ? 'cursor-not-allowed text-ink-3/40'
-                        : `text-ink hover:bg-primary/10 ${isToday ? 'font-semibold text-primary ring-1 ring-inset ring-primary/30' : ''}`
-                  }`}
-                >
-                  {day}
-                </button>
-              )
-            })}
-          </div>
+              {/* Days */}
+              <div className="grid grid-cols-7 gap-0.5">
+                {grid.map((day, i) => {
+                  if (day === null) return <span key={`b${i}`} />
+                  const cellStamp = new Date(cursor.year, cursor.month, day).getTime()
+                  const isDisabled = minStamp !== null && cellStamp < minStamp
+                  const isSelected = parts && parts.y === cursor.year && parts.m === cursor.month && parts.d === day
+                  const isToday = today.getFullYear() === cursor.year && today.getMonth() === cursor.month && today.getDate() === day
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => pickDay(day)}
+                      className={`flex h-9 items-center justify-center rounded-lg text-[13px] transition-colors ${
+                        isSelected
+                          ? 'bg-primary font-semibold text-dark'
+                          : isDisabled
+                            ? 'cursor-not-allowed text-ink-3/40'
+                            : `text-ink hover:bg-primary/10 ${isToday ? 'font-semibold text-primary ring-1 ring-inset ring-primary/30' : ''}`
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )}
 
           {/* Time row */}
           <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">

@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { BadgeCheck, Globe, AtSign, Link2, Music2, Phone, MapPin, X } from 'lucide-react'
-import { VendorProfile, parseSpecialties } from '../types/vendor.types'
+import { VendorProfile, parseSpecialties, parsePortfolio } from '../types/vendor.types'
 
 interface Props {
   userId: string
@@ -24,6 +24,7 @@ export function VendorProfileModal({ userId, onClose }: Props) {
   }, [userId])
 
   const specialties = parseSpecialties(profile?.specialties)
+  const portfolio = parsePortfolio(profile?.portfolio)
   const socials = profile ? [
     profile.website && { Icon: Globe, label: profile.website, href: profile.website.startsWith('http') ? profile.website : `https://${profile.website}` },
     profile.instagram && { Icon: AtSign, label: profile.instagram.replace(/^@/, ''), href: `https://instagram.com/${profile.instagram.replace(/^@/, '')}` },
@@ -68,6 +69,22 @@ export function VendorProfileModal({ userId, onClose }: Props) {
             )}
 
             {profile.bio && <p className="mb-4 text-[13px] leading-relaxed text-ink-2">{profile.bio}</p>}
+
+            {portfolio.length > 0 && (
+              <div className="mb-4">
+                <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.08em] text-ink-3">Their work</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {portfolio.map((m, i) => (
+                    <a key={`${m.url}-${i}`} href={m.url} target="_blank" rel="noopener noreferrer"
+                      className="aspect-square overflow-hidden rounded-lg border border-border bg-canvas">
+                      {m.type === 'video'
+                        ? <video src={m.url} className="h-full w-full object-cover" muted playsInline />
+                        : <img src={m.url} alt="Portfolio work" className="h-full w-full object-cover" loading="lazy" />}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {specialties.length > 0 && (
               <div className="mb-4">

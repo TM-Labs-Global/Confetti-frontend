@@ -157,14 +157,14 @@
    admin portal (the app no longer ships a dark mode).
    ───────────────────────────────────────────────── */
 [data-admin-theme='light'] {
-  --dark:     #FAFAFC;          /* bg-dark (hand-written util) → page canvas */
+  --dark:     #F1F2F8;          /* bg-dark (hand-written util) → page canvas */
   --surface:  #FFFFFF;          /* bg-dark-surface (hand-written util) → cards */
   --border-d: #E4E7EC;
   /* Tailwind @theme aliases. The generated utilities (border-dark-border,
      text-dark-muted, divide-dark-border …) read these, and they're computed
      from the base tokens at :root, so overriding a base token alone never
      reaches them — the borders would stay dark navy on white. */
-  --color-dark:         #FAFAFC;
+  --color-dark:         #F1F2F8;
   --color-dark-surface: #FFFFFF;
   --color-dark-border:  #E4E7EC;
   --color-dark-muted:   #667085;

@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { resolveDashboard } from '@/features/auth/portal'
 import { AppLogo } from '@/features/shared-ui'
-import { Menu, X, Sun, Moon } from 'lucide-react'
-import { useLandingTheme, useFeaturedVendors } from './LandingShell'
+import { Menu, X } from 'lucide-react'
+import { useFeaturedVendors } from './LandingShell'
 
 const LINKS = [
   { label: 'About', href: '#about' },
@@ -16,20 +16,6 @@ const LINKS = [
   { label: 'FAQ', href: '#faq' },
   { label: 'Contact', href: '#contact' },
 ]
-
-function ThemeToggle({ className = '' }: { className?: string }) {
-  const { theme, toggle } = useLandingTheme()
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-      className={`flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--ld-border)] bg-[var(--ld-glass)] text-[var(--ld-text)] backdrop-blur transition-colors hover:bg-[var(--ld-glass-strong)] ${className}`}
-    >
-      {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-    </button>
-  )
-}
 
 export function LandingNav() {
   const { user } = useAuth()
@@ -57,7 +43,6 @@ export function LandingNav() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <ThemeToggle />
           {dashboard ? (
             <Link href={dashboard} className="rounded-xl bg-primary px-5 py-2.5 text-[14px] font-semibold text-dark transition-colors hover:bg-primary/90">
               Go to dashboard
@@ -75,7 +60,6 @@ export function LandingNav() {
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
-          <ThemeToggle />
           <button
             type="button"
             onClick={() => setOpen(o => !o)}

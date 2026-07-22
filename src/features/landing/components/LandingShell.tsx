@@ -2,10 +2,11 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
 type Theme = 'dark' | 'light'
-const STORAGE_KEY = 'confette-landing-theme'
 
+// The landing page ships in a single (light) mode now - no toggle. The context
+// stays so existing consumers keep working; theme is always 'light'.
 const ThemeCtx = createContext<{ theme: Theme; toggle: () => void }>({
-  theme: 'dark',
+  theme: 'light',
   toggle: () => {},
 })
 
@@ -26,14 +27,7 @@ const VendorsCtx = createContext<{ vendors: FeaturedVendor[] | null }>({ vendors
 export const useFeaturedVendors = () => useContext(VendorsCtx)
 
 export function LandingShell({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark')
   const [vendors, setVendors] = useState<FeaturedVendor[] | null>(null)
-
-  // Restore preference after mount (avoids hydration mismatch).
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved === 'light' || saved === 'dark') setTheme(saved)
-  }, [])
 
   // Load the public vendor showcase once for the whole page.
   useEffect(() => {
@@ -45,19 +39,12 @@ export function LandingShell({ children }: { children: ReactNode }) {
     return () => { active = false }
   }, [])
 
-  const toggle = () =>
-    setTheme(t => {
-      const next = t === 'dark' ? 'light' : 'dark'
-      localStorage.setItem(STORAGE_KEY, next)
-      return next
-    })
-
   return (
-    <ThemeCtx.Provider value={{ theme, toggle }}>
+    <ThemeCtx.Provider value={{ theme: 'light', toggle: () => {} }}>
       <VendorsCtx.Provider value={{ vendors }}>
         <div
-          className="landing min-h-screen bg-[var(--ld-bg)] text-[var(--ld-text)] transition-colors duration-300"
-          data-theme={theme}
+          className="landing min-h-screen bg-[var(--ld-bg)] text-[var(--ld-text)]"
+          data-theme="light"
         >
           {children}
         </div>

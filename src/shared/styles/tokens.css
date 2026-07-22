@@ -10,7 +10,7 @@
   --dark:     #0B0F19;
   --surface:  #161F30;
   --border-d: #283248;
-  --light:    #FAFAFC;
+  --light:    #F1F2F8;   /* soft off-white canvas so white cards lift off it (was near-white #FAFAFC) */
   --border-l: #E4E7EC;
   --ink:      #101828;
   --ink-2:    #475467;
@@ -33,9 +33,10 @@
   --grad-warm:  linear-gradient(103deg, var(--gold) 0%, var(--coral) 55%, var(--pink) 100%);
 
   /* Fonts - resolved from the next/font CSS variables set on <html> in
-     layout.tsx (with literal fallbacks). Everything reads var(--font-d/-b/-m). */
-  --font-d:   var(--font-display-family), 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
-  --font-b:   var(--font-body-family), 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+     layout.tsx (with literal fallbacks). Everything reads var(--font-d/-b/-m).
+     Poppins is used for both display and body; DM Mono stays for money/codes. */
+  --font-d:   var(--font-poppins), 'Poppins', ui-sans-serif, system-ui, sans-serif;
+  --font-b:   var(--font-poppins), 'Poppins', ui-sans-serif, system-ui, sans-serif;
   --font-m:   var(--font-mono-family), 'DM Mono', ui-monospace, monospace;
 
   /* Spacing - 8pt grid */

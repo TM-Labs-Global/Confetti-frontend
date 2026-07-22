@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Pencil, BadgeCheck, Phone, Lock, CheckCircle2, Clock } from 'lucide-react'
+import { Pencil, BadgeCheck, Phone, Lock, CheckCircle2, Clock, Landmark, MapPin, Users, Radio } from 'lucide-react'
 import { EventTile, ConfettiBurst } from '@/features/shared-ui'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { VendorProfileModal } from '@/features/vendor/components/VendorProfileModal'
@@ -16,7 +16,15 @@ interface OrganizerBid extends VendorBid {
   vendor?: {
     id: string
     name: string
-    vendorProfile?: { status: string; businessName: string; phone?: string | null } | null
+    vendorProfile?: {
+      status: string
+      businessName: string
+      phone?: string | null
+      address?: string | null
+      bankName?: string | null
+      bankAccountNumber?: string | null
+      bankAccountName?: string | null
+    } | null
   }
 }
 
@@ -107,12 +115,29 @@ export default function PlanDetailPage() {
   }
 
   async function publishPlan() {
+    // "Let the Bids Roll In" means broadcast: open the event AND list it for bids.
     const res = await fetch(`/api/plans/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'open' }),
+      body: JSON.stringify({ status: 'open', openToBids: true }),
     })
     if (res.ok) { await loadPlan(); setCelebrate(true) }
+  }
+
+  // Toggle whether the event is broadcast to the open vendor marketplace.
+  const [togglingBids, setTogglingBids] = useState(false)
+  async function setOpenToBids(next: boolean) {
+    setTogglingBids(true)
+    try {
+      const res = await fetch(`/api/plans/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ openToBids: next }),
+      })
+      if (res.ok) await loadPlan()
+    } finally {
+      setTogglingBids(false)
+    }
   }
 
   async function completeEvent(outcome: 'great' | 'issues') {
@@ -300,6 +325,27 @@ export default function PlanDetailPage() {
               <span className="font-mono text-[11px] text-ink-3 pl-1.5 ml-1.5 border-l border-border">{plan.shareCode}</span>
             </button>
           )}
+          {(plan.status === 'open' || plan.status === 'bidding') && editable && (
+            <Link href={`/organiser/marketplace?plan=${plan.id}`}
+              className="flex items-center gap-2 px-4 py-2.5 bg-primary/10 text-primary text-[13px] font-medium rounded-lg hover:bg-primary/20 transition-colors">
+              <Users size={14} /> Find vendors
+            </Link>
+          )}
+          {(plan.status === 'open' || plan.status === 'bidding') && editable && (
+            <button onClick={() => setOpenToBids(!plan.openToBids)} disabled={togglingBids}
+              title={plan.openToBids
+                ? 'Listed in the vendor marketplace. Click to make it invite-only.'
+                : 'Hidden from the marketplace. Click to open it for bids.'}
+              className={`flex items-center gap-2 px-4 py-2.5 border text-[13px] font-medium rounded-lg transition-colors disabled:opacity-50 ${plan.openToBids ? 'border-primary/30 bg-primary/5 text-primary' : 'border-border text-ink-2 hover:bg-canvas'}`}>
+              <Radio size={14} /> {plan.openToBids ? 'Open to bids' : 'Invite-only'}
+            </button>
+          )}
+          {(plan.status === 'open' || plan.status === 'bidding') && editable && !plan.openToBids && (
+            <p className="w-full flex items-start gap-1.5 text-[12px] text-ink-3 mt-1">
+              <Radio size={12} className="mt-px shrink-0" />
+              This event is invite-only, so it&apos;s hidden from the marketplace. Only vendors you invite can bid. Turn on &quot;Open to bids&quot; to list it for everyone.
+            </p>
+          )}
           {canManualComplete && !closeoutOpen && (
             <button onClick={() => setShowCloseout(true)}
               className="flex items-center gap-2 px-4 py-2.5 border border-border text-ink-2 text-[13px] font-medium rounded-lg hover:bg-canvas transition-colors">
@@ -348,6 +394,16 @@ export default function PlanDetailPage() {
                   <div className="h-1.5 bg-canvas rounded-full border border-border overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: barColor }} />
                   </div>
+                  {(cat.lineItems?.length ?? 0) > 1 && (
+                    <div className="mt-1.5 space-y-0.5">
+                      {cat.lineItems!.map(li => (
+                        <div key={li.id} className="flex items-center justify-between text-[12px] text-ink-3">
+                          <span className="truncate pr-2">{li.name || cat.name}{li.quantity > 1 ? ` ×${li.quantity}` : ''}</span>
+                          <span className="font-mono tabular-nums shrink-0">{fmtNaira(li.quantity * li.unitCost)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {cat.brief && (
                     <p className="text-[12px] text-ink-3 mt-1.5 leading-relaxed">{cat.brief}</p>
                   )}
@@ -358,6 +414,12 @@ export default function PlanDetailPage() {
                         ? <span className="text-[#166534]">{fmtNaira(diff)} under</span>
                         : <span className="text-red-600">{fmtNaira(-diff)} over</span>}
                     </p>
+                  )}
+                  {(plan.status === 'open' || plan.status === 'bidding') && editable && !accepted && (
+                    <Link href={`/organiser/marketplace?plan=${plan.id}&category=${cat.id}`}
+                      className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors">
+                      <Users size={11} /> Find {cat.name.toLowerCase()} vendors →
+                    </Link>
                   )}
                 </div>
               )
@@ -482,6 +544,21 @@ export default function PlanDetailPage() {
                               className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-success/10 px-2.5 py-1.5 text-[12px] font-medium text-[#166534] hover:bg-success/20 transition-colors">
                               <Phone size={12} /> {bid.vendor.vendorProfile.phone}
                             </a>
+                          )}
+                          {bid.vendor?.vendorProfile?.address && (
+                            <p className="mt-1.5 flex items-start gap-1.5 text-[12px] text-ink-2">
+                              <MapPin size={12} className="mt-0.5 shrink-0 text-ink-3" /> {bid.vendor.vendorProfile.address}
+                            </p>
+                          )}
+                          {bid.vendor?.vendorProfile?.bankAccountName && bid.vendor?.vendorProfile?.bankAccountNumber && (
+                            <div className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-canvas border border-border px-2.5 py-1.5 text-[12px] text-ink-2">
+                              <Landmark size={12} className="mt-0.5 shrink-0 text-ink-3" />
+                              <span>
+                                <span className="font-medium text-ink">{bid.vendor.vendorProfile.bankAccountName}</span>
+                                {' · '}{bid.vendor.vendorProfile.bankName}
+                                {' · '}<span className="font-mono">{bid.vendor.vendorProfile.bankAccountNumber}</span>
+                              </span>
+                            </div>
                           )}
                           {vendorsLocked ? (
                             <p className="mt-2 text-[11px] text-ink-3">

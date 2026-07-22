@@ -1,27 +1,36 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
-import { BadgeCheck, Clock, AlertCircle, Check, Pencil, Globe, AtSign, Link2, Music2, Phone, MapPin } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  BadgeCheck, Clock, AlertCircle, Check, Pencil, Globe, AtSign, Link2, Music2, Phone, MapPin,
+  Upload, Trash2, Loader2, Landmark,
+} from 'lucide-react'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { SearchableSelect, ConfettiBurst } from '@/features/shared-ui'
-import { NIGERIAN_STATES } from '@/shared/constants/nigeria'
-import { VendorProfile, parseSpecialties } from '@/features/vendor/types/vendor.types'
+import { NIGERIAN_STATES, NIGERIAN_BANKS } from '@/shared/constants/nigeria'
+import { VendorProfile, PortfolioItem, parseSpecialties, parsePortfolio } from '@/features/vendor/types/vendor.types'
 
 interface FormState {
   businessName: string
   bio: string
   state: string
   city: string
+  address: string
   specialties: string[]
+  portfolio: PortfolioItem[]
   website: string
   instagram: string
   facebook: string
   tiktok: string
   phone: string
+  bankName: string
+  bankAccountNumber: string
+  bankAccountName: string
 }
 
 const EMPTY: FormState = {
-  businessName: '', bio: '', state: '', city: '', specialties: [],
+  businessName: '', bio: '', state: '', city: '', address: '', specialties: [], portfolio: [],
   website: '', instagram: '', facebook: '', tiktok: '', phone: '',
+  bankName: '', bankAccountNumber: '', bankAccountName: '',
 }
 
 // Normalisers so stored values are well-formed regardless of how they were typed.
@@ -33,6 +42,8 @@ function validate(f: FormState): Partial<Record<keyof FormState, string>> {
   const e: Partial<Record<keyof FormState, string>> = {}
   if (f.website && !/\.[a-z]{2,}/i.test(f.website)) e.website = 'Enter a valid website, e.g. yourbiz.com'
   if (f.phone && normalizePhone(f.phone).replace(/\D/g, '').length < 7) e.phone = 'Enter a valid phone number'
+  // An account number is optional, but if given it must be a full 10-digit NUBAN.
+  if (f.bankAccountNumber && f.bankAccountNumber.length !== 10) e.bankAccountNumber = 'Account number must be 10 digits'
   return e
 }
 
@@ -60,12 +71,17 @@ export default function VendorProfilePage() {
           bio: p.bio ?? '',
           state: p.state ?? '',
           city: p.city ?? '',
+          address: p.address ?? '',
           specialties: parseSpecialties(p.specialties),
+          portfolio: parsePortfolio(p.portfolio),
           website: p.website ?? '',
           instagram: p.instagram ?? '',
           facebook: p.facebook ?? '',
           tiktok: p.tiktok ?? '',
           phone: p.phone ?? '',
+          bankName: p.bankName ?? '',
+          bankAccountNumber: p.bankAccountNumber ?? '',
+          bankAccountName: p.bankAccountName ?? '',
         })
         setStatus(p.status)
         setRejectionReason(p.rejectionReason ?? null)
@@ -107,11 +123,13 @@ export default function VendorProfilePage() {
     // Normalise + validate before sending.
     const cleaned: FormState = {
       ...form,
+      address: form.address.trim(),
       website: normalizeUrl(form.website),
       instagram: normalizeHandle(form.instagram),
       facebook: form.facebook.trim(),
       tiktok: normalizeHandle(form.tiktok),
       phone: normalizePhone(form.phone),
+      bankAccountName: form.bankAccountName.trim(),
     }
     const errs = validate(cleaned)
     if (Object.keys(errs).length) { setErrors(errs); return }
@@ -233,6 +251,8 @@ function ProfileView({ form }: { form: FormState }) {
     form.tiktok && { Icon: Music2, label: form.tiktok.replace(/^@/, ''), href: `https://tiktok.com/@${form.tiktok.replace(/^@/, '')}` },
   ].filter(Boolean) as Array<{ Icon: any; label: string; href: string }>
 
+  const hasBank = !!(form.bankAccountNumber && form.bankName)
+
   return (
     <div className="bg-white border border-border rounded-xl p-6">
       <h2 className="font-display font-bold text-[20px] text-ink">{form.businessName}</h2>
@@ -240,6 +260,13 @@ function ProfileView({ form }: { form: FormState }) {
         <p className="mt-1 flex items-center gap-1.5 text-[13px] text-ink-2"><MapPin size={14} className="text-ink-3" /> {[form.city, form.state].filter(Boolean).join(', ')}</p>
       )}
       {form.bio && <p className="mt-3 text-[14px] leading-relaxed text-ink-2">{form.bio}</p>}
+
+      {form.portfolio.length > 0 && (
+        <div className="mt-5">
+          <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-ink-3 mb-2">Your work</p>
+          <MediaGrid items={form.portfolio} />
+        </div>
+      )}
 
       {form.specialties.length > 0 && (
         <div className="mt-5">
@@ -264,6 +291,128 @@ function ProfileView({ form }: { form: FormState }) {
             <p className="flex items-center gap-2 text-[13px] text-ink-2"><Phone size={14} className="text-ink-3" /> {form.phone} <span className="text-[11px] text-ink-3">(shared with an organiser only after they accept your bid)</span></p>
           )}
         </div>
+      </div>
+
+      {(form.address || hasBank) && (
+        <div className="mt-5 border-t border-border pt-4">
+          <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-ink-3 mb-2">Private details</p>
+          <p className="text-[11px] text-ink-3 mb-2">Only shared with an organiser after they accept your bid.</p>
+          {form.address && (
+            <p className="flex items-start gap-2 text-[13px] text-ink-2"><MapPin size={14} className="text-ink-3 mt-0.5 shrink-0" /> {form.address}</p>
+          )}
+          {hasBank && (
+            <p className="mt-1.5 flex items-center gap-2 text-[13px] text-ink-2">
+              <Landmark size={14} className="text-ink-3 shrink-0" />
+              {[form.bankAccountName, form.bankName, `****${form.bankAccountNumber.slice(-4)}`].filter(Boolean).join(' · ')}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------- media grid */
+function MediaGrid({ items, onRemove }: { items: PortfolioItem[]; onRemove?: (i: number) => void }) {
+  return (
+    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+      {items.map((m, i) => (
+        <div key={`${m.url}-${i}`} className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-canvas">
+          {m.type === 'video'
+            ? <video src={m.url} className="h-full w-full object-cover" muted playsInline controls={!onRemove} />
+            : <img src={m.url} alt="Portfolio work" className="h-full w-full object-cover" loading="lazy" />}
+          {onRemove && (
+            <button type="button" onClick={() => onRemove(i)}
+              className="absolute right-1 top-1 rounded-md bg-ink/70 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+              aria-label="Remove">
+              <Trash2 size={13} />
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* ---------------------------------------------------------- portfolio uploader */
+function PortfolioUploader({ items, onChange }: { items: PortfolioItem[]; onChange: (items: PortfolioItem[]) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  const MAX = 12
+
+  async function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return
+    setError('')
+    setUploading(true)
+    try {
+      // One signature covers this whole batch (same folder + timestamp window).
+      const sigRes = await fetch('/api/vendors/me/media-signature', { method: 'POST' })
+      const sig = await sigRes.json()
+      if (!sigRes.ok) { setError(sig.error ?? 'Uploads are not available right now.'); return }
+
+      const room = MAX - items.length
+      const chosen = Array.from(files).slice(0, Math.max(0, room))
+      const uploaded: PortfolioItem[] = []
+      for (const file of chosen) {
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('api_key', sig.apiKey)
+        fd.append('timestamp', String(sig.timestamp))
+        fd.append('folder', sig.folder)
+        fd.append('signature', sig.signature)
+        const up = await fetch(`https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`, { method: 'POST', body: fd })
+        const data = await up.json()
+        if (!up.ok) { setError(data?.error?.message ?? 'One of the files failed to upload.'); continue }
+        uploaded.push({
+          url: data.secure_url,
+          type: data.resource_type === 'video' ? 'video' : 'image',
+          publicId: data.public_id,
+        })
+      }
+      if (uploaded.length) onChange([...items, ...uploaded].slice(0, MAX))
+    } catch {
+      setError('Something went wrong uploading. Please try again.')
+    } finally {
+      setUploading(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  return (
+    <div>
+      {items.length > 0 && <div className="mb-3"><MediaGrid items={items} onRemove={i => onChange(items.filter((_, idx) => idx !== i))} /></div>}
+      <input ref={inputRef} type="file" accept="image/*,video/*" multiple className="hidden"
+        onChange={e => handleFiles(e.target.files)} />
+      <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading || items.length >= MAX}
+        className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-canvas py-4 text-[13px] font-medium text-ink-2 transition-colors hover:border-warning/50 hover:text-ink disabled:opacity-50">
+        {uploading ? <><Loader2 size={15} className="animate-spin" /> Uploading…</> : <><Upload size={15} /> {items.length ? 'Add more photos or videos' : 'Add photos or videos of your work'}</>}
+      </button>
+      <p className="mt-1.5 text-[11px] text-ink-3">{items.length}/{MAX} added. Images and short videos, shown to organisers.</p>
+      {error && <p className="mt-1.5 text-[11px] text-red-500">{error}</p>}
+    </div>
+  )
+}
+
+/* ---------------------------------------------------------------- bank fields */
+function BankFields({ form, set, error }: {
+  form: FormState
+  set: <K extends keyof FormState>(k: K, v: FormState[K]) => void
+  error?: string
+}) {
+  return (
+    <div className="border-t border-border pt-5">
+      <p className="text-[13px] font-medium text-ink-2 mb-1 flex items-center gap-1.5"><Landmark size={14} /> Payout bank account</p>
+      <p className="text-[12px] text-ink-3 mb-3">Where you&apos;ll get paid. Optional for now, and shared with an organiser only after they accept your bid.</p>
+      <div className="space-y-3">
+        <SearchableSelect value={form.bankName} onChange={v => set('bankName', v)} options={NIGERIAN_BANKS}
+          placeholder="Select your bank" searchPlaceholder="Search banks…" />
+        <input type="text" inputMode="numeric" value={form.bankAccountNumber} maxLength={10}
+          onChange={e => set('bankAccountNumber', e.target.value.replace(/\D/g, '').slice(0, 10))}
+          placeholder="10-digit account number" className={`${inputCls} ${error ? 'border-red-400' : ''}`} />
+        {error && <p className="text-[11px] text-red-500 -mt-1">{error}</p>}
+        <input type="text" value={form.bankAccountName} onChange={e => set('bankAccountName', e.target.value)}
+          placeholder="Account name (as it appears at your bank)" className={inputCls} />
       </div>
     </div>
   )
@@ -306,6 +455,11 @@ function EditForm({ form, set, toggleSpecialty, categoryNames, errors, complete,
           </Field>
         </div>
 
+        <Field label="Full address" hint="Your business or pickup address. Only shared with an organiser after they accept your bid.">
+          <input type="text" value={form.address} onChange={e => set('address', e.target.value)}
+            placeholder="e.g. 12 Admiralty Way, Lekki Phase 1" className={inputCls} />
+        </Field>
+
         <Field label="Services you offer" required hint="Pick the categories you can bid on.">
           <div className="flex flex-wrap gap-2">
             {categoryNames.map(name => {
@@ -322,8 +476,14 @@ function EditForm({ form, set, toggleSpecialty, categoryNames, errors, complete,
         </Field>
 
         <div className="border-t border-border pt-5">
+          <p className="text-[13px] font-medium text-ink-2 mb-1">Your work</p>
+          <p className="text-[12px] text-ink-3 mb-3">Show off photos and videos of past events. This is your portfolio.</p>
+          <PortfolioUploader items={form.portfolio} onChange={items => set('portfolio', items)} />
+        </div>
+
+        <div className="border-t border-border pt-5">
           <p className="text-[13px] font-medium text-ink-2 mb-1">Portfolio & socials <span className="text-red-500">*</span></p>
-          <p className="text-[12px] text-ink-3 mb-3">At least one so organisers can see your work. These are your portfolio.</p>
+          <p className="text-[12px] text-ink-3 mb-3">At least one so organisers can reach you and see more of your work.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <input type="text" value={form.instagram} onChange={e => set('instagram', e.target.value)} placeholder="Instagram (@handle)" className={inputCls} />
@@ -346,6 +506,8 @@ function EditForm({ form, set, toggleSpecialty, categoryNames, errors, complete,
             </div>
           </div>
         </div>
+
+        <BankFields form={form} set={set} error={errors.bankAccountNumber} />
       </div>
 
       <div className="mt-5 flex items-center justify-between">

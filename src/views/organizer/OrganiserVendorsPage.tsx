@@ -1,6 +1,7 @@
 'use client'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { BadgeCheck, MapPin, Search, UserPlus, X, Send, Check } from 'lucide-react'
 import { VendorProfileModal } from '@/features/vendor/components/VendorProfileModal'
 import { parseSpecialties } from '@/features/vendor/types/vendor.types'
@@ -28,6 +29,13 @@ interface SentInvite {
 }
 
 export default function OrganiserVendorsPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  // Deep-link context: "Find vendors" from an event (optionally a category) lands
+  // here scoped to that event, ready to invite for it.
+  const planParam = searchParams.get('plan')
+  const categoryParam = searchParams.get('category')
+
   const [vendors, setVendors] = useState<BrowseVendor[]>([])
   const [plans, setPlans]     = useState<Plan[]>([])
   const [invites, setInvites] = useState<SentInvite[]>([])
@@ -55,6 +63,29 @@ export default function OrganiserVendorsPage() {
 
   // Has this vendor been invited to *any* slot yet? Used for the card badge.
   const invitedVendorIds = useMemo(() => new Set(invites.map(i => i.vendorId)), [invites])
+
+  // Resolve the deep-link event + category (category is a planCategoryId).
+  const contextPlan = useMemo(() => plans.find(p => p.id === planParam) ?? null, [plans, planParam])
+  const contextCategory = useMemo(
+    () => contextPlan?.categories.find(c => c.id === categoryParam) ?? null,
+    [contextPlan, categoryParam],
+  )
+
+  // Once, when a category context resolves, pre-filter the list to that service
+  // (only if some verified vendor actually offers it — otherwise show everyone).
+  const serviceApplied = useRef(false)
+  useEffect(() => {
+    if (serviceApplied.current || !vendors.length || !contextCategory) return
+    serviceApplied.current = true
+    const offered = new Set(vendors.flatMap(v => parseSpecialties(v.specialties)))
+    if (offered.has(contextCategory.name)) setService(contextCategory.name)
+  }, [vendors, contextCategory])
+
+  function clearContext() {
+    setService('all')
+    serviceApplied.current = false
+    router.replace('/organiser/marketplace')
+  }
 
   function showToast(msg: string, type = 'success') {
     setToast({ msg, type })
@@ -100,6 +131,16 @@ export default function OrganiserVendorsPage() {
         <h1 className="font-display font-bold text-[22px] sm:text-[28px] text-ink">Find Vendors</h1>
         <p className="text-ink-3 text-[14px] mt-1">Browse verified vendors and invite them to bid on your events.</p>
       </div>
+
+      {contextPlan && (
+        <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/[0.04] px-4 py-3">
+          <p className="text-[13px] text-ink-2 min-w-0 truncate">
+            Inviting vendors for <span className="font-medium text-ink">{contextPlan.name}</span>
+            {contextCategory && <> · <span className="font-medium text-ink">{contextCategory.name}</span></>}
+          </p>
+          <button onClick={clearContext} className="shrink-0 text-[12px] text-ink-3 hover:text-ink transition-colors">Clear</button>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-3 mb-5">
         <div className="relative flex-1 min-w-[220px]">
@@ -185,6 +226,8 @@ export default function OrganiserVendorsPage() {
           vendor={inviteVendor}
           plans={plans}
           invites={invites}
+          initialPlanId={contextPlan?.id ?? ''}
+          initialCategoryId={contextCategory?.id ?? ''}
           onClose={() => setInviteVendor(null)}
           onSent={(planId, planCategoryId) =>
             setInvites(prev => [...prev, { vendorId: inviteVendor.userId, planId, planCategoryId }])
@@ -198,17 +241,17 @@ export default function OrganiserVendorsPage() {
 
 // ── Invite-to-bid modal ──────────────────────────────────────────────────────
 function InviteToBidModal({
-  vendor, plans, invites, onClose, onSent, onResult,
+  vendor, plans, invites, initialPlanId = '', initialCategoryId = '', onClose, onSent, onResult,
 }: {
   vendor: BrowseVendor
   plans: Plan[]
   invites: SentInvite[]
+  initialPlanId?: string
+  initialCategoryId?: string
   onClose: () => void
   onSent: (planId: string, planCategoryId: string) => void
   onResult: (msg: string, type?: string) => void
 }) {
-  const [planId, setPlanId] = useState('')
-  const [categoryId, setCategoryId] = useState('')
   const [sending, setSending] = useState(false)
 
   const vendorServices = parseSpecialties(vendor.specialties)
@@ -224,10 +267,21 @@ function InviteToBidModal({
       (p.dateFlexible || !p.startDate || new Date(p.startDate).getTime() > now)
     )
   }, [plans, now])
+
+  // Preselect the deep-link event if it's actually invitable for this vendor.
+  const [planId, setPlanId] = useState(() => (invitable.some(p => p.id === initialPlanId) ? initialPlanId : ''))
   const selectedPlan = invitable.find(p => p.id === planId)
   // Categories on the chosen event that this vendor actually offers.
   const matchingCats = (selectedPlan?.categories ?? []).filter(c => vendorServices.includes(c.name))
   const allInvited = matchingCats.length > 0 && matchingCats.every(c => invitedSlots.has(`${planId}:${c.id}`))
+
+  // Preselect the deep-link category only when this vendor offers it and hasn't
+  // been invited to it yet; otherwise leave the picker for the organiser.
+  const [categoryId, setCategoryId] = useState(() =>
+    matchingCats.some(c => c.id === initialCategoryId) && !invitedSlots.has(`${initialPlanId}:${initialCategoryId}`)
+      ? initialCategoryId
+      : '',
+  )
 
   async function send() {
     if (!planId || !categoryId) return

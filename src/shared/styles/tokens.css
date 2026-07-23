@@ -32,12 +32,13 @@
   --grad-brand: linear-gradient(103deg, var(--primary) 0%, var(--sky) 42%, var(--violet) 100%);
   --grad-warm:  linear-gradient(103deg, var(--gold) 0%, var(--coral) 55%, var(--pink) 100%);
 
-  /* Fonts - resolved from the next/font CSS variables set on <html> in
-     layout.tsx (with literal fallbacks). Everything reads var(--font-d/-b/-m).
-     Poppins is used for both display and body; DM Mono stays for money/codes. */
+  /* One global font: Poppins for display, body AND mono (money/codes). All
+     three tokens resolve to the single next/font Poppins var set on <html> in
+     layout.tsx; weight (via font-bold/medium utilities) carries the hierarchy.
+     The three tokens are kept distinct only so a future split stays a one-liner. */
   --font-d:   var(--font-poppins), 'Poppins', ui-sans-serif, system-ui, sans-serif;
   --font-b:   var(--font-poppins), 'Poppins', ui-sans-serif, system-ui, sans-serif;
-  --font-m:   var(--font-mono-family), 'DM Mono', ui-monospace, monospace;
+  --font-m:   var(--font-poppins), 'Poppins', ui-sans-serif, system-ui, sans-serif;
 
   /* Spacing - 8pt grid */
   --space-xs:   4px;

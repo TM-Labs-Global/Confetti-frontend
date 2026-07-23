@@ -115,7 +115,7 @@ export default function DesignSystemPage() {
               <p className="text-[16px] text-ink-2 leading-relaxed">Connect with trusted vendors across Nigeria. From Jollof catering to Afrobeats DJs, find everything in one place.</p>
             </div>
             <div>
-              <p className="text-[11px] font-mono text-ink-3 mb-1">font-mono · DM Mono</p>
+              <p className="text-[11px] font-mono text-ink-3 mb-1">font-mono · Poppins (money &amp; codes)</p>
               <p className="font-mono text-[13px] text-ink-3 uppercase tracking-[0.08em]">WS-2026 · SHARE CODE · 7 BIDS</p>
             </div>
           </div>

@@ -1,22 +1,14 @@
-import { Poppins, DM_Mono } from 'next/font/google'
+import { Poppins } from 'next/font/google'
 import { AuthProvider } from '@/features/auth/context/AuthContext'
 import './globals.css'
 
-// One warm, friendly family across the whole app (headings + body). Poppins
-// reads engaging and approachable, not "backend". Heavier weights carry the
-// headings/stat values; lighter weights carry body copy.
+// One global font across the entire app - display, body AND money/codes.
+// Poppins reads engaging and approachable, not "backend". Weight carries the
+// hierarchy: heavier for headings/stat values, lighter for body copy.
 const poppins = Poppins({
   subsets: ['latin'],
   variable: '--font-poppins',
   weight: ['400', '500', '600', '700', '800'],
-  display: 'swap',
-})
-
-// Money / codes only. Unchanged - the right call for tabular figures.
-const dmMono = DM_Mono({
-  subsets: ['latin'],
-  variable: '--font-mono-family',
-  weight: ['400', '500'],
   display: 'swap',
 })
 
@@ -36,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // suppressHydrationWarning: browser extensions (Grammarly, dark-mode tools,
     // wallets, etc.) commonly inject attributes onto <html>/<body> before React
     // hydrates, which otherwise trips a hydration attribute-mismatch warning.
-    <html lang="en" suppressHydrationWarning className={`${poppins.variable} ${dmMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={poppins.variable}>
       <body suppressHydrationWarning>
         <AuthProvider>{children}</AuthProvider>
       </body>

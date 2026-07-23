@@ -41,7 +41,7 @@
   /* Fonts - resolved via next/font CSS vars injected on <html> */
   --font-sans: var(--font-b), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-d), sans-serif;
-  --font-mono: var(--font-m), ui-monospace, monospace;
+  --font-mono: var(--font-m), ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {

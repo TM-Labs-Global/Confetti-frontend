@@ -9,6 +9,9 @@ interface SearchableSelectProps {
   placeholder?: string
   searchPlaceholder?: string
   disabled?: boolean
+  /** When true, a typed value that isn't in `options` can be selected as-is
+   * (offers a "Use '<query>'" row). Handy for near-complete lists like banks. */
+  allowCustom?: boolean
 }
 
 /**
@@ -22,6 +25,7 @@ export function SearchableSelect({
   placeholder = 'Select…',
   searchPlaceholder = 'Search…',
   disabled = false,
+  allowCustom = false,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -34,6 +38,11 @@ export function SearchableSelect({
     () => options.filter(o => o.toLowerCase().includes(query.trim().toLowerCase())),
     [options, query],
   )
+
+  // For allowCustom lists: offer the typed value when it isn't already an option.
+  const trimmed = query.trim()
+  const hasExact = options.some(o => o.toLowerCase() === trimmed.toLowerCase())
+  const showCustom = allowCustom && trimmed.length > 0 && !hasExact
 
   useEffect(() => {
     if (!open) return
@@ -68,7 +77,7 @@ export function SearchableSelect({
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'ArrowDown') { e.preventDefault(); setActive(a => Math.min(a + 1, filtered.length - 1)) }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(a => Math.max(a - 1, 0)) }
-    else if (e.key === 'Enter') { e.preventDefault(); if (filtered[active]) choose(filtered[active]) }
+    else if (e.key === 'Enter') { e.preventDefault(); if (filtered[active]) choose(filtered[active]); else if (showCustom) choose(trimmed) }
     else if (e.key === 'Escape') { setOpen(false) }
   }
 
@@ -103,28 +112,41 @@ export function SearchableSelect({
           </div>
 
           <ul ref={listRef} className="max-h-[240px] overflow-y-auto p-1.5">
-            {filtered.length === 0 ? (
+            {filtered.length === 0 && !showCustom ? (
               <li className="px-3 py-6 text-center text-[13px] text-ink-3">No matches</li>
             ) : (
-              filtered.map((opt, i) => {
-                const isSelected = opt === value
-                const isActive = i === active
-                return (
-                  <li key={opt}>
+              <>
+                {filtered.map((opt, i) => {
+                  const isSelected = opt === value
+                  const isActive = i === active
+                  return (
+                    <li key={opt}>
+                      <button
+                        type="button"
+                        onMouseEnter={() => setActive(i)}
+                        onClick={() => choose(opt)}
+                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[13px] transition-colors ${
+                          isActive ? 'bg-primary/10 text-ink' : 'text-ink-2'
+                        }`}
+                      >
+                        {opt}
+                        {isSelected && <Check size={15} className="text-primary" />}
+                      </button>
+                    </li>
+                  )
+                })}
+                {showCustom && (
+                  <li>
                     <button
                       type="button"
-                      onMouseEnter={() => setActive(i)}
-                      onClick={() => choose(opt)}
-                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[13px] transition-colors ${
-                        isActive ? 'bg-primary/10 text-ink' : 'text-ink-2'
-                      }`}
+                      onClick={() => choose(trimmed)}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] text-primary transition-colors hover:bg-primary/10"
                     >
-                      {opt}
-                      {isSelected && <Check size={15} className="text-primary" />}
+                      Use &ldquo;{trimmed}&rdquo;
                     </button>
                   </li>
-                )
-              })
+                )}
+              </>
             )}
           </ul>
         </div>

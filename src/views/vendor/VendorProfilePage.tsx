@@ -406,7 +406,7 @@ function BankFields({ form, set, error }: {
       <p className="text-[12px] text-ink-3 mb-3">Where you&apos;ll get paid. Optional for now, and shared with an organiser only after they accept your bid.</p>
       <div className="space-y-3">
         <SearchableSelect value={form.bankName} onChange={v => set('bankName', v)} options={NIGERIAN_BANKS}
-          placeholder="Select your bank" searchPlaceholder="Search banks…" />
+          placeholder="Select your bank" searchPlaceholder="Search or type your bank…" allowCustom />
         <input type="text" inputMode="numeric" value={form.bankAccountNumber} maxLength={10}
           onChange={e => set('bankAccountNumber', e.target.value.replace(/\D/g, '').slice(0, 10))}
           placeholder="10-digit account number" className={`${inputCls} ${error ? 'border-red-400' : ''}`} />

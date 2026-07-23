@@ -124,7 +124,7 @@ export default function NotificationBell({ dark = false, notifications: propNoti
               <span className="font-display font-semibold text-[13px] text-ink">
                 Notifications
                 {unread > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] rounded-full font-mono">
+                  <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
                     {unread} new
                   </span>
                 )}

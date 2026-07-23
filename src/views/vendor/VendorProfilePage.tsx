@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  BadgeCheck, Clock, AlertCircle, Check, Pencil, Globe, AtSign, Link2, Music2, Phone, MapPin,
+  BadgeCheck, Clock, AlertCircle, Check, Pencil, Phone, MapPin,
   Upload, Trash2, Loader2, Landmark,
 } from 'lucide-react'
 import { useAuth } from '@/features/auth/context/AuthContext'
@@ -17,10 +17,6 @@ interface FormState {
   address: string
   specialties: string[]
   portfolio: PortfolioItem[]
-  website: string
-  instagram: string
-  facebook: string
-  tiktok: string
   phone: string
   bankName: string
   bankAccountNumber: string
@@ -29,18 +25,14 @@ interface FormState {
 
 const EMPTY: FormState = {
   businessName: '', bio: '', state: '', city: '', address: '', specialties: [], portfolio: [],
-  website: '', instagram: '', facebook: '', tiktok: '', phone: '',
-  bankName: '', bankAccountNumber: '', bankAccountName: '',
+  phone: '', bankName: '', bankAccountNumber: '', bankAccountName: '',
 }
 
-// Normalisers so stored values are well-formed regardless of how they were typed.
-const normalizeUrl = (u: string) => (!u.trim() ? '' : /^https?:\/\//i.test(u.trim()) ? u.trim() : `https://${u.trim()}`)
-const normalizeHandle = (h: string) => (!h.trim() ? '' : h.trim().startsWith('http') ? h.trim() : `@${h.trim().replace(/^@+/, '')}`)
+// Keep only digits (and a leading +) in a typed phone number.
 const normalizePhone = (p: string) => p.replace(/[^\d+]/g, '')
 
 function validate(f: FormState): Partial<Record<keyof FormState, string>> {
   const e: Partial<Record<keyof FormState, string>> = {}
-  if (f.website && !/\.[a-z]{2,}/i.test(f.website)) e.website = 'Enter a valid website, e.g. yourbiz.com'
   if (f.phone && normalizePhone(f.phone).replace(/\D/g, '').length < 7) e.phone = 'Enter a valid phone number'
   // An account number is optional, but if given it must be a full 10-digit NUBAN.
   if (f.bankAccountNumber && f.bankAccountNumber.length !== 10) e.bankAccountNumber = 'Account number must be 10 digits'
@@ -74,10 +66,6 @@ export default function VendorProfilePage() {
           address: p.address ?? '',
           specialties: parseSpecialties(p.specialties),
           portfolio: parsePortfolio(p.portfolio),
-          website: p.website ?? '',
-          instagram: p.instagram ?? '',
-          facebook: p.facebook ?? '',
-          tiktok: p.tiktok ?? '',
           phone: p.phone ?? '',
           bankName: p.bankName ?? '',
           bankAccountNumber: p.bankAccountNumber ?? '',
@@ -111,11 +99,10 @@ export default function VendorProfilePage() {
     }))
   }
 
-  const hasSocial = !!(form.website || form.instagram || form.facebook || form.tiktok || form.phone)
   const complete = useMemo(
     () => !!form.businessName.trim() && !!form.bio.trim() && !!form.state && !!form.city.trim() &&
-      form.specialties.length > 0 && hasSocial,
-    [form, hasSocial],
+      form.specialties.length > 0 && form.portfolio.length > 0,
+    [form],
   )
 
   async function save() {
@@ -124,10 +111,6 @@ export default function VendorProfilePage() {
     const cleaned: FormState = {
       ...form,
       address: form.address.trim(),
-      website: normalizeUrl(form.website),
-      instagram: normalizeHandle(form.instagram),
-      facebook: form.facebook.trim(),
-      tiktok: normalizeHandle(form.tiktok),
       phone: normalizePhone(form.phone),
       bankAccountName: form.bankAccountName.trim(),
     }
@@ -244,13 +227,6 @@ function StatusBanner({ status, rejectionReason }: { status: VendorProfile['stat
 
 /* ------------------------------------------------------------- view mode */
 function ProfileView({ form }: { form: FormState }) {
-  const socials = [
-    form.website && { Icon: Globe, label: form.website, href: form.website },
-    form.instagram && { Icon: AtSign, label: form.instagram.replace(/^@/, ''), href: `https://instagram.com/${form.instagram.replace(/^@/, '')}` },
-    form.facebook && { Icon: Link2, label: form.facebook, href: form.facebook.startsWith('http') ? form.facebook : `https://facebook.com/${form.facebook}` },
-    form.tiktok && { Icon: Music2, label: form.tiktok.replace(/^@/, ''), href: `https://tiktok.com/@${form.tiktok.replace(/^@/, '')}` },
-  ].filter(Boolean) as Array<{ Icon: any; label: string; href: string }>
-
   const hasBank = !!(form.bankAccountNumber && form.bankName)
 
   return (
@@ -279,19 +255,12 @@ function ProfileView({ form }: { form: FormState }) {
         </div>
       )}
 
-      <div className="mt-5 border-t border-border pt-4">
-        <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-ink-3 mb-2">Portfolio & socials</p>
-        <div className="space-y-1.5">
-          {socials.map(({ Icon, label, href }) => (
-            <a key={href} href={href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[13px] text-primary hover:underline">
-              <Icon size={14} /> {label}
-            </a>
-          ))}
-          {form.phone && (
-            <p className="flex items-center gap-2 text-[13px] text-ink-2"><Phone size={14} className="text-ink-3" /> {form.phone} <span className="text-[11px] text-ink-3">(shared with an organiser only after they accept your bid)</span></p>
-          )}
+      {form.phone && (
+        <div className="mt-5 border-t border-border pt-4">
+          <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-ink-3 mb-2">Contact</p>
+          <p className="flex items-center gap-2 text-[13px] text-ink-2"><Phone size={14} className="text-ink-3" /> {form.phone} <span className="text-[11px] text-ink-3">(shared with an organiser only after they accept your bid)</span></p>
         </div>
-      </div>
+      )}
 
       {(form.address || hasBank) && (
         <div className="mt-5 border-t border-border pt-4">
@@ -476,35 +445,18 @@ function EditForm({ form, set, toggleSpecialty, categoryNames, errors, complete,
         </Field>
 
         <div className="border-t border-border pt-5">
-          <p className="text-[13px] font-medium text-ink-2 mb-1">Your work</p>
-          <p className="text-[12px] text-ink-3 mb-3">Show off photos and videos of past events. This is your portfolio.</p>
+          <p className="text-[13px] font-medium text-ink-2 mb-1">Your work <span className="text-red-500">*</span></p>
+          <p className="text-[12px] text-ink-3 mb-3">Photos and videos of past events are how organisers judge you, so add at least one. This is your portfolio.</p>
           <PortfolioUploader items={form.portfolio} onChange={items => set('portfolio', items)} />
         </div>
 
         <div className="border-t border-border pt-5">
-          <p className="text-[13px] font-medium text-ink-2 mb-1">Portfolio & socials <span className="text-red-500">*</span></p>
-          <p className="text-[12px] text-ink-3 mb-3">At least one so organisers can reach you and see more of your work.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <input type="text" value={form.instagram} onChange={e => set('instagram', e.target.value)} placeholder="Instagram (@handle)" className={inputCls} />
-            </div>
-            <div>
-              <input type="text" value={form.website} onChange={e => set('website', e.target.value)} placeholder="Website (yourbiz.com)" className={`${inputCls} ${errors.website ? 'border-red-400' : ''}`} />
-              {errors.website && <p className="text-[11px] text-red-500 mt-1">{errors.website}</p>}
-            </div>
-            <div>
-              <input type="text" value={form.facebook} onChange={e => set('facebook', e.target.value)} placeholder="Facebook" className={inputCls} />
-            </div>
-            <div>
-              <input type="text" value={form.tiktok} onChange={e => set('tiktok', e.target.value)} placeholder="TikTok (@handle)" className={inputCls} />
-            </div>
-            <div>
-              <input type="tel" inputMode="numeric" value={form.phone}
-                onChange={e => set('phone', e.target.value.replace(/[^\d+]/g, ''))}
-                placeholder="WhatsApp / phone" className={`${inputCls} ${errors.phone ? 'border-red-400' : ''}`} />
-              {errors.phone && <p className="text-[11px] text-red-500 mt-1">{errors.phone}</p>}
-            </div>
-          </div>
+          <p className="text-[13px] font-medium text-ink-2 mb-1">Contact</p>
+          <p className="text-[12px] text-ink-3 mb-3">A phone or WhatsApp number, shared with an organiser only after they accept your bid.</p>
+          <input type="tel" inputMode="numeric" value={form.phone}
+            onChange={e => set('phone', e.target.value.replace(/[^\d+]/g, ''))}
+            placeholder="WhatsApp / phone" className={`${inputCls} ${errors.phone ? 'border-red-400' : ''}`} />
+          {errors.phone && <p className="text-[11px] text-red-500 mt-1">{errors.phone}</p>}
         </div>
 
         <BankFields form={form} set={set} error={errors.bankAccountNumber} />
